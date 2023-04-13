@@ -1,0 +1,71 @@
+name: Build and Publish the Images
+
+# Controls when the workflow will run
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - LICENSE
+      - dev/
+  schedule:
+    # first Friday of every month at 10
+    - cron: "0 10 1-7 * 5"
+
+env:
+  # these versions are only used to modify images for minimal-r-notebook and python-notebook
+  # in all other images, these are just used to tag the images (which are built from those)
+  python-version: 3.10
+  r-version: 4.2
+
+jobs:
+  python-notebook:
+    runs-on: ubuntu-latest
+    steps:
+      # https://github.com/actions/checkout
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build and push
+        uses: ./.github/actions/build-and-push
+        with:
+          context: ${{ github.job }}
+          python-version: ${{ env.python-version }}
+
+  minimal-r-notebook:
+    runs-on: ubuntu-latest
+    steps:
+      # https://github.com/actions/checkout
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build and push
+        uses: ./.github/actions/build-and-push
+        with:
+          context: ${{ github.job }}
+          python-version: ${{ env.python-version }}
+          r-version: ${{ env.r-version }}
+
+  build-r-stacks:
+    needs: minimal-r-notebook
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: true
+      matrix:
+        config:
+          - {context: "r-notebook"}
+          - {context: "datascience-notebook"}
+
+    steps:
+      # https://github.com/actions/checkout
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build and push
+        uses: ./.github/actions/build-and-push
+        with:
+          context: ${{ matrix.config.context }}
+          base-tag: r-${{ env.r-version }}
