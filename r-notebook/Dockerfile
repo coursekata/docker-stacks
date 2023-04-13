@@ -1,5 +1,5 @@
 ARG BASE_TAG=r-4.2
-FROM coursekata/minimal-r-notebook:${BASE_TAG} as base
+FROM ghcr.io/coursekata/minimal-r-notebook:${BASE_TAG} as base
 
 LABEL maintainer="CourseKata <tech@coursekata.org>"
 

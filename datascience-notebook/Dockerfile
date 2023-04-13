@@ -1,6 +1,6 @@
 ARG BUILD_LAB=true
 ARG BASE_TAG=r-4.2
-FROM coursekata/r-notebook:${BASE_TAG} as base
+FROM ghcr.io/coursekata/r-notebook:${BASE_TAG} as base
 
 LABEL maintainer="CourseKata <tech@coursekata.org>"
 
