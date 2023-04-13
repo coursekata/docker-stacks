@@ -84,7 +84,7 @@ jobs:
             type=schedule,pattern={{date 'YYYY-MM-DD'}}
             type=sha
             type=raw,value=python-${{ env.python-version }}
-            type=raw,value=python-${{ env.r-version }}
+            type=raw,value=r-${{ env.r-version }}
 
       # https://github.com/docker/build-push-action
       - name: Build and push
@@ -139,7 +139,7 @@ jobs:
             type=schedule,pattern={{date 'YYYY-MM-DD'}}
             type=sha
             type=raw,value=python-${{ env.python-version }}
-            type=raw,value=python-${{ env.r-version }}
+            type=raw,value=r-${{ env.r-version }}
 
       # https://github.com/docker/build-push-action
       - name: Build and push
