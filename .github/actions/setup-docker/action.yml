@@ -1,5 +1,9 @@
 name: Setup Docker
 description: Install Docker Buildx with QEMU and login to GHCR.
+inputs:
+  github-token:
+    description: The token from `secrets.GITHUB_TOKEN`.
+    required: true
 runs:
   using: "composite"
   steps:
@@ -17,4 +21,4 @@ runs:
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        password: ${{ inputs.github-token }}

@@ -29,6 +29,8 @@ jobs:
 
       - name: Setup Docker
         uses: ./.github/actions/setup-docker
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       # https://github.com/docker/metadata-action
       - name: Image Metdata
@@ -65,6 +67,8 @@ jobs:
 
       - name: Setup Docker
         uses: ./.github/actions/setup-docker
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       # https://github.com/docker/metadata-action
       - name: Image Metdata
@@ -118,6 +122,8 @@ jobs:
 
       - name: Setup Docker
         uses: ./.github/actions/setup-docker
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       # https://github.com/docker/metadata-action
       - name: Image Metdata
