@@ -16,8 +16,8 @@ on:
 env:
   # these versions are only used to modify images for minimal-r-notebook and python-notebook
   # in all other images, these are just used to tag the images (which are built from those)
-  python-version: 3.10
-  r-version: 4.2
+  python-version: "3.10"
+  r-version: "4.2"
 
 jobs:
   python-notebook:
