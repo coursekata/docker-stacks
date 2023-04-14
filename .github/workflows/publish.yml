@@ -56,7 +56,7 @@ jobs:
           platforms: linux/amd64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build_args: PYTHON_VERSION=${{ env.python-version }}
+          build-args: PYTHON_VERSION=${{ env.python-version }}
 
   minimal-r-notebook:
     runs-on: ubuntu-latest
@@ -95,7 +95,7 @@ jobs:
           platforms: linux/amd64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build_args: |
+          build-args: |
             PYTHON_VERSION=${{ env.python-version }}
             R_VERSION=${{ env.r-version }}
 
@@ -137,7 +137,7 @@ jobs:
           platforms: linux/amd64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build_args: BASE_TAG=r-${{ env.r-version }}
+          build-args: BASE_TAG=r-${{ env.r-version }}
 
   datascience-notebook:
     needs: r-notebook
@@ -177,4 +177,4 @@ jobs:
           platforms: linux/amd64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build_args: BASE_TAG=r-${{ env.r-version }}
+          build-args: BASE_TAG=r-${{ env.r-version }}
