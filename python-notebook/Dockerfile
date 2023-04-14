@@ -11,12 +11,14 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 USER root
 
-# hadolint ignore=DL3008
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   --mount=type=cache,target=/var/lib/apt,sharing=locked \
   apt-get update && export DEBIAN_FRONTEND=noninteractive \
   && apt-get -y install --no-install-recommends \
-  g++
+  g++ \
+  gdal-bin \
+  libgdal-dev \
+  libproj-dev
 
 USER ${NB_UID}
 
@@ -28,7 +30,6 @@ USER ${NB_UID}
 # stages to build concurrently.
 FROM base as py-builder
 
-# hadolint ignore=DL3042
 RUN --mount=type=cache,target=/tmp/pip-cache,uid=${NB_UID} \
   --mount=type=bind,source=requirements.txt,target=/tmp/requirements.txt \
   pip3 install --disable-pip-version-check --cache-dir=/tmp/pip-cache build~=0.10 \
@@ -43,7 +44,6 @@ FROM base as final-with-lab-build-true
 USER ${NB_UID}
 WORKDIR ${HOME}
 
-# hadolint ignore=DL3042
 RUN --mount=type=cache,target=/tmp/pip-cache,uid=${NB_UID} \
   --mount=type=cache,from=py-builder,source=/tmp/wheels,target=/tmp/wheels \
   --mount=type=bind,source=requirements.txt,target=/tmp/requirements.txt \
@@ -60,7 +60,6 @@ FROM base as final-with-lab-build-false
 USER ${NB_UID}
 WORKDIR ${HOME}
 
-# hadolint ignore=DL3042
 RUN --mount=type=cache,target=/tmp/pip-cache,uid=${NB_UID} \
   --mount=type=cache,from=py-builder,source=/tmp/wheels,target=/tmp/wheels \
   --mount=type=bind,source=requirements.txt,target=/tmp/requirements.txt \

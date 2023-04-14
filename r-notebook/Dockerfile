@@ -1,5 +1,6 @@
+ARG BASE_IMAGE=ghcr.io/coursekata/minimal-r-notebook
 ARG BASE_TAG=r-4.2
-FROM ghcr.io/coursekata/minimal-r-notebook:${BASE_TAG} as base
+FROM ${BASE_IMAGE}:${BASE_TAG} as base
 
 LABEL maintainer="CourseKata <tech@coursekata.org>"
 
@@ -9,7 +10,6 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 USER root
 
-# hadolint ignore=DL3008
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   --mount=type=cache,target=/var/lib/apt,sharing=locked \
   apt-get update && export DEBIAN_FRONTEND=noninteractive \
