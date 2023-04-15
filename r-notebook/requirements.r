@@ -1,5 +1,10 @@
 options(warn = 2, Ncpus = max(1L, parallel::detectCores()))
 
+install.packages("remotes")
+remotes::install_github("datacamp/testwhat")
+remotes::install_github("UCLATALL/coursekata-r", "main")
+coursekata::coursekata_install()
+
 install.packages(c(
   "av",
   "car",
@@ -25,7 +30,6 @@ install.packages(c(
   "profvis",
   "psych",
   "RcppTOML",
-  "remotes",
   "reticulate",
   "sf",
   "simstudy",
@@ -35,8 +39,3 @@ install.packages(c(
   "tidyverse",
   "transformr"
 ))
-
-remotes::install_github("datacamp/testwhat")
-
-remotes::install_github("UCLATALL/coursekata-r", "main")
-coursekata::coursekata_install()
