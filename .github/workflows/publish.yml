@@ -10,8 +10,9 @@ on:
       - LICENSE
       - dev/
   schedule:
-    # first Friday of every month at 10
-    - cron: "0 10 1-7 * 5"
+    # every Friday at 10AM
+    # see https://crontab.guru
+    - cron: "0 10 * * 5"
 
 env:
   # these versions are only used to modify images for minimal-r-notebook and python-notebook
