@@ -6,8 +6,58 @@
     {
       "label": "dev-build.sh",
       "type": "shell",
-      "command": "${workspaceFolder}/dev-build.sh",
+      "command": "${workspaceFolder}/dev-build.sh ${input:select-image} ${input:select-platform}",
       "problemMatcher": []
+    },
+    {
+      "label": "dev-test.sh",
+      "type": "shell",
+      "command": "${workspaceFolder}/dev-test.sh ${input:select-single-image} ${input:select-single-platform}",
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "select-image",
+      "type": "pickString",
+      "description": "Which image(s) do you want to work with?",
+      "options": [
+        "all",
+        "r-notebook",
+        "datascience-notebook",
+        "minimal-r-notebook",
+        "python-notebook",
+      ]
+    },
+    {
+      "id": "select-platform",
+      "type": "pickString",
+      "description": "Which platform(s) do you want to work with?",
+      "options": [
+        "all",
+        "linux/arm64/v8",
+        "linux/amd64",
+      ]
+    },
+    {
+      "id": "select-single-image",
+      "type": "pickString",
+      "description": "Which image do you want to test?",
+      "options": [
+        "r-notebook",
+        "datascience-notebook",
+        "minimal-r-notebook",
+        "python-notebook",
+      ]
+    },
+    {
+      "id": "select-single-platform",
+      "type": "pickString",
+      "description": "Which platform do you want to test?",
+      "options": [
+        "linux/arm64/v8",
+        "linux/amd64",
+      ]
     }
   ]
 }
