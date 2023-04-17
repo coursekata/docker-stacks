@@ -9,7 +9,8 @@ if [ "${platform}" = all ]; then
 fi
 build_lab=${BUILD_LAB:-false}
 
-if [ "${images}" = all ] || [ "${images}" = python-notebook ]; then
+dependents=("all" "python-notebook")
+if [[ " ${dependents[*]} " =~ (^|[[:space:]])${images}($|[[:space:]]) ]]; then
   image=python-notebook
   echo "Building ${image}"
   docker buildx build "${image}" \
@@ -19,7 +20,8 @@ if [ "${images}" = all ] || [ "${images}" = python-notebook ]; then
     -t coursekata/"${image}":test
 fi
 
-if [ "${images}" = all ] || [ "${images}" = minimal-r-notebook ] || [ "${images}" = r-notebook ] || [ "${images}" = datascience-notebook ]; then
+dependents=("all" "minimal-r-notebook" "essentials-notebook" "r-notebook" "datascience-notebook")
+if [[ " ${dependents[*]} " =~ (^|[[:space:]])${images}($|[[:space:]]) ]]; then
   image=minimal-r-notebook
   echo "Building ${image}"
   docker buildx build "${image}" \
@@ -29,7 +31,19 @@ if [ "${images}" = all ] || [ "${images}" = minimal-r-notebook ] || [ "${images}
     -t coursekata/"${image}":test
 fi
 
-if [ "${images}" = all ] || [ "${images}" = r-notebook ] || [ "${images}" = datascience-notebook ]; then
+dependents=("all" "essentials-notebook")
+if [[ " ${dependents[*]} " =~ (^|[[:space:]])${images}($|[[:space:]]) ]]; then
+  image=essentials-notebook
+  echo "Building ${image}"
+  docker buildx build "${image}" \
+    --build-arg BASE_IMAGE=coursekata/minimal-r-notebook \
+    --build-arg BASE_TAG=test \
+    --platform "${platform}" \
+    -t coursekata/"${image}":test
+fi
+
+dependents=("all" "r-notebook" "datascience-notebook")
+if [[ " ${dependents[*]} " =~ (^|[[:space:]])${images}($|[[:space:]]) ]]; then
   image=r-notebook
   echo "Building ${image}"
   docker buildx build "${image}" \
@@ -39,7 +53,8 @@ if [ "${images}" = all ] || [ "${images}" = r-notebook ] || [ "${images}" = data
     -t coursekata/"${image}":test
 fi
 
-if [ "${images}" = all ] || [ "${images}" = datascience-notebook ]; then
+dependents=("all" "datascience-notebook")
+if [[ " ${dependents[*]} " =~ (^|[[:space:]])${images}($|[[:space:]]) ]]; then
   image=datascience-notebook
   echo "Building ${image}"
   docker buildx build "${image}" \

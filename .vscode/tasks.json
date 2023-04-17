@@ -24,6 +24,7 @@
       "options": [
         "all",
         "r-notebook",
+        "essentials-notebook",
         "datascience-notebook",
         "minimal-r-notebook",
         "python-notebook",
@@ -45,6 +46,7 @@
       "description": "Which image do you want to test?",
       "options": [
         "r-notebook",
+        "essentials-notebook",
         "datascience-notebook",
         "minimal-r-notebook",
         "python-notebook",
