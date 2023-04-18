@@ -13,6 +13,10 @@ inputs:
     description: Build arguments passed to docker/build-push-action.
     required: false
     default: ""
+  build-contexts:
+    description: Build contexts passed to docker/build-push-action.
+    required: false
+    default: ""
 
 runs:
   using: "composite"
