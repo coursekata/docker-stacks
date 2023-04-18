@@ -31,7 +31,7 @@ Using one of these two methods will ensure that the image will be the same every
 
 ## Contents
 
-There are currently five different images that you can choose from, some of which build on others:
+There are currently five different images that you can choose from, some of which build on others. Both ARM64- and AMD64-compatible images are built for each of these.
 
 - `essentials-notebook`: an image with all of the R packages used in CourseKata books and CourseKata Jupyter Notebooks. If you are coming from the CourseKata book this is a great starting place: you will be able to do everything you did in the books and more!
   - You can see specifically what packages are installed by looking at [essentials-notebook/requirements.r](essentials-notebook/requirements.r).
