@@ -8,16 +8,6 @@ LABEL maintainer="CourseKata <tech@coursekata.org>"
 # https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-USER root
-
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-  --mount=type=cache,target=/var/lib/apt,sharing=locked \
-  apt-get update && export DEBIAN_FRONTEND=noninteractive \
-  && apt-get -y install --no-install-recommends \
-  gdal-bin \
-  libgdal-dev \
-  libproj-dev
-
 USER ${NB_UID}
 
 
@@ -33,20 +23,18 @@ USER root
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   --mount=type=cache,target=/var/lib/apt,sharing=locked \
   --mount=type=bind,source=scripts,target=/tmp/scripts \
-  /tmp/scripts/setup-av.sh \
+  apt-get update && export DEBIAN_FRONTEND=noninteractive \
+  && apt-get -y install --no-install-recommends cargo libgit2-dev \
   && /tmp/scripts/setup-tidyverse.sh \
   && /tmp/scripts/setup-geospatial.sh
 
 USER ${NB_UID}
 
-# these options are important for installing packages with the builder
-# user-facing options should instead go in the Rprofile.site file
-# (they are separate from requirements.r to make that file easier to share)
-COPY --chown=${NB_UID}:${NB_GID} Rprofile.builder.site "${R_HOME}"/etc/Rprofile.site
-
 # install packages
 RUN --mount=type=bind,source=requirements.r,target=/tmp/requirements.r \
-  Rscript /tmp/requirements.r
+  --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID} \
+  mamba install --yes ffmpeg r-units r-sf r-gert \
+  && Rscript /tmp/requirements.r
 
 
 # final

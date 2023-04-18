@@ -4,6 +4,7 @@ set -e
 
 apt-get update && export DEBIAN_FRONTEND=noninteractive \
   && apt-get -y install --no-install-recommends \
+  cmake \
   libxml2-dev \
   libcairo2-dev \
   libgit2-dev \
@@ -14,4 +15,11 @@ apt-get update && export DEBIAN_FRONTEND=noninteractive \
   libssh2-1-dev \
   libxtst6 \
   libcurl4-openssl-dev \
+  libharfbuzz-dev \
+  libfribidi-dev \
+  libfreetype6-dev \
+  libpng-dev \
+  libtiff5-dev \
+  libjpeg-dev \
   unixodbc-dev
+  

@@ -1,17 +1,14 @@
 options(
-  # Add R mimetype to specify how the plot returns from R to the browser.
-  # https://notebook.community/andrie/jupyter-notebook-samples/Changing%20R%20plot%20options%20in%20Jupyter # nolint
-  jupyter.plot_mimetypes = c(
-    "text/plain", # plot description, always keep
-    "image/svg+xml",
-    "image/png"
-  ),
-
   # add a default CRAN mirror and download method
-  repos = c(CRAN = Sys.getenv("CRAN", unset="https://cloud.r-project.org/")),
-  download.file.method = "libcurl",
+  repos = c(CRAN = Sys.getenv("CRAN", unset = if ("aarch64" == R.version["arch"]) {
+    "https://cloud.r-project.org/"
+  } else {
+    "https://packagemanager.rstudio.com/cran/__linux__/jammy/latest"
+  })),
 
-  # set HTTPUserAgent for RSPM (https://docs.rstudio.com/rspm/admin/serving-binaries/#binaries-r-configuration-linux) # nolint
+  # default download method and user agent
+  # https://docs.posit.co/rspm/admin/serving-binaries/#binary-user-agents
+  download.file.method = "libcurl",
   HTTPUserAgent = sprintf(
     "R/%s R (%s)",
     getRversion(),
@@ -21,5 +18,13 @@ options(
       R.version["arch"],
       R.version["os"]
     )
+  ),
+
+  # Add R mimetype to specify how the plot returns from R to the browser.
+  # https://notebook.community/andrie/jupyter-notebook-samples/Changing%20R%20plot%20options%20in%20Jupyter # nolint
+  jupyter.plot_mimetypes = c(
+    "text/plain", # plot description, always keep
+    "image/svg+xml",
+    "image/png"
   )
 )

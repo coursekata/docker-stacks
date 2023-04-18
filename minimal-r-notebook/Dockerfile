@@ -25,12 +25,9 @@ USER ${NB_UID}
 
 # configure R
 ENV TZ=Etc/UTC
-ENV CRAN=https://packagemanager.rstudio.com/cran/__linux__/jammy/latest
 ENV LANG=en_US.UTF-8
 ENV _R_SHLIB_STRIP_=true
 ENV R_HOME=/opt/conda/lib/R
-ENV R_LIBS_USER=/opt/conda/lib/R/library
-ENV R_LIBS_SITE=/opt/conda/lib/R/library
 
 # install R and the R kernel
 ARG R_VERSION=4.2
@@ -39,6 +36,7 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID} \
   mamba install --yes \
   r-base==${R_VERSION} \
   r-irkernel \
+  pkg-config \
   && fix-permissions "${CONDA_DIR}" \
   && fix-permissions "/home/${NB_USER}"
 

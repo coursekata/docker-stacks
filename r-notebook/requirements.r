@@ -1,10 +1,21 @@
 options(warn = 2, Ncpus = max(1L, parallel::detectCores()))
 
+# packages also installed in essentials
 install.packages("remotes")
 remotes::install_github("datacamp/testwhat")
 remotes::install_github("UCLATALL/coursekata-r", "main")
 coursekata::coursekata_install()
+install.packages(c(
+  "ggpubr",
+  "gridExtra",
+  "lme4",
+  "minqa",
+  "plotly",
+  "statmod",
+  "tidyverse"
+))
 
+# packages only in r-notebook and datascience-notebook
 install.packages(c(
   "av",
   "car",
@@ -14,28 +25,18 @@ install.packages(c(
   "jtools",
   "gganimate",
   "ggdag",
-  "ggformula",
-  "ggpubr",
   "gifski",
+  "gridExtra",
   "here",
-  "lme4",
-  "magrittr",
   "mapdata",
   "mapproj",
   "maps",
-  "minqa",
-  "mosaic",
   "OCSdata",
-  "plotly",
   "profvis",
   "psych",
   "RcppTOML",
   "reticulate",
-  "sf",
   "simstudy",
-  "statmod",
-  "stringi",
   "tidymodels",
-  "tidyverse",
   "transformr"
 ))
