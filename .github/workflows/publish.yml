@@ -1,3 +1,4 @@
+---
 name: Build and Publish the Images
 
 # Controls when the workflow will run
@@ -23,8 +24,8 @@ env:
   platforms: |
     linux/amd64
     linux/arm64/v8
-  # these versions are only used to modify images for minimal-r-notebook and python-notebook
-  # in all other images, these are just used to tag the images (which are built from those)
+  # these versions are only used to modify images for minimal-r and python
+  # in all other images, these are just used to tag the images
   python-version: "3.10"
   r-version: "4.2"
 
