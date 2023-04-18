@@ -7,17 +7,15 @@ platform=${2:-all}
 if [ "${platform}" = all ]; then
   platform=linux/amd64,linux/arm64/v8 
 fi
-build_lab=${BUILD_LAB:-false}
 
-dependents=("all" "python-notebook")
+dependents=("all" "python-notebook" "datascience-notebook")
 if [[ " ${dependents[*]} " =~ (^|[[:space:]])${images}($|[[:space:]]) ]]; then
   image=python-notebook
   echo "Building ${image}"
   docker buildx build "${image}" \
     -t coursekata/"${image}":test \
     --platform "${platform}" \
-    --build-arg PYTHON_VERSION=3.10 \
-    --build-arg BUILD_LAB="${build_lab}"
+    --build-arg PYTHON_VERSION=3.10
 fi
 
 dependents=("all" "minimal-r-notebook" "essentials-notebook" "r-notebook" "datascience-notebook")
@@ -63,6 +61,5 @@ if [[ " ${dependents[*]} " =~ (^|[[:space:]])${images}($|[[:space:]]) ]]; then
     -t coursekata/"${image}":test \
     --platform "${platform}" \
     --build-arg REPO=coursekata \
-    --build-arg BASE_TAG=test \
-    --build-arg BUILD_LAB="${build_lab}"
+    --build-arg BASE_TAG=test
 fi

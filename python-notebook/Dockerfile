@@ -1,9 +1,8 @@
-ARG BUILD_LAB=true
 ARG PYTHON_VERSION=3.10
-FROM jupyter/minimal-notebook:python-${PYTHON_VERSION} as base
-ENV PYTHON_VERSION=${PYTHON_VERSION}
 
+FROM jupyter/minimal-notebook:python-${PYTHON_VERSION} as base
 LABEL maintainer="CourseKata <tech@coursekata.org>"
+ENV PYTHON_VERSION=${PYTHON_VERSION}
 
 # ensure errors get piped
 # https://github.com/hadolint/hadolint/wiki/DL4006
@@ -36,10 +35,10 @@ RUN --mount=type=cache,target=/tmp/pip-cache,uid=${NB_UID} \
   && pip3 wheel --wheel-dir=/tmp/wheels -r /tmp/requirements.txt
 
 
-# final-with-lab-build-true
+# final
 # -------------------------------------
-# Installs the Python wheels and builds JupyterLab. This is the production-version of final.
-FROM base as final-with-lab-build-true
+# Installs the Python wheels and builds JupyterLab.
+FROM base as final
 
 USER ${NB_UID}
 WORKDIR ${HOME}
@@ -50,22 +49,3 @@ RUN --mount=type=cache,target=/tmp/pip-cache,uid=${NB_UID} \
   pip3 install --find-links=/tmp/wheels --cache-dir=/tmp/pip-cache -r /tmp/requirements.txt \
   # install jupyter-dash extension (prevents user pop-up on first load)
   && jupyter lab build
-
-
-# final-without-lab-build-false
-# -------------------------------------
-# Installs the Python wheels and but doesn't build JupyterLab. This is the dev-version of final.
-FROM base as final-with-lab-build-false
-
-USER ${NB_UID}
-WORKDIR ${HOME}
-
-RUN --mount=type=cache,target=/tmp/pip-cache,uid=${NB_UID} \
-  --mount=type=cache,from=py-builder,source=/tmp/wheels,target=/tmp/wheels \
-  --mount=type=bind,source=requirements.txt,target=/tmp/requirements.txt \
-  pip3 install --find-links=/tmp/wheels --cache-dir=/tmp/pip-cache -r /tmp/requirements.txt
-
-
-# final
-# -------------------------------------
-FROM final-with-lab-build-${BUILD_LAB} as final

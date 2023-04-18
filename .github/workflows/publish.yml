@@ -98,7 +98,7 @@ jobs:
           build-contexts: scripts=scripts
 
   datascience-notebook:
-    needs: r-notebook
+    needs: [python-notebook, r-notebook]
     runs-on: ubuntu-latest
     steps:
       # https://github.com/actions/checkout
@@ -112,4 +112,4 @@ jobs:
           extra-tags: |
             type=raw,value=python-${{ env.python-version }}
             type=raw,value=r-${{ env.r-version }}
-          build-args: BASE_TAG=r-${{ env.r-version }}
+          build-args: BASE_TAG=python-${{ env.python-version }}
