@@ -9,6 +9,17 @@ LABEL maintainer="CourseKata <tech@coursekata.org>"
 # https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
+USER root
+
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+  --mount=type=cache,target=/var/lib/apt,sharing=locked \
+  apt-get update && export DEBIAN_FRONTEND=noninteractive \
+  && apt-get -y install --no-install-recommends \
+  g++ \
+  gdal-bin \
+  libgdal-dev \
+  libproj-dev
+
 USER ${NB_UID}
 
 
