@@ -1,6 +1,6 @@
 options(warn = 2, Ncpus = max(1L, parallel::detectCores()))
 
-# packages also installed in essentials
+# packages also installed in essentials-notebook
 install.packages("remotes")
 remotes::install_github("datacamp/testwhat")
 remotes::install_github("UCLATALL/coursekata-r", "main")
