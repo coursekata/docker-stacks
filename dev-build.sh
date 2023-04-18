@@ -31,7 +31,7 @@ if [[ " ${dependents[*]} " =~ (^|[[:space:]])${images}($|[[:space:]]) ]]; then
     --build-arg R_VERSION=4.2
 fi
 
-dependents=("all" "essentials-notebook")
+dependents=("all" "essentials-notebook" "r-notebook" "datascience-notebook")
 if [[ " ${dependents[*]} " =~ (^|[[:space:]])${images}($|[[:space:]]) ]]; then
   image=essentials-notebook
   echo "Building ${image}"
@@ -39,7 +39,7 @@ if [[ " ${dependents[*]} " =~ (^|[[:space:]])${images}($|[[:space:]]) ]]; then
     -t coursekata/"${image}":test \
     --platform "${platform}" \
     --build-context scripts=scripts \
-    --build-arg BASE_IMAGE=coursekata/minimal-r-notebook \
+    --build-arg REPO=coursekata \
     --build-arg BASE_TAG=test
 fi
 
@@ -51,7 +51,7 @@ if [[ " ${dependents[*]} " =~ (^|[[:space:]])${images}($|[[:space:]]) ]]; then
     -t coursekata/"${image}":test \
     --platform "${platform}" \
     --build-context scripts=scripts \
-    --build-arg BASE_IMAGE=coursekata/minimal-r-notebook \
+    --build-arg REPO=coursekata \
     --build-arg BASE_TAG=test
 fi
 
@@ -62,7 +62,7 @@ if [[ " ${dependents[*]} " =~ (^|[[:space:]])${images}($|[[:space:]]) ]]; then
   docker buildx build "${image}" \
     -t coursekata/"${image}":test \
     --platform "${platform}" \
-    --build-arg BASE_IMAGE=coursekata/r-notebook \
+    --build-arg REPO=coursekata \
     --build-arg BASE_TAG=test \
     --build-arg BUILD_LAB="${build_lab}"
 fi

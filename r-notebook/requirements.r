@@ -1,11 +1,10 @@
 options(warn = 2, Ncpus = max(1L, parallel::detectCores()))
+install.packages("pak")
 
 # packages also installed in essentials-notebook
-install.packages("remotes")
-remotes::install_github("datacamp/testwhat")
-remotes::install_github("UCLATALL/coursekata-r", "main")
-coursekata::coursekata_install()
-install.packages(c(
+pak::pkg_install(upgrade = FALSE, pkg = c(
+  "datacamp/testwhat",
+  "UCLATALL/coursekata-r@main",
   "ggpubr",
   "gridExtra",
   "lme4",
@@ -14,9 +13,10 @@ install.packages(c(
   "statmod",
   "tidyverse"
 ))
+coursekata::coursekata_install()
 
 # packages only in r-notebook and datascience-notebook
-install.packages(c(
+pak::pkg_install(upgrade = FALSE, pkg = c(
   "av",
   "car",
   "ClustOfVar",

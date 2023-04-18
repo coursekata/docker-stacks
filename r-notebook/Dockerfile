@@ -1,7 +1,12 @@
-ARG BASE_IMAGE=ghcr.io/coursekata/minimal-r-notebook
+ARG REPO=ghcr.io/coursekata
 ARG BASE_TAG=r-4.2
-FROM ${BASE_IMAGE}:${BASE_TAG} as base
 
+# WORKAROUND: this is required because 'COPY --from' does not support ARGs
+# https://github.com/moby/buildkit/issues/2412
+# https://github.com/moby/buildkit/pull/3551
+FROM ${REPO}/essentials-notebook:${BASE_TAG} as essentials
+
+FROM ${REPO}/minimal-r-notebook:${BASE_TAG} as base
 LABEL maintainer="CourseKata <tech@coursekata.org>"
 
 # ensure errors get piped
@@ -30,11 +35,14 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 USER ${NB_UID}
 
+# get built packages from essentials-notebook
+COPY --from=essentials "${R_HOME}" "${R_HOME}"
+
 # install packages
+RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
+  mamba install --yes ffmpeg r-units r-sf r-gert
 RUN --mount=type=bind,source=requirements.r,target=/tmp/requirements.r \
-  --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
-  mamba install --yes ffmpeg r-units r-sf r-gert \
-  && Rscript /tmp/requirements.r
+  Rscript /tmp/requirements.r
 
 
 # final

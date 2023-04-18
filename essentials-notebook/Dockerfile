@@ -1,7 +1,7 @@
-ARG BASE_IMAGE=ghcr.io/coursekata/minimal-r-notebook
+ARG REPO=ghcr.io/coursekata
 ARG BASE_TAG=r-4.2
-FROM ${BASE_IMAGE}:${BASE_TAG} as base
 
+FROM ${REPO}/minimal-r-notebook:${BASE_TAG} as base
 LABEL maintainer="CourseKata <tech@coursekata.org>"
 
 # ensure errors get piped

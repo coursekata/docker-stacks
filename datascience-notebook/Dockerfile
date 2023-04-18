@@ -1,8 +1,8 @@
-ARG BUILD_LAB=true
-ARG BASE_IMAGE=ghcr.io/coursekata/r-notebook
+ARG REPO=ghcr.io/coursekata
 ARG BASE_TAG=r-4.2
-FROM ${BASE_IMAGE}:${BASE_TAG} as base
+ARG BUILD_LAB=true
 
+FROM ${REPO}/r-notebook:${BASE_TAG} as base
 LABEL maintainer="CourseKata <tech@coursekata.org>"
 
 # ensure errors get piped

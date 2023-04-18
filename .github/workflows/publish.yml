@@ -80,7 +80,7 @@ jobs:
           build-contexts: scripts=scripts
 
   r-notebook:
-    needs: minimal-r-notebook
+    needs: essentials-notebook
     runs-on: ubuntu-latest
     steps:
       # https://github.com/actions/checkout
