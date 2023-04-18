@@ -22,7 +22,7 @@ USER root
 # system dependencies for various packages
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   --mount=type=cache,target=/var/lib/apt,sharing=locked \
-  --mount=type=bind,source=scripts,target=/tmp/scripts \
+  --mount=type=bind,from=scripts,target=/tmp/scripts \
   /tmp/scripts/setup-tidyverse.sh
 
 USER ${NB_UID}

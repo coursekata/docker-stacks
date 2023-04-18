@@ -142,6 +142,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: BASE_TAG=r-${{ env.r-version }}
+          build-contexts: scripts=scripts
 
   datascience-notebook:
     needs: r-notebook
@@ -182,3 +183,4 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: BASE_TAG=r-${{ env.r-version }}
+          build-contexts: scripts=scripts
