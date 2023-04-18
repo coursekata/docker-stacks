@@ -40,7 +40,7 @@ COPY --from=essentials "${R_HOME}" "${R_HOME}"
 
 # install packages
 RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
-  mamba install --yes ffmpeg r-units r-sf r-gert
+  mamba install --yes ffmpeg r-units r-sf r-gert r-stringi
 RUN --mount=type=bind,source=requirements.r,target=/tmp/requirements.r \
   Rscript /tmp/requirements.r
 
