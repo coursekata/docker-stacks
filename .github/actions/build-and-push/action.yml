@@ -54,6 +54,8 @@ runs:
       with:
         push: true
         context: ${{ github.job }}
+        cache-from: type=gha
+        cache-to: type=gha
         platforms: ${{ env.platforms }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
