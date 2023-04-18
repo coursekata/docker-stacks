@@ -6,14 +6,14 @@ on:
   push:
     branches: [main]
     paths:
-      - .github/actions/build-and-push/
       - .github/actions/publish.yml
-      - scripts/
-      - python-notebook/
-      - minimal-r-notebook/
-      - essentials-notebook/
-      - r-notebook/
-      - datacience-notebook/
+      - .github/actions/build-and-push/**
+      - scripts/**
+      - python-notebook/**
+      - minimal-r-notebook/**
+      - essentials-notebook/**
+      - r-notebook/**
+      - datacience-notebook/**
   schedule:
     # every Friday at 10AM
     # see https://crontab.guru
