@@ -32,7 +32,7 @@ USER ${NB_UID}
 
 # install packages
 RUN --mount=type=bind,source=requirements.r,target=/tmp/requirements.r \
-  --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID} \
+  --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
   mamba install --yes ffmpeg r-units r-sf r-gert \
   && Rscript /tmp/requirements.r
 

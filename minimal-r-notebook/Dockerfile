@@ -32,7 +32,7 @@ ENV R_HOME=/opt/conda/lib/R
 # install R and the R kernel
 ARG R_VERSION=4.2
 ENV R_VERSION=${R_VERSION}
-RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID} \
+RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
   mamba install --yes \
   r-base==${R_VERSION} \
   r-irkernel \
