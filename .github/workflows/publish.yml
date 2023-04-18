@@ -103,6 +103,47 @@ jobs:
             PYTHON_VERSION=${{ env.python-version }}
             R_VERSION=${{ env.r-version }}
 
+  essentials-notebook:
+    needs: minimal-r-notebook
+    runs-on: ubuntu-latest
+    steps:
+      # https://github.com/actions/checkout
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Docker
+        uses: ./.github/actions/setup-docker
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # https://github.com/docker/metadata-action
+      - name: Image Metdata
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          # list of Docker images to use as base name for tags
+          images: |
+            ghcr.io/coursekata/${{ github.job }}
+          # generate Docker tags based on the following events/attributes
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=schedule,pattern={{date 'YYYY-MM-DD'}}
+            type=sha
+            type=raw,value=python-${{ env.python-version }}
+            type=raw,value=r-${{ env.r-version }}
+
+      # https://github.com/docker/build-push-action
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          push: true
+          context: ${{ github.job }}
+          platforms: ${{ env.platforms }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: BASE_TAG=r-${{ env.r-version }}
+          build-contexts: scripts=scripts
+
   r-notebook:
     needs: minimal-r-notebook
     runs-on: ubuntu-latest
