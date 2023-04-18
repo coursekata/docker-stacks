@@ -6,15 +6,14 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths:
-      - .github/actions/publish.yml
-      - .github/actions/build-and-push/**
-      - scripts/**
-      - python-notebook/**
-      - minimal-r-notebook/**
-      - essentials-notebook/**
-      - r-notebook/**
-      - datacience-notebook/**
+    paths-ignore:
+      - LICENSE
+      - .github/workflows/linter.yml
+      - .vscode/**
+      - "**.md"
+      - .hadolint.yaml
+      - .lintr
+      - dev-*.sh
   schedule:
     # every Friday at 10AM
     # see https://crontab.guru
