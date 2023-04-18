@@ -92,9 +92,6 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           extra-tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=schedule,pattern={{date 'YYYY-MM-DD'}}
-            type=sha
             type=raw,value=python-${{ env.python-version }}
             type=raw,value=r-${{ env.r-version }}
           build-args: BASE_TAG=r-${{ env.r-version }}
@@ -113,9 +110,6 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           extra-tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=schedule,pattern={{date 'YYYY-MM-DD'}}
-            type=sha
             type=raw,value=python-${{ env.python-version }}
             type=raw,value=r-${{ env.r-version }}
           build-args: BASE_TAG=r-${{ env.r-version }}
