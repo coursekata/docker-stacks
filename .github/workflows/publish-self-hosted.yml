@@ -28,6 +28,16 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           extra-tags: type=raw,value=python-${{ env.python-version }}
           build-args: PYTHON_VERSION=${{ env.python-version }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+      - # Temp fix
+        # https://github.com/docker/build-push-action/issues/252
+        # https://github.com/moby/buildkit/issues/1896
+        name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
   minimal-r-notebook:
     runs-on: self-hosted
@@ -46,6 +56,16 @@ jobs:
           build-args: |
             PYTHON_VERSION=${{ env.python-version }}
             R_VERSION=${{ env.r-version }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+      - # Temp fix
+        # https://github.com/docker/build-push-action/issues/252
+        # https://github.com/moby/buildkit/issues/1896
+        name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
   essentials-notebook:
     needs: minimal-r-notebook
@@ -64,6 +84,16 @@ jobs:
             type=raw,value=r-${{ env.r-version }}
           build-args: BASE_TAG=r-${{ env.r-version }}
           build-contexts: scripts=scripts
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+      - # Temp fix
+        # https://github.com/docker/build-push-action/issues/252
+        # https://github.com/moby/buildkit/issues/1896
+        name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
   r-notebook:
     needs: essentials-notebook
@@ -82,6 +112,16 @@ jobs:
             type=raw,value=r-${{ env.r-version }}
           build-args: BASE_TAG=r-${{ env.r-version }}
           build-contexts: scripts=scripts
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+      - # Temp fix
+        # https://github.com/docker/build-push-action/issues/252
+        # https://github.com/moby/buildkit/issues/1896
+        name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
   datascience-notebook:
     needs: [python-notebook, r-notebook]
@@ -99,3 +139,13 @@ jobs:
             type=raw,value=python-${{ env.python-version }}
             type=raw,value=r-${{ env.r-version }}
           build-args: BASE_TAG=python-${{ env.python-version }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+      - # Temp fix
+        # https://github.com/docker/build-push-action/issues/252
+        # https://github.com/moby/buildkit/issues/1896
+        name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache

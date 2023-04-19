@@ -17,6 +17,14 @@ inputs:
     description: Build contexts passed to docker/build-push-action.
     required: false
     default: ""
+  cache-from:
+    description: Build cache-from passed to docker/build-push-action.
+    required: false
+    default: type=gha
+  cache-to:
+    description: Build cache-to passed to docker/build-push-action.
+    required: false
+    default: type=gha
 
 runs:
   using: "composite"
@@ -58,8 +66,8 @@ runs:
       with:
         push: true
         context: ${{ github.job }}
-        cache-from: type=gha
-        cache-to: type=gha
+        cache-from: ${{ inputs.cache-from }}
+        cache-to: ${{ inputs.cache-to }}
         platforms: ${{ env.platforms }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
