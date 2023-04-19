@@ -17,7 +17,7 @@ on:
   schedule:
     # every Friday at 10AM
     # see https://crontab.guru
-    - cron: "0 10 * * 5"
+    - cron: "0 10 * * 2,5"
 
 env:
   platforms: |
