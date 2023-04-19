@@ -1,0 +1,115 @@
+---
+name: Build and Publish the Images
+
+# Controls when the workflow will run
+on:
+  workflow_dispatch:
+  push:
+    branches: [develop]
+    paths-ignore:
+      - LICENSE
+      - .github/workflows/linter.yml
+      - .vscode/**
+      - "**.md"
+      - .hadolint.yaml
+      - .lintr
+      - dev-*.sh
+  schedule:
+    # every Friday at 10AM
+    # see https://crontab.guru
+    - cron: "0 10 * * 2,5"
+
+env:
+  platforms: |
+    linux/amd64
+    linux/arm64/v8
+  # these versions are only used to modify images for minimal-r and python
+  # in all other images, these are just used to tag the images
+  python-version: "3.10"
+  r-version: "4.2"
+
+jobs:
+  python-notebook:
+    runs-on: self-hosted
+    steps:
+      # https://github.com/actions/checkout
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build and push
+        uses: ./.github/actions/build-and-push
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          extra-tags: type=raw,value=python-${{ env.python-version }}
+          build-args: PYTHON_VERSION=${{ env.python-version }}
+
+  minimal-r-notebook:
+    runs-on: self-hosted
+    steps:
+      # https://github.com/actions/checkout
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build and push
+        uses: ./.github/actions/build-and-push
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          extra-tags: |
+            type=raw,value=python-${{ env.python-version }}
+            type=raw,value=r-${{ env.r-version }}
+          build-args: |
+            PYTHON_VERSION=${{ env.python-version }}
+            R_VERSION=${{ env.r-version }}
+
+  essentials-notebook:
+    needs: minimal-r-notebook
+    runs-on: self-hosted
+    steps:
+      # https://github.com/actions/checkout
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build and push
+        uses: ./.github/actions/build-and-push
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          extra-tags: |
+            type=raw,value=python-${{ env.python-version }}
+            type=raw,value=r-${{ env.r-version }}
+          build-args: BASE_TAG=r-${{ env.r-version }}
+          build-contexts: scripts=scripts
+
+  r-notebook:
+    needs: essentials-notebook
+    runs-on: self-hosted
+    steps:
+      # https://github.com/actions/checkout
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build and push
+        uses: ./.github/actions/build-and-push
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          extra-tags: |
+            type=raw,value=python-${{ env.python-version }}
+            type=raw,value=r-${{ env.r-version }}
+          build-args: BASE_TAG=r-${{ env.r-version }}
+          build-contexts: scripts=scripts
+
+  datascience-notebook:
+    needs: [python-notebook, r-notebook]
+    runs-on: self-hosted
+    steps:
+      # https://github.com/actions/checkout
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build and push
+        uses: ./.github/actions/build-and-push
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          extra-tags: |
+            type=raw,value=python-${{ env.python-version }}
+            type=raw,value=r-${{ env.r-version }}
+          build-args: BASE_TAG=python-${{ env.python-version }}
