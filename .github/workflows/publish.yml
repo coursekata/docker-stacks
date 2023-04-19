@@ -8,7 +8,7 @@ on:
     branches: [main]
     paths-ignore:
       - LICENSE
-      - .github/workflows/linter.yml
+      - .github/workflows/publish-self-hosted.yml
       - .vscode/**
       - "**.md"
       - .hadolint.yaml
