@@ -33,15 +33,15 @@ Using one of these two methods will ensure that the image will be the same every
 
 There are currently five different images that you can choose from, some of which build on others. Both ARM64- and AMD64-compatible images are built for each of these.
 
-- `essentials-notebook`: an image with all of the R packages used in CourseKata books and CourseKata Jupyter Notebooks. If you are coming from the CourseKata book this is a great starting place: you will be able to do everything you did in the books and more!
+- [essentials-notebook](https://github.com/coursekata/docker-stacks/pkgs/container/essentials-notebook): an image with all of the R packages used in CourseKata books and CourseKata Jupyter Notebooks. If you are coming from the CourseKata book this is a great starting place: you will be able to do everything you did in the books and more!
   - You can see specifically what packages are installed by looking at [essentials-notebook/requirements.r](essentials-notebook/requirements.r).
-- `r-notebook`: this image has all of the contents of the `essentials-notebook` with the addition of other R packages that instructors have requested that we install for data science and statistics.
+- [r-notebook](https://github.com/coursekata/docker-stacks/pkgs/container/r-notebook): this image has all of the contents of the *essentials-notebook* with the addition of other R packages that instructors have requested that we install for data science and statistics.
   - You can see specifically what packages are installed by looking at [r-notebook/requirements.r](r-notebook/requirements.r)
-  - If you have a specific package you think would be useful to install here, [please submit an issue describing your use case](https://github.com/coursekata/docker-stacks/issues).
-- `datascience-notebook`: this image builds on `r-notebook` by adding a variety of Python packages for data science and statistics.
+  - If you have a specific package you think would be useful to install here, please [submit an issue describing your use case](https://github.com/coursekata/docker-stacks/issues).
+- [datascience-notebook](https://github.com/coursekata/docker-stacks/pkgs/container/datascience-notebook): this image builds on *r-notebook* by adding a variety of Python packages for data science and statistics.
   - You can see specifically what packages are installed by looking at [datascience-notebook/requirements.r](datascience-notebook/requirements.r) and [datascience-notebook/requirements.txt](datascience-notebook/requirements.txt)
-  - If you have a specific package you think would be useful to install here, [please submit an issue describing your use case](https://github.com/coursekata/docker-stacks/issues).
-- `python-notebook`: this image is similar to the `datascience-notebook` except that this image does *not* have R installed.
+  - If you have a specific package you think would be useful to install here, please [submit an issue describing your use case](https://github.com/coursekata/docker-stacks/issues).
+- [python-notebook](https://github.com/coursekata/docker-stacks/pkgs/container/python-notebook): this image is similar to the *datascience-notebook* except that this image does *not* have R installed.
   - You can see specifically what packages are installed by looking at [python-notebook/requirements.txt](python-notebook/requirements.txt)
-  - If you have a specific package you think would be useful to install here, [please submit an issue describing your use case](https://github.com/coursekata/docker-stacks/issues).
-- `minimal-r-notebook`: an image with Python and R installed, and that's it. R is configured to be the default notebook, but both R and Python notebooks are supported. There are no other packages installed on this image. This is a good image to use if you are building your own image from scratch.
+  - If you have a specific package you think would be useful to install here, please [submit an issue describing your use case](https://github.com/coursekata/docker-stacks/issues).
+- [minimal-r-notebook](https://github.com/coursekata/docker-stacks/pkgs/container/minimal-r-notebook): an image with Python and R installed, and that's it. R is configured to be the default notebook, but both R and Python notebooks are supported. There are no other packages installed on this image. This is a good image to use if you are building your own image from scratch.
