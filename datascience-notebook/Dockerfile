@@ -4,8 +4,6 @@ ARG BASE_TAG=r-4.2
 FROM ${REPO}/r-notebook:${BASE_TAG} as base
 LABEL maintainer="CourseKata <tech@coursekata.org>"
 
-# ensure errors get piped
-# https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 USER root

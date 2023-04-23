@@ -23,27 +23,13 @@ env:
   platforms: |
     linux/amd64
     linux/arm64/v8
-  # these versions are only used to modify images for minimal-r and python
+  # these versions are only used to modify images for base-r-notebook
   # in all other images, these are just used to tag the images
   python-version: "3.10"
   r-version: "4.2"
 
 jobs:
-  python-notebook:
-    runs-on: ubuntu-latest
-    steps:
-      # https://github.com/actions/checkout
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Build and push
-        uses: ./.github/actions/build-and-push
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          extra-tags: type=raw,value=python-${{ env.python-version }}
-          build-args: PYTHON_VERSION=${{ env.python-version }}
-
-  minimal-r-notebook:
+  base-r-notebook:
     runs-on: ubuntu-latest
     steps:
       # https://github.com/actions/checkout
@@ -62,7 +48,7 @@ jobs:
             R_VERSION=${{ env.r-version }}
 
   essentials-notebook:
-    needs: minimal-r-notebook
+    needs: base-r-notebook
     runs-on: ubuntu-latest
     steps:
       # https://github.com/actions/checkout
@@ -80,7 +66,7 @@ jobs:
           build-contexts: scripts=scripts
 
   r-notebook:
-    needs: essentials-notebook
+    needs: base-r-notebook
     runs-on: ubuntu-latest
     steps:
       # https://github.com/actions/checkout
@@ -98,7 +84,7 @@ jobs:
           build-contexts: scripts=scripts
 
   datascience-notebook:
-    needs: [python-notebook, r-notebook]
+    needs: r-notebook
     runs-on: ubuntu-latest
     steps:
       # https://github.com/actions/checkout

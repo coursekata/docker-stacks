@@ -23,11 +23,10 @@
       "description": "Which image(s) do you want to work with?",
       "options": [
         "all",
-        "r-notebook",
+        "base-r-notebook",
         "essentials-notebook",
+        "r-notebook",
         "datascience-notebook",
-        "minimal-r-notebook",
-        "python-notebook",
       ]
     },
     {
@@ -45,11 +44,10 @@
       "type": "pickString",
       "description": "Which image do you want to test?",
       "options": [
-        "r-notebook",
+        "base-r-notebook",
         "essentials-notebook",
+        "r-notebook",
         "datascience-notebook",
-        "minimal-r-notebook",
-        "python-notebook",
       ]
     },
     {

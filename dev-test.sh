@@ -2,7 +2,7 @@
 
 set -e
 
-image=${1:-minimal-r-notebook}
+image=${1:-base-r-notebook}
 platform=${DEV_PLATFORM:-${2:-linux/arm64/v8}}
 
 ./dev-build.sh "${image}" "${platform}"
