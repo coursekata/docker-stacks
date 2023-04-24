@@ -5,6 +5,7 @@
   "conventionalCommits.scopes": [
     "vscode",
     "base-r-notebook",
+    "essentials-builder",
     "essentials-notebook",
     "r-notebook",
     "datascience-notebook"

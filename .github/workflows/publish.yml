@@ -47,7 +47,7 @@ jobs:
             PYTHON_VERSION=${{ env.python-version }}
             R_VERSION=${{ env.r-version }}
 
-  essentials-notebook:
+  essentials-builder:
     needs: base-r-notebook
     runs-on: ubuntu-latest
     steps:
@@ -65,8 +65,26 @@ jobs:
           build-args: BASE_TAG=r-${{ env.r-version }}
           build-contexts: scripts=scripts
 
+  essentials-notebook:
+    needs: [base-r-notebook, essentials-builder]
+    runs-on: ubuntu-latest
+    steps:
+      # https://github.com/actions/checkout
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build and push
+        uses: ./.github/actions/build-and-push
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          extra-tags: |
+            type=raw,value=python-${{ env.python-version }}
+            type=raw,value=r-${{ env.r-version }}
+          build-args: BASE_TAG=r-${{ env.r-version }}
+          build-contexts: scripts=scripts
+
   r-notebook:
-    needs: base-r-notebook
+    needs: [base-r-notebook, essentials-builder]
     runs-on: ubuntu-latest
     steps:
       # https://github.com/actions/checkout
