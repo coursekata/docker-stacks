@@ -2,4 +2,11 @@
   "files.associations": {
     "*.site": "r"
   },
+  "conventionalCommits.scopes": [
+    "vscode",
+    "base-r-notebook",
+    "essentials-notebook",
+    "r-notebook",
+    "datascience-notebook"
+  ],
 }
