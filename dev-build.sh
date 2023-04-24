@@ -32,7 +32,7 @@ if [[ " ${dependents[*]} " =~ (^|[[:space:]])${images}($|[[:space:]]) ]]; then
     -t coursekata/"${image}":test \
     --platform "${platform}" \
     --build-context scripts=scripts \
-    --build-arg REPO=coursekata \
+    --build-arg ORG=coursekata \
     --build-arg BASE_TAG=test
   with-margin docker images coursekata/"${image}":test
 fi
@@ -45,7 +45,7 @@ if [[ " ${dependents[*]} " =~ (^|[[:space:]])${images}($|[[:space:]]) ]]; then
     -t coursekata/"${image}":test \
     --platform "${platform}" \
     --build-context scripts=scripts \
-    --build-arg REPO=coursekata \
+    --build-arg ORG=coursekata \
     --build-arg BASE_TAG=test
   with-margin docker images coursekata/"${image}":test
 fi
@@ -58,7 +58,7 @@ if [[ " ${dependents[*]} " =~ (^|[[:space:]])${images}($|[[:space:]]) ]]; then
     -t coursekata/"${image}":test \
     --platform "${platform}" \
     --build-context scripts=scripts \
-    --build-arg REPO=coursekata \
+    --build-arg ORG=coursekata \
     --build-arg BASE_TAG=test
   with-margin docker images coursekata/"${image}":test
 fi
@@ -70,7 +70,7 @@ if [[ " ${dependents[*]} " =~ (^|[[:space:]])${images}($|[[:space:]]) ]]; then
   docker buildx build "${image}" \
     -t coursekata/"${image}":test \
     --platform "${platform}" \
-    --build-arg REPO=coursekata \
+    --build-arg ORG=coursekata \
     --build-arg BASE_TAG=test
   with-margin docker images coursekata/"${image}":test
 fi

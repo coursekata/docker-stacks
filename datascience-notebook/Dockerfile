@@ -1,7 +1,7 @@
-ARG REPO=ghcr.io/coursekata
+ARG ORG=ghcr.io/coursekata
 ARG BASE_TAG=r-4.2
 
-FROM ${REPO}/r-notebook:${BASE_TAG} as base
+FROM ${ORG}/r-notebook:${BASE_TAG} as base
 LABEL maintainer="CourseKata <tech@coursekata.org>"
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
