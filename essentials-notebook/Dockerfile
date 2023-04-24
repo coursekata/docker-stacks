@@ -39,12 +39,6 @@ USER root
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   --mount=type=cache,target=/var/lib/apt,sharing=locked \
   --mount=type=bind,from=scripts,target=/tmp/scripts \
-  /tmp/scripts/setup-r.sh
-
-# hadolint ignore=DL3059
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-  --mount=type=cache,target=/var/lib/apt,sharing=locked \
-  --mount=type=bind,from=scripts,target=/tmp/scripts \
   /tmp/scripts/setup-tidyverse.sh
 
 USER ${NB_UID}
