@@ -11,16 +11,34 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
   mamba install --yes \
   # avoid bug in pak: https://github.com/r-lib/pak/issues/393
   "r-MASS" \
-  ## coursekata deps
-  "r-gridExtra" \
-  "r-lme4" \
-  "r-plotly" \
-  "r-survival" \
-  "r-stringi~=1.7.12" \
+  # R packages
+  "r-bit" \
+  "r-commonmark" \
+  "r-curl" \
   "r-data.table" \
-  ## testwhat deps
+  "r-diffobj" \
+  "r-digest" \
+  "r-dplyr" \
+  "r-farver" \
+  "r-fs" \
+  "r-gridExtra" \
+  "r-jsonlite" \
+  "r-lattice" \
+  "r-lme4" \
+  "r-MatrixModels" \
+  "r-mgcv" \
+  "r-nlme" \
+  "r-nloptr" \
+  "r-plotly" \
+  "r-purrr" \
+  "r-Rcpp" \
+  "r-RcppEigen" \
+  "r-rlang" \
+  "r-statmod" \
   "r-stringdist" \
+  "r-survival" \
   "r-testthat" \
+  "r-vctrs" \
   # ensure user has full control of package and home dirs
   && fix-permissions "${CONDA_DIR}" \
   && fix-permissions "/home/${NB_USER}"
