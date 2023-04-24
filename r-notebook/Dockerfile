@@ -17,17 +17,21 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
   ## av
   "ffmpeg" \
   ## geospatial
-  "r-units" \
-  "r-sf" \
+  "gdal" \
+  "pkg-config" \
+  "proj" \
   "r-gert" \
+  "r-units" \
   # ensure user has full control of package and home dirs
   && fix-permissions "${CONDA_DIR}" \
   && fix-permissions "/home/${NB_USER}"
 
+# https://github.com/conda-forge/geopandas-feedstock/issues/63
+ENV PROJ_LIB=${CONDA_DIR}/share/proj
+
 # dependencies for the rest of the packages not installed by mamba
 USER root
 
-# hadolint ignore=DL3059
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   --mount=type=cache,target=/var/lib/apt,sharing=locked \
   --mount=type=bind,from=scripts,target=/tmp/scripts \
