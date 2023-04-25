@@ -24,7 +24,7 @@ inputs:
   cache-to:
     description: Build cache-to passed to docker/build-push-action.
     required: false
-    default: type=gha
+    default: type=gha,mode=max
 
 runs:
   using: "composite"
