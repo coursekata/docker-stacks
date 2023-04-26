@@ -14,7 +14,7 @@ on:
       - .lintr
       - dev-*.sh
   schedule:
-    # every Friday at 10AM
+    # 01:00 UTC on Tues./Fri.
     # see https://crontab.guru
     - cron: "0 1 * * 2,5"
 
