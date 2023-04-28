@@ -38,6 +38,8 @@ jobs:
       - name: Build and push
         uses: ./.github/actions/build-and-push
         with:
+          docker-username: ${{ secrets.DOCKER_USERNAME }}
+          docker-token: ${{ secrets.DOCKER_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           extra-tags: |
             type=raw,value=python-${{ env.python-version }}
@@ -57,6 +59,8 @@ jobs:
       - name: Build and push
         uses: ./.github/actions/build-and-push
         with:
+          docker-username: ${{ secrets.DOCKER_USERNAME }}
+          docker-token: ${{ secrets.DOCKER_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           extra-tags: |
             type=raw,value=python-${{ env.python-version }}
@@ -75,6 +79,8 @@ jobs:
       - name: Build and push
         uses: ./.github/actions/build-and-push
         with:
+          docker-username: ${{ secrets.DOCKER_USERNAME }}
+          docker-token: ${{ secrets.DOCKER_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           extra-tags: |
             type=raw,value=python-${{ env.python-version }}
@@ -93,6 +99,8 @@ jobs:
       - name: Build and push
         uses: ./.github/actions/build-and-push
         with:
+          docker-username: ${{ secrets.DOCKER_USERNAME }}
+          docker-token: ${{ secrets.DOCKER_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           extra-tags: |
             type=raw,value=python-${{ env.python-version }}
@@ -111,6 +119,8 @@ jobs:
       - name: Build and push
         uses: ./.github/actions/build-and-push
         with:
+          docker-username: ${{ secrets.DOCKER_USERNAME }}
+          docker-token: ${{ secrets.DOCKER_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           extra-tags: |
             type=raw,value=python-${{ env.python-version }}
