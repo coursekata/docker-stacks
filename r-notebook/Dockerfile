@@ -47,7 +47,7 @@ USER ${NB_UID}
 
 # install the full package list, ignoring updates except where required
 RUN --mount=type=bind,source=requirements.r,target=/tmp/requirements.r \
-  Rscript /tmp/requirements.r
+  CARGO_NET_GIT_FETCH_WITH_CLI=true Rscript /tmp/requirements.r
 
 
 # final
