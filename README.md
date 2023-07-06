@@ -2,7 +2,7 @@
 
 This is a collection of Docker images that build on one another for different purposes. Read the [Contents](#contents) section for a description of what is in each image. Additionally, each of the images has a tag indicating something about how the image was built. Read the [Tagging](#tagging) section to get an idea of how the images are built and what the tags mean.
 
-You will eventually need a link structured as [[Contents](#contents):[Tag](#tagging).
+You will eventually need a link structured as [Contents](#contents):[Tag](#tagging).
 
 For example, in this link `coursekata/essentials-notebook:latest`, the `datascience-notebook` is an example of [Contents](#contents) and `latest` is an example of a [Tag](#tagging).
 
