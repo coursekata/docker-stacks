@@ -6,7 +6,6 @@ You will eventually need a link structured as [Contents](#contents):[Tag](#taggi
 
 For example, in this link `coursekata/essentials-notebook:latest`, the `datascience-notebook` is an example of [Contents](#contents) and `latest` is an example of a [Tag](#tagging).
 
-
 ## Contents
 
 There are currently five different images that you can choose from, some of which build on others. Both ARM64- and AMD64-compatible images are built for each of these.
@@ -21,7 +20,6 @@ There are currently five different images that you can choose from, some of whic
   - If you have a specific package you think would be useful to install here, please [submit an issue describing your use case](https://github.com/coursekata/docker-stacks/issues).
 - [base-r-notebook](https://github.com/coursekata/docker-stacks/pkgs/container/minimal-r-notebook): an image with Python and R installed, and that's it. R is configured to be the default notebook, but both R and Python notebooks are supported. There are no other packages installed on this image. This is a good image to use if you are building your own image from scratch.
 - essentials-builder: **this is likely not an image you want to use**. This image is used to cache build steps common to the essentials- and r-notebook images. R images benefit from multi-staged builds by having a build stage that builds the R package binaries and then just copies the built packages to the final stage (omitting the considerable amount of dependencies needed to build the packages). However, multi-staged builds do not cache all of the build stages, so to take advantage of caching you either need to extract them to their own image (like here) or build to the appropriate target (e.g. `docker build --target <stage>`).
-
 
 ## Tagging
 
@@ -49,4 +47,3 @@ If you need your images to be highly reproducible, e.g. for use in systems where
 2. Use a dated tag: all of these images are built twice a week (Tuesday and Friday starting at 1:00 UTC), so you will see many tags like 2023-04-21 indicating when they were built
 
 Using one of these two methods will ensure that the image will be the same everytime you pull it.
-
