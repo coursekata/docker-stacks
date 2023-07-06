@@ -1,5 +1,6 @@
 options(warn = 2, Ncpus = max(1L, parallel::detectCores()))
 install.packages("pak")
+install.packages("digest", repos = "https://eddelbuettel.r-universe.dev", type = "source")
 
 # packages also installed in essentials-notebook
 pak::pkg_install(upgrade = FALSE, pkg = c(
