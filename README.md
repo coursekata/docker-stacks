@@ -4,7 +4,7 @@ This is a collection of Docker images that build on one another for different pu
 
 You will eventually need a link structured as [Contents](#contents):[Tag](#tagging).
 
-For example, in this link `coursekata/essentials-notebook:latest`, the `datascience-notebook` is an example of [Contents](#contents) and `latest` is an example of a [Tag](#tagging).
+For example, in this link `coursekata/essentials-notebook:latest`, the `essentials-notebook` is an example of [Contents](#contents) and `latest` is an example of a [Tag](#tagging).
 
 ## Contents
 
