@@ -2,7 +2,28 @@
 
 [![Build action status](https://github.com/coursekata/docker-stacks/actions/workflows/publish.yml/badge.svg)](https://github.com/coursekata/docker-stacks/actions/workflows/publish.yml)
 
-This is a collection of Docker images that build on one another for different purposes. You should first read the [Tagging](#tagging) section to get an idea of how the images are built and what the tags mean, and then move on to the [Contents](#contents) section for a description of what is in each image.
+This is a collection of Docker images that build on one another for different purposes. Read the [Contents](#contents) section for a description of what is in each image. Additionally, each of the images has a tag indicating something about how the image was built. Read the [Tagging](#tagging) section to get an idea of how the images are built and what the tags mean.
+
+You will eventually need a link structured as [[Contents](#contents):[Tag](#tagging).
+
+For example, in this link `coursekata/essentials-notebook:latest`, the `datascience-notebook` is an example of [Contents](#contents) and `latest` is an example of a [Tag](#tagging).
+
+
+## Contents
+
+There are currently five different images that you can choose from, some of which build on others. Both ARM64- and AMD64-compatible images are built for each of these.
+
+- [essentials-notebook](https://github.com/coursekata/docker-stacks/pkgs/container/essentials-notebook): an image with all of the R packages used in CourseKata books and CourseKata Jupyter Notebooks. If you are coming from the CourseKata book this is a great starting place: you will be able to do everything you did in the books and more!
+  - You can see specifically what packages are installed by looking at [essentials-notebook/requirements.r](essentials-notebook/requirements.r).
+- [r-notebook](https://github.com/coursekata/docker-stacks/pkgs/container/r-notebook): this image has all of the contents of the *essentials-notebook* with the addition of other R packages that instructors have requested that we install for data science and statistics.
+  - You can see specifically what packages are installed by looking at [r-notebook/requirements.r](r-notebook/requirements.r)
+  - If you have a specific package you think would be useful to install here, please [submit an issue describing your use case](https://github.com/coursekata/docker-stacks/issues).
+- [datascience-notebook](https://github.com/coursekata/docker-stacks/pkgs/container/datascience-notebook): this image builds on *r-notebook* by adding a variety of Python packages for data science and statistics.
+  - You can see specifically what packages are installed by looking at [datascience-notebook/requirements.r](datascience-notebook/requirements.r) and [datascience-notebook/requirements.txt](datascience-notebook/requirements.txt)
+  - If you have a specific package you think would be useful to install here, please [submit an issue describing your use case](https://github.com/coursekata/docker-stacks/issues).
+- [base-r-notebook](https://github.com/coursekata/docker-stacks/pkgs/container/minimal-r-notebook): an image with Python and R installed, and that's it. R is configured to be the default notebook, but both R and Python notebooks are supported. There are no other packages installed on this image. This is a good image to use if you are building your own image from scratch.
+- essentials-builder: **this is likely not an image you want to use**. This image is used to cache build steps common to the essentials- and r-notebook images. R images benefit from multi-staged builds by having a build stage that builds the R package binaries and then just copies the built packages to the final stage (omitting the considerable amount of dependencies needed to build the packages). However, multi-staged builds do not cache all of the build stages, so to take advantage of caching you either need to extract them to their own image (like here) or build to the appropriate target (e.g. `docker build --target <stage>`).
+
 
 ## Tagging
 
@@ -31,17 +52,3 @@ If you need your images to be highly reproducible, e.g. for use in systems where
 
 Using one of these two methods will ensure that the image will be the same everytime you pull it.
 
-## Contents
-
-There are currently five different images that you can choose from, some of which build on others. Both ARM64- and AMD64-compatible images are built for each of these.
-
-- [essentials-notebook](https://github.com/coursekata/docker-stacks/pkgs/container/essentials-notebook): an image with all of the R packages used in CourseKata books and CourseKata Jupyter Notebooks. If you are coming from the CourseKata book this is a great starting place: you will be able to do everything you did in the books and more!
-  - You can see specifically what packages are installed by looking at [essentials-notebook/requirements.r](essentials-notebook/requirements.r).
-- [r-notebook](https://github.com/coursekata/docker-stacks/pkgs/container/r-notebook): this image has all of the contents of the *essentials-notebook* with the addition of other R packages that instructors have requested that we install for data science and statistics.
-  - You can see specifically what packages are installed by looking at [r-notebook/requirements.r](r-notebook/requirements.r)
-  - If you have a specific package you think would be useful to install here, please [submit an issue describing your use case](https://github.com/coursekata/docker-stacks/issues).
-- [datascience-notebook](https://github.com/coursekata/docker-stacks/pkgs/container/datascience-notebook): this image builds on *r-notebook* by adding a variety of Python packages for data science and statistics.
-  - You can see specifically what packages are installed by looking at [datascience-notebook/requirements.r](datascience-notebook/requirements.r) and [datascience-notebook/requirements.txt](datascience-notebook/requirements.txt)
-  - If you have a specific package you think would be useful to install here, please [submit an issue describing your use case](https://github.com/coursekata/docker-stacks/issues).
-- [base-r-notebook](https://github.com/coursekata/docker-stacks/pkgs/container/minimal-r-notebook): an image with Python and R installed, and that's it. R is configured to be the default notebook, but both R and Python notebooks are supported. There are no other packages installed on this image. This is a good image to use if you are building your own image from scratch.
-- essentials-builder: **this is likely not an image you want to use**. This image is used to cache build steps common to the essentials- and r-notebook images. R images benefit from multi-staged builds by having a build stage that builds the R package binaries and then just copies the built packages to the final stage (omitting the considerable amount of dependencies needed to build the packages). However, multi-staged builds do not cache all of the build stages, so to take advantage of caching you either need to extract them to their own image (like here) or build to the appropriate target (e.g. `docker build --target <stage>`).
