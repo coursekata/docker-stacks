@@ -4,7 +4,7 @@ install.packages("digest", repos = "https://eddelbuettel.r-universe.dev", type =
 
 pak::pkg_install(upgrade = FALSE, pkg = c(
   "datacamp/testwhat",
-  "UCLATALL/coursekata-r@main",
+  "corusekata/coursekata-r@main",
   "fivethirtyeightdata/fivethirtyeightdata",
   "supernova",
   "dslabs",
