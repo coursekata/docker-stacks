@@ -25,6 +25,8 @@ jobs:
       - name: Build and push
         uses: ./.github/actions/build-and-push
         with:
+          cache-from: ""
+          cache-to: ""
           docker-username: ${{ secrets.DOCKER_USERNAME }}
           docker-token: ${{ secrets.DOCKER_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -46,6 +48,8 @@ jobs:
       - name: Build and push
         uses: ./.github/actions/build-and-push
         with:
+          cache-from: ""
+          cache-to: ""
           docker-username: ${{ secrets.DOCKER_USERNAME }}
           docker-token: ${{ secrets.DOCKER_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -66,6 +70,8 @@ jobs:
       - name: Build and push
         uses: ./.github/actions/build-and-push
         with:
+          cache-from: ""
+          cache-to: ""
           docker-username: ${{ secrets.DOCKER_USERNAME }}
           docker-token: ${{ secrets.DOCKER_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -86,6 +92,8 @@ jobs:
       - name: Build and push
         uses: ./.github/actions/build-and-push
         with:
+          cache-from: ""
+          cache-to: ""
           docker-username: ${{ secrets.DOCKER_USERNAME }}
           docker-token: ${{ secrets.DOCKER_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -106,6 +114,8 @@ jobs:
       - name: Build and push
         uses: ./.github/actions/build-and-push
         with:
+          cache-from: ""
+          cache-to: ""
           docker-username: ${{ secrets.DOCKER_USERNAME }}
           docker-token: ${{ secrets.DOCKER_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
