@@ -6,13 +6,15 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths-ignore:
-      - LICENSE
-      - .vscode/**
-      - "**.md"
-      - .hadolint.yaml
-      - .lintr
-      - dev-*.sh
+    paths:
+      - .github/actions/**
+      - .github/workflows/publish.yml
+      - base-r-notebook/**
+      - essentials-builder/**
+      - essentials-notebook/**
+      - r-notebook/**
+      - datascience-notebook/**
+      - scripts/**
   schedule:
     # Weekly, at 03:00 on Monday UTC time (see https://crontab.guru)
     - cron: "0 3 * * 1"
