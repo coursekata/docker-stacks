@@ -43,82 +43,88 @@ jobs:
   env:
     runs-on: ubuntu-latest
     outputs:
-      python-version: ${{ steps.set-env.outputs.some_var }}
-      r-version: ${{ steps.set-env.outputs.another_var }}
+      runs-on: ${{ steps.set-env.outputs.runs-on }}
+      python-version: ${{ steps.set-env.outputs.python-version }}
+      r-version: ${{ steps.set-env.outputs.r-version }}
+      cache-from: ${{ steps.set-env.outputs.cache-from }}
+      cache-to: ${{ steps.set-env.outputs.cache-to }}
     steps:
-      - name: Print inputs passed to the reusable workflow
+      - name: Set output variables based on the inputs
         id: set-env
         run: |
+          echo "runs-on=${{ github.event.inputs.runs-on || 'ubuntu-latest' }}" >> $GITHUB_OUTPUT
           echo "python-version=3.10" >> $GITHUB_OUTPUT
           echo "r-version=4.2" >> $GITHUB_OUTPUT
+          echo "cache-from=${{ github.event.inputs.cache && github.event.inputs.cache-from || 'type=gha' }}" >> $GITHUB_OUTPUT
+          echo "cache-to=${{ github.event.inputs.cache && github.event.inputs.cache-to || 'type=gha,mode=max' }}" >> $GITHUB_OUTPUT
 
   base-r-notebook:
     needs: env
     uses: ./.github/workflows/build-and-push.yml
     secrets: inherit
     with:
-      runs-on: ${{ inputs.runs-on || 'ubuntu-latest' }}
+      runs-on: ${{ needs.env.outputs.runs-on }}
       image: base-r-notebook
       python-version: ${{ needs.env.outputs.python-version }}
       r-version: ${{ needs.env.outputs.r-version }}
       build-args: |
         PYTHON_VERSION=${{ needs.env.outputs.python-version }}
         R_VERSION=${{ needs.env.outputs.r-version }}
-      cache-from: ${{ inputs.cache && inputs.cache-from || '' }}
-      cache-to: ${{ inputs.cache && inputs.cache-to || '' }}
+      cache-from: ${{ github.event.inputs.cache && github.event.inputs.cache-from || '' }}
+      cache-to: ${{ github.event.inputs.cache && github.event.inputs.cache-to || '' }}
 
   essentials-builder:
     needs: [env, base-r-notebook]
     uses: ./.github/workflows/build-and-push.yml
     secrets: inherit
     with:
-      runs-on: ${{ inputs.runs-on || 'ubuntu-latest' }}
+      runs-on: ${{ needs.env.outputs.runs-on }}
       image: essentials-builder
       python-version: ${{ needs.env.outputs.python-version }}
       r-version: ${{ needs.env.outputs.r-version }}
       build-args: BASE_TAG=r-${{ needs.env.outputs.r-version }}
       build-contexts: scripts=scripts
-      cache-from: ${{ inputs.cache && inputs.cache-from || '' }}
-      cache-to: ${{ inputs.cache && inputs.cache-to || '' }}
+      cache-from: ${{ needs.env.outputs.cache-from }}
+      cache-to: ${{ needs.env.outputs.cache-to }}
 
   essentials-notebook:
     needs: [env, essentials-builder]
     uses: ./.github/workflows/build-and-push.yml
     secrets: inherit
     with:
-      runs-on: ${{ inputs.runs-on || 'ubuntu-latest' }}
+      runs-on: ${{ needs.env.outputs.runs-on }}
       image: essentials-notebook
       python-version: ${{ needs.env.outputs.python-version }}
       r-version: ${{ needs.env.outputs.r-version }}
       build-args: BASE_TAG=r-${{ needs.env.outputs.r-version }}
       build-contexts: scripts=scripts
-      cache-from: ${{ inputs.cache && inputs.cache-from || '' }}
-      cache-to: ${{ inputs.cache && inputs.cache-to || '' }}
+      cache-from: ${{ needs.env.outputs.cache-from }}
+      cache-to: ${{ needs.env.outputs.cache-to }}
 
   r-notebook:
     needs: [env, essentials-builder]
     uses: ./.github/workflows/build-and-push.yml
     secrets: inherit
     with:
-      runs-on: ${{ inputs.runs-on || 'ubuntu-latest' }}
+      runs-on: ${{ needs.env.outputs.runs-on }}
       image: r-notebook
       python-version: ${{ needs.env.outputs.python-version }}
       r-version: ${{ needs.env.outputs.r-version }}
       build-args: BASE_TAG=r-${{ needs.env.outputs.r-version }}
       build-contexts: scripts=scripts
-      cache-from: ${{ inputs.cache && inputs.cache-from || '' }}
-      cache-to: ${{ inputs.cache && inputs.cache-to || '' }}
+      cache-from: ${{ needs.env.outputs.cache-from }}
+      cache-to: ${{ needs.env.outputs.cache-to }}
 
   datascience-notebook:
     needs: [env, r-notebook]
     uses: ./.github/workflows/build-and-push.yml
     secrets: inherit
     with:
-      runs-on: ${{ inputs.runs-on || 'ubuntu-latest' }}
+      runs-on: ${{ needs.env.outputs.runs-on }}
       image: datascience-notebook
       python-version: ${{ needs.env.outputs.python-version }}
       r-version: ${{ needs.env.outputs.r-version }}
       build-args: BASE_TAG=python-${{ needs.env.outputs.python-version }}
       build-contexts: scripts=scripts
-      cache-from: ${{ inputs.cache && inputs.cache-from || '' }}
-      cache-to: ${{ inputs.cache && inputs.cache-to || '' }}
+      cache-from: ${{ needs.env.outputs.cache-from }}
+      cache-to: ${{ needs.env.outputs.cache-to }}
