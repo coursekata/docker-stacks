@@ -43,11 +43,11 @@ jobs:
   env:
     runs-on: ubuntu-latest
     outputs:
-      python-version: ${{ steps.step1.outputs.some_var }}
-      r-version: ${{ steps.step1.outputs.another_var }}
+      python-version: ${{ steps.set-env.outputs.some_var }}
+      r-version: ${{ steps.set-env.outputs.another_var }}
     steps:
       - name: Print inputs passed to the reusable workflow
-        id: step1
+        id: set-env
         run: |
           echo "python-version=3.10" >> $GITHUB_OUTPUT
           echo "r-version=4.2" >> $GITHUB_OUTPUT
@@ -58,7 +58,7 @@ jobs:
     secrets: inherit
     with:
       runs-on: ${{ inputs.runs-on || 'ubuntu-latest' }}
-      image: ${{ github.job }}
+      image: base-r-notebook
       python-version: ${{ needs.env.outputs.python-version }}
       r-version: ${{ needs.env.outputs.r-version }}
       build-args: |
@@ -73,7 +73,7 @@ jobs:
     secrets: inherit
     with:
       runs-on: ${{ inputs.runs-on || 'ubuntu-latest' }}
-      image: ${{ github.job }}
+      image: essentials-builder
       python-version: ${{ needs.env.outputs.python-version }}
       r-version: ${{ needs.env.outputs.r-version }}
       build-args: BASE_TAG=r-${{ needs.env.outputs.r-version }}
@@ -87,7 +87,7 @@ jobs:
     secrets: inherit
     with:
       runs-on: ${{ inputs.runs-on || 'ubuntu-latest' }}
-      image: ${{ github.job }}
+      image: essentials-notebook
       python-version: ${{ needs.env.outputs.python-version }}
       r-version: ${{ needs.env.outputs.r-version }}
       build-args: BASE_TAG=r-${{ needs.env.outputs.r-version }}
@@ -101,7 +101,7 @@ jobs:
     secrets: inherit
     with:
       runs-on: ${{ inputs.runs-on || 'ubuntu-latest' }}
-      image: ${{ github.job }}
+      image: r-notebook
       python-version: ${{ needs.env.outputs.python-version }}
       r-version: ${{ needs.env.outputs.r-version }}
       build-args: BASE_TAG=r-${{ needs.env.outputs.r-version }}
@@ -115,7 +115,7 @@ jobs:
     secrets: inherit
     with:
       runs-on: ${{ inputs.runs-on || 'ubuntu-latest' }}
-      image: ${{ github.job }}
+      image: datascience-notebook
       python-version: ${{ needs.env.outputs.python-version }}
       r-version: ${{ needs.env.outputs.r-version }}
       build-args: BASE_TAG=python-${{ needs.env.outputs.python-version }}
