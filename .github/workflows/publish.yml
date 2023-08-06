@@ -56,68 +56,68 @@ jobs:
     uses: ./.github/workflows/build-and-push.yml
     secrets: inherit
     with:
-      runs-on: ${{ inputs.runs-on || "ubuntu-latest" }}
+      runs-on: ${{ inputs.runs-on || 'ubuntu-latest' }}
       image: "base-notebook"
       python-version: ${{ needs.env.outputs.python-version }}
       r-version: ${{ needs.env.outputs.r-version }}
       build-args: |
         PYTHON_VERSION=${{ needs.env.outputs.python-version }}
         R_VERSION=${{ needs.env.outputs.r-version }}
-      cache-from: ${{ inputs.cache && inputs.cache-from || "" }}
-      cache-to: ${{ inputs.cache && inputs.cache-to || "" }}
+      cache-from: ${{ inputs.cache && inputs.cache-from || '' }}
+      cache-to: ${{ inputs.cache && inputs.cache-to || '' }}
 
   essentials-builder:
     needs: [env, base-r-notebook]
     uses: ./.github/workflows/build-and-push.yml
     secrets: inherit
     with:
-      runs-on: ${{ inputs.runs-on || "ubuntu-latest" }}
+      runs-on: ${{ inputs.runs-on || 'ubuntu-latest' }}
       image: "essentials-builder"
       python-version: ${{ needs.env.outputs.python-version }}
       r-version: ${{ needs.env.outputs.r-version }}
       build-args: BASE_TAG=r-${{ needs.env.outputs.r-version }}
       build-contexts: scripts=scripts
-      cache-from: ${{ inputs.cache && inputs.cache-from || "" }}
-      cache-to: ${{ inputs.cache && inputs.cache-to || "" }}
+      cache-from: ${{ inputs.cache && inputs.cache-from || '' }}
+      cache-to: ${{ inputs.cache && inputs.cache-to || '' }}
 
   essentials-notebook:
     needs: [env, essentials-builder]
     uses: ./.github/workflows/build-and-push.yml
     secrets: inherit
     with:
-      runs-on: ${{ inputs.runs-on || "ubuntu-latest" }}
+      runs-on: ${{ inputs.runs-on || 'ubuntu-latest' }}
       image: "essentials-notebook"
       python-version: ${{ needs.env.outputs.python-version }}
       r-version: ${{ needs.env.outputs.r-version }}
       build-args: BASE_TAG=r-${{ needs.env.outputs.r-version }}
       build-contexts: scripts=scripts
-      cache-from: ${{ inputs.cache && inputs.cache-from || "" }}
-      cache-to: ${{ inputs.cache && inputs.cache-to || "" }}
+      cache-from: ${{ inputs.cache && inputs.cache-from || '' }}
+      cache-to: ${{ inputs.cache && inputs.cache-to || '' }}
 
   r-notebook:
     needs: [env, essentials-builder]
     uses: ./.github/workflows/build-and-push.yml
     secrets: inherit
     with:
-      runs-on: ${{ inputs.runs-on || "ubuntu-latest" }}
+      runs-on: ${{ inputs.runs-on || 'ubuntu-latest' }}
       image: "r-notebook"
       python-version: ${{ needs.env.outputs.python-version }}
       r-version: ${{ needs.env.outputs.r-version }}
       build-args: BASE_TAG=r-${{ needs.env.outputs.r-version }}
       build-contexts: scripts=scripts
-      cache-from: ${{ inputs.cache && inputs.cache-from || "" }}
-      cache-to: ${{ inputs.cache && inputs.cache-to || "" }}
+      cache-from: ${{ inputs.cache && inputs.cache-from || '' }}
+      cache-to: ${{ inputs.cache && inputs.cache-to || '' }}
 
   datascience-notebook:
     needs: [env, r-notebook]
     uses: ./.github/workflows/build-and-push.yml
     secrets: inherit
     with:
-      runs-on: ${{ inputs.runs-on || "ubuntu-latest" }}
+      runs-on: ${{ inputs.runs-on || 'ubuntu-latest' }}
       image: "datascience-notebook"
       python-version: ${{ needs.env.outputs.python-version }}
       r-version: ${{ needs.env.outputs.r-version }}
       build-args: BASE_TAG=python-${{ needs.env.outputs.python-version }}
       build-contexts: scripts=scripts
-      cache-from: ${{ inputs.cache && inputs.cache-from || "" }}
-      cache-to: ${{ inputs.cache && inputs.cache-to || "" }}
+      cache-from: ${{ inputs.cache && inputs.cache-from || '' }}
+      cache-to: ${{ inputs.cache && inputs.cache-to || '' }}
