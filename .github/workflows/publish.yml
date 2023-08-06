@@ -60,8 +60,8 @@ jobs:
         id: set-env
         run: |
           echo "runs-on=${{ github.event.inputs.runs-on || 'ubuntu-latest' }}" >> $GITHUB_OUTPUT
-          echo "python-version=3.10" >> $GITHUB_OUTPUT
-          echo "r-version=4.2" >> $GITHUB_OUTPUT
+          echo "python-version=3.11" >> $GITHUB_OUTPUT
+          echo "r-version=4.3" >> $GITHUB_OUTPUT
           echo "cache-from=${{ github.event.inputs.cache && github.event.inputs.cache-from || 'type=gha' }}" >> $GITHUB_OUTPUT
           echo "cache-to=${{ github.event.inputs.cache && github.event.inputs.cache-to || 'type=gha,mode=max' }}" >> $GITHUB_OUTPUT
 

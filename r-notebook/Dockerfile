@@ -1,5 +1,5 @@
 ARG ORG=ghcr.io/coursekata
-ARG BASE_TAG=python-3.10
+ARG BASE_TAG=python-3.11
 
 FROM ${ORG}/base-r-notebook:${BASE_TAG} as base
 LABEL maintainer="CourseKata <tech@coursekata.org>"

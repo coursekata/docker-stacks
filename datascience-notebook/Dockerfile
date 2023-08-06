@@ -1,5 +1,5 @@
 ARG ORG=ghcr.io/coursekata
-ARG BASE_TAG=r-4.2
+ARG BASE_TAG=r-4.3
 
 FROM ${ORG}/r-notebook:${BASE_TAG} as base
 LABEL maintainer="CourseKata <tech@coursekata.org>"

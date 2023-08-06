@@ -11,8 +11,8 @@ fi
 org="coursekata"
 repo1=${org}
 repo2="ghcr.io/${org}"
-r_version="4.2"
-python_version="3.10"
+r_version="4.3"
+python_version="3.11"
 current_dt=$(gdate -u +'%Y-%m-%dT%H:%M:%S.%3NZ')
 
 with-margin() {

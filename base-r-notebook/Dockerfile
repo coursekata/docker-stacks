@@ -1,5 +1,5 @@
-ARG PYTHON_VERSION=3.10
-ARG R_VERSION=4.2
+ARG PYTHON_VERSION=3.11
+ARG R_VERSION=4.3
 
 FROM jupyter/minimal-notebook:python-${PYTHON_VERSION} as base
 LABEL maintainer="CourseKata <tech@coursekata.org>"
