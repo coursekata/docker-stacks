@@ -62,6 +62,11 @@ jobs:
       - if: ${{ inputs.runs-on == 'ubuntu-latest' }}
         name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@main
+        with:
+          dotnet: false
+          haskell: false
+          large-packages: false
+          swap-storage: false
 
       # https://github.com/actions/checkout
       - name: Checkout
