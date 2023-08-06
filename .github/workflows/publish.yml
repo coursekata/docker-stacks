@@ -28,6 +28,7 @@ on:
     paths:
       - .github/actions/**
       - .github/workflows/publish.yml
+      - .github/workflows/build-and-push.yml
       - base-r-notebook/**
       - essentials-builder/**
       - essentials-notebook/**
