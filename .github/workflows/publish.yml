@@ -70,6 +70,7 @@ jobs:
       build-args: |
         PYTHON_VERSION=${{ needs.env.outputs.python-version }}
         R_VERSION=${{ needs.env.outputs.r-version }}
+      build-contexts: scripts=scripts
       cache-from: ${{ github.event.inputs.cache && github.event.inputs.cache-from || '' }}
       cache-to: ${{ github.event.inputs.cache && github.event.inputs.cache-to || '' }}
 
