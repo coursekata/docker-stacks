@@ -21,8 +21,8 @@ on:
         type: string
         required: false
         default: "ubuntu-latest"
-      context:
-        description: "The context to build from (defaults to image name)"
+      labels:
+        description: "Labels to add to the image"
         type: string
         required: false
         default: ""
@@ -109,6 +109,10 @@ jobs:
             type=sha
             type=raw,value=r-${{ inputs.r-version }}
             type=raw,value=python-${{ inputs.python-version }}
+          labels: |
+            org.opencontainers.image.title=${{ inputs.image }}
+            org.opencontainers.image.url=https://github.com/${{ github.repository_owner }}/docker-stacks/pkgs/container/${{ inputs.image }}
+            ${{ inputs.labels }}
 
       # https://github.com/docker/build-push-action
       - name: Build and push

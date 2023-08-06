@@ -72,6 +72,9 @@ jobs:
     with:
       runs-on: ${{ needs.env.outputs.runs-on }}
       image: base-r-notebook
+      labels: |
+        org.opencontainers.image.title=Base R Notebook
+        org.opencontainers.image.description=Jupyter Lab, Python, and R, and that's it.
       python-version: ${{ needs.env.outputs.python-version }}
       r-version: ${{ needs.env.outputs.r-version }}
       build-args: |
@@ -88,6 +91,9 @@ jobs:
     with:
       runs-on: ${{ needs.env.outputs.runs-on }}
       image: essentials-builder
+      labels: |
+        org.opencontainers.image.title=Essentials Builder
+        org.opencontainers.image.description=Base for the essentials- and r-notebook images.
       python-version: ${{ needs.env.outputs.python-version }}
       r-version: ${{ needs.env.outputs.r-version }}
       build-args: BASE_TAG=r-${{ needs.env.outputs.r-version }}
@@ -102,6 +108,9 @@ jobs:
     with:
       runs-on: ${{ needs.env.outputs.runs-on }}
       image: essentials-notebook
+      labels: |
+        org.opencontainers.image.title=Essentials Notebook
+        org.opencontainers.image.description=CourseKata essentials: everything used in the books.
       python-version: ${{ needs.env.outputs.python-version }}
       r-version: ${{ needs.env.outputs.r-version }}
       build-args: BASE_TAG=r-${{ needs.env.outputs.r-version }}
@@ -116,6 +125,9 @@ jobs:
     with:
       runs-on: ${{ needs.env.outputs.runs-on }}
       image: r-notebook
+      labels: |
+        org.opencontainers.image.title=R Notebook
+        org.opencontainers.image.description=CourseKata essentials and other R packages for teaching and learning data science.
       python-version: ${{ needs.env.outputs.python-version }}
       r-version: ${{ needs.env.outputs.r-version }}
       build-args: BASE_TAG=r-${{ needs.env.outputs.r-version }}
@@ -130,6 +142,9 @@ jobs:
     with:
       runs-on: ${{ needs.env.outputs.runs-on }}
       image: datascience-notebook
+      labels: |
+        org.opencontainers.image.title=Data Science Notebook
+        org.opencontainers.image.description=R and Python packages for teaching and learning data science.
       python-version: ${{ needs.env.outputs.python-version }}
       r-version: ${{ needs.env.outputs.r-version }}
       build-args: BASE_TAG=python-${{ needs.env.outputs.python-version }}
