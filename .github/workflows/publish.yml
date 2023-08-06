@@ -1,9 +1,28 @@
 ---
-name: Build and Publish the Images
+name: Publish the Images
 
-# Controls when the workflow will run
 on:
   workflow_dispatch:
+    runs-on:
+      description: "The platform to build on"
+      type: string
+      required: false
+      default: "ubuntu-latest"
+    cache:
+      description: "Should the build cache be used?"
+      type: boolean
+      required: false
+      default: true
+    cache-from:
+      description: Build cache-from passed to docker/build-push-action.
+      type: string
+      required: false
+      default: type=gha
+    cache-to:
+      description: Build cache-to passed to docker/build-push-action.
+      type: string
+      required: false
+      default: type=gha,mode=max
   push:
     branches: [main]
     paths:
@@ -19,111 +38,86 @@ on:
     # Weekly, at 03:00 on Monday UTC time (see https://crontab.guru)
     - cron: "0 3 * * 1"
 
-env:
-  platforms: |
-    linux/amd64
-    linux/arm64/v8
-  # these versions are only used to modify images for base-r-notebook
-  # in all other images, these are just used to tag the images
-  python-version: "3.10"
-  r-version: "4.2"
-
 jobs:
-  base-r-notebook:
+  env:
     runs-on: ubuntu-latest
+    outputs:
+      python-version: ${{ steps.step1.outputs.some_var }}
+      r-version: ${{ steps.step1.outputs.another_var }}
     steps:
-      # https://github.com/actions/checkout
-      - name: Checkout
-        uses: actions/checkout@v3
+      - name: Print inputs passed to the reusable workflow
+        id: step1
+        run: |
+          echo "python-version=3.10" >> $GITHUB_OUTPUT
+          echo "r-version=4.2" >> $GITHUB_OUTPUT
 
-      - name: Build and push
-        uses: ./.github/actions/build-and-push
-        with:
-          docker-username: ${{ secrets.DOCKER_USERNAME }}
-          docker-token: ${{ secrets.DOCKER_TOKEN }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          extra-tags: |
-            type=raw,value=python-${{ env.python-version }}
-            type=raw,value=r-${{ env.r-version }}
-          build-args: |
-            PYTHON_VERSION=${{ env.python-version }}
-            R_VERSION=${{ env.r-version }}
+  base-r-notebook:
+    needs: env
+    uses: ./.github/workflows/build-and-push.yml
+    secrets: inherit
+    with:
+      runs-on: ${{ inputs.runs-on || "ubuntu-latest" }}
+      image: "base-notebook"
+      python-version: ${{ needs.env.outputs.python-version }}
+      r-version: ${{ needs.env.outputs.r-version }}
+      build-args: |
+        PYTHON_VERSION=${{ needs.env.outputs.python-version }}
+        R_VERSION=${{ needs.env.outputs.r-version }}
+      cache-from: ${{ inputs.cache && inputs.cache-from || "" }}
+      cache-to: ${{ inputs.cache && inputs.cache-to || "" }}
 
   essentials-builder:
-    needs: base-r-notebook
-    runs-on: ubuntu-latest
-    steps:
-      # https://github.com/actions/checkout
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Build and push
-        uses: ./.github/actions/build-and-push
-        with:
-          docker-username: ${{ secrets.DOCKER_USERNAME }}
-          docker-token: ${{ secrets.DOCKER_TOKEN }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          extra-tags: |
-            type=raw,value=python-${{ env.python-version }}
-            type=raw,value=r-${{ env.r-version }}
-          build-args: BASE_TAG=r-${{ env.r-version }}
-          build-contexts: scripts=scripts
+    needs: [env, base-r-notebook]
+    uses: ./.github/workflows/build-and-push.yml
+    secrets: inherit
+    with:
+      runs-on: ${{ inputs.runs-on || "ubuntu-latest" }}
+      image: "essentials-builder"
+      python-version: ${{ needs.env.outputs.python-version }}
+      r-version: ${{ needs.env.outputs.r-version }}
+      build-args: BASE_TAG=r-${{ needs.env.outputs.r-version }}
+      build-contexts: scripts=scripts
+      cache-from: ${{ inputs.cache && inputs.cache-from || "" }}
+      cache-to: ${{ inputs.cache && inputs.cache-to || "" }}
 
   essentials-notebook:
-    needs: [base-r-notebook, essentials-builder]
-    runs-on: ubuntu-latest
-    steps:
-      # https://github.com/actions/checkout
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Build and push
-        uses: ./.github/actions/build-and-push
-        with:
-          docker-username: ${{ secrets.DOCKER_USERNAME }}
-          docker-token: ${{ secrets.DOCKER_TOKEN }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          extra-tags: |
-            type=raw,value=python-${{ env.python-version }}
-            type=raw,value=r-${{ env.r-version }}
-          build-args: BASE_TAG=r-${{ env.r-version }}
-          build-contexts: scripts=scripts
+    needs: [env, essentials-builder]
+    uses: ./.github/workflows/build-and-push.yml
+    secrets: inherit
+    with:
+      runs-on: ${{ inputs.runs-on || "ubuntu-latest" }}
+      image: "essentials-notebook"
+      python-version: ${{ needs.env.outputs.python-version }}
+      r-version: ${{ needs.env.outputs.r-version }}
+      build-args: BASE_TAG=r-${{ needs.env.outputs.r-version }}
+      build-contexts: scripts=scripts
+      cache-from: ${{ inputs.cache && inputs.cache-from || "" }}
+      cache-to: ${{ inputs.cache && inputs.cache-to || "" }}
 
   r-notebook:
-    needs: [base-r-notebook, essentials-builder]
-    runs-on: ubuntu-latest
-    steps:
-      # https://github.com/actions/checkout
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Build and push
-        uses: ./.github/actions/build-and-push
-        with:
-          docker-username: ${{ secrets.DOCKER_USERNAME }}
-          docker-token: ${{ secrets.DOCKER_TOKEN }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          extra-tags: |
-            type=raw,value=python-${{ env.python-version }}
-            type=raw,value=r-${{ env.r-version }}
-          build-args: BASE_TAG=r-${{ env.r-version }}
-          build-contexts: scripts=scripts
+    needs: [env, essentials-builder]
+    uses: ./.github/workflows/build-and-push.yml
+    secrets: inherit
+    with:
+      runs-on: ${{ inputs.runs-on || "ubuntu-latest" }}
+      image: "r-notebook"
+      python-version: ${{ needs.env.outputs.python-version }}
+      r-version: ${{ needs.env.outputs.r-version }}
+      build-args: BASE_TAG=r-${{ needs.env.outputs.r-version }}
+      build-contexts: scripts=scripts
+      cache-from: ${{ inputs.cache && inputs.cache-from || "" }}
+      cache-to: ${{ inputs.cache && inputs.cache-to || "" }}
 
   datascience-notebook:
-    needs: r-notebook
-    runs-on: ubuntu-latest
-    steps:
-      # https://github.com/actions/checkout
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Build and push
-        uses: ./.github/actions/build-and-push
-        with:
-          docker-username: ${{ secrets.DOCKER_USERNAME }}
-          docker-token: ${{ secrets.DOCKER_TOKEN }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          extra-tags: |
-            type=raw,value=python-${{ env.python-version }}
-            type=raw,value=r-${{ env.r-version }}
-          build-args: BASE_TAG=python-${{ env.python-version }}
+    needs: [env, r-notebook]
+    uses: ./.github/workflows/build-and-push.yml
+    secrets: inherit
+    with:
+      runs-on: ${{ inputs.runs-on || "ubuntu-latest" }}
+      image: "datascience-notebook"
+      python-version: ${{ needs.env.outputs.python-version }}
+      r-version: ${{ needs.env.outputs.r-version }}
+      build-args: BASE_TAG=python-${{ needs.env.outputs.python-version }}
+      build-contexts: scripts=scripts
+      cache-from: ${{ inputs.cache && inputs.cache-from || "" }}
+      cache-to: ${{ inputs.cache && inputs.cache-to || "" }}
