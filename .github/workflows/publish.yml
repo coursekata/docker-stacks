@@ -3,26 +3,27 @@ name: Publish the Images
 
 on:
   workflow_dispatch:
-    runs-on:
-      description: "The platform to build on"
-      type: string
-      required: false
-      default: "ubuntu-latest"
-    cache:
-      description: "Should the build cache be used?"
-      type: boolean
-      required: false
-      default: true
-    cache-from:
-      description: Build cache-from passed to docker/build-push-action.
-      type: string
-      required: false
-      default: type=gha
-    cache-to:
-      description: Build cache-to passed to docker/build-push-action.
-      type: string
-      required: false
-      default: type=gha,mode=max
+    inputs:
+      runs-on:
+        description: "The platform to build on"
+        type: string
+        required: false
+        default: "ubuntu-latest"
+      cache:
+        description: "Should the build cache be used?"
+        type: boolean
+        required: false
+        default: true
+      cache-from:
+        description: Build cache-from passed to docker/build-push-action.
+        type: string
+        required: false
+        default: type=gha
+      cache-to:
+        description: Build cache-to passed to docker/build-push-action.
+        type: string
+        required: false
+        default: type=gha,mode=max
   push:
     branches: [main]
     paths:
@@ -38,6 +39,12 @@ on:
   schedule:
     # Weekly, at 03:00 on Monday UTC time (see https://crontab.guru)
     - cron: "0 3 * * 1"
+
+# https://docs.github.com/en/actions/using-jobs/using-concurrency
+concurrency:
+  # only cancel in-progress jobs or runs for the current workflow - matches against branch & tags
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   env:
