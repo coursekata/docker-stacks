@@ -112,7 +112,7 @@ jobs:
           context: ${{ inputs.context || inputs.image }}
           build-args: ${{ inputs.build-args }}
           build-contexts: ${{ inputs.build-contexts }}
-          platforms: ${{ input.platforms }}
+          platforms: ${{ inputs.platforms }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: ${{ inputs.cache-from }}
