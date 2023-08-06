@@ -58,9 +58,10 @@ jobs:
   build:
     runs-on: ${{ inputs.runs-on }}
     steps:
-      # https://github.com/marketplace/actions/maximize-build-disk-space
-      - name: Maximize build space
-        uses: easimon/maximize-build-space@master
+      # https://github.com/jlumbroso/free-disk-space
+      - if: ${{ inputs.runs-on == 'ubuntu-latest' }}
+        name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
 
       # https://github.com/actions/checkout
       - name: Checkout
