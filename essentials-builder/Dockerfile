@@ -39,11 +39,12 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
   "r-survival" \
   "r-testthat" \
   "r-vctrs" \
+  "asttokens" \
   # ensure user has full control of package and home dirs
   && fix-permissions "${CONDA_DIR}" \
   && fix-permissions "/home/${NB_USER}"
 
-# dependencies for the rest of the packages not installed by mamba
+# dependencies for the rest of the R packages not installed by mamba
 USER root
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -53,6 +54,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 USER ${NB_UID}
 
-# install the full package list, ignoring updates except where required
+# install the full R package list, ignoring updates except where required
 RUN --mount=type=bind,source=requirements.r,target=/tmp/requirements.r \
   Rscript /tmp/requirements.r
+

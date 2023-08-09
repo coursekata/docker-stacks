@@ -42,14 +42,14 @@ images = [
         description="Base for the essentials- and r-notebook images.",
         deps=["base-r-notebook"],
         build_contexts={"scripts": "scripts"},
-        build_args={"BASE_TAG": "r-{context.r_version}"},
+        build_args={"BASE_TAG": "python-{context.python_version}"},
     ),
     Image(
         name="essentials-notebook",
         description="CourseKata essentials: everything used in the books.",
         deps=["essentials-builder"],
         build_contexts={"scripts": "scripts"},
-        build_args={"BASE_TAG": "r-{context.r_version}"},
+        build_args={"BASE_TAG": "python-{context.python_version}"},
     ),
     Image(
         name="r-notebook",
@@ -71,7 +71,7 @@ images = [
 @click.command()
 @click.option("--org", default="coursekata", help="GitHub organization")
 @click.option("--repo", default="docker-images", help="GitHub repository")
-@click.option("--python-version", default="3.11", help="Python version to use")
+@click.option("--python-version", default="3.10", help="Python version to use")
 @click.option("--r-version", default="4.3", help="R version to use")
 @click.option(
     "--platforms", default="linux/amd64,linux/arm64/v8", help="Platforms to build for"
