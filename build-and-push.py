@@ -56,7 +56,7 @@ images = [
         description="CourseKata essentials and other R packages for teaching and learning data science.",
         deps=["essentials-builder"],
         build_contexts={"scripts": "scripts"},
-        build_args={"BASE_TAG": "r-{context.r_version}"},
+        build_args={"BASE_TAG": "python-{context.python_version}"},
     ),
     Image(
         name="datascience-notebook",
@@ -71,7 +71,7 @@ images = [
 @click.command()
 @click.option("--org", default="coursekata", help="GitHub organization")
 @click.option("--repo", default="docker-images", help="GitHub repository")
-@click.option("--python-version", default="3.10", help="Python version to use")
+@click.option("--python-version", default="3.11", help="Python version to use")
 @click.option("--r-version", default="4.3", help="R version to use")
 @click.option(
     "--platforms", default="linux/amd64,linux/arm64/v8", help="Platforms to build for"
@@ -110,7 +110,7 @@ async def build_image(image: Image, context: BuildContext):
 
     click.echo(f"\nBuilding {image.name}")
     click.secho(" ".join(make_cmd(image, context)), fg="green")
-    subprocess.run(" ".join(make_cmd(image, context)), shell=True)
+    subprocess.run(" ".join(make_cmd(image, context)), shell=True, check=True)
     context.has_built.add(image.name)
 
 
@@ -132,8 +132,7 @@ def build_args(image: Image, context: BuildContext) -> list[str]:
     for key, value in image.build_contexts.items():
         args.append(f"--build-context={key}={value}")
     args.append(f"--platform={','.join(context.platforms)}")
-    if context.push:
-        args.append("--push")
+    args.append("--push" if context.push else "--load")
     return args
 
 
