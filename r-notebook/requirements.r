@@ -13,7 +13,8 @@ pak::pkg_install(upgrade = FALSE, pkg = c(
   "minqa",
   "plotly",
   "statmod",
-  "tidyverse"
+  "dplyr",
+  "readr"
 ))
 
 # packages only in r-notebook and datascience-notebook
@@ -39,5 +40,6 @@ pak::pkg_install(upgrade = FALSE, pkg = c(
   "reticulate",
   "simstudy",
   "tidymodels",
+  "tidyverse",
   "transformr"
 ))

@@ -18,5 +18,6 @@ pak::pkg_install(upgrade = FALSE, pkg = c(
   "minqa",
   "plotly",
   "statmod",
-  "tidyverse"
+  "dplyr",
+  "readr"
 ))
