@@ -22,6 +22,7 @@ class BuildContext(BaseModel):
     python_version: str
     r_version: str
     platforms: list[str]
+    no_cache: bool = False
     has_built: set[str] = set()
     push: bool = False
 
@@ -77,6 +78,7 @@ images = [
     "--platforms", default="linux/amd64,linux/arm64/v8", help="Platforms to build for"
 )
 @click.option("--push", is_flag=True, help="Push to DockerHub/GHCR")
+@click.option("--no-cache", is_flag=True, help="Don't use Docker cache")
 async def build(
     org: str,
     repo: str,
@@ -84,6 +86,7 @@ async def build(
     r_version: str,
     platforms: str,
     push: bool,
+    no_cache: bool,
 ):
     """Build (and push) Docker images"""
     context = BuildContext(
@@ -92,6 +95,7 @@ async def build(
         python_version=python_version,
         r_version=r_version,
         platforms=platforms.split(","),
+        no_cache=no_cache,
         push=push,
     )
     for image in images:
@@ -120,6 +124,8 @@ def make_cmd(image: Image, context: BuildContext) -> list[str]:
     cmd.extend(build_args(image, context))
     cmd.extend(labels(image, context))
     cmd.extend(tags(image, context))
+    if context.no_cache:
+        cmd.append("--no-cache")
     cmd.append(f"{Path(__file__).parent}/{image.name}")
     return cmd
 
