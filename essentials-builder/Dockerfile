@@ -57,4 +57,3 @@ USER ${NB_UID}
 # install the full R package list, ignoring updates except where required
 RUN --mount=type=bind,source=requirements.r,target=/tmp/requirements.r \
   Rscript /tmp/requirements.r
-

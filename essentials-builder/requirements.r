@@ -3,8 +3,8 @@ install.packages("pak")
 install.packages("digest", repos = "https://eddelbuettel.r-universe.dev", type = "source")
 
 pak::pkg_install(upgrade = FALSE, pkg = c(
-  "datacamp/testwhat",
-  "coursekata/coursekata-r@main",
+  "coursekata/testwhat",
+  "coursekata/coursekata-r",
   "fivethirtyeightdata/fivethirtyeightdata",
   "supernova",
   "dslabs",

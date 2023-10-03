@@ -4,8 +4,8 @@ install.packages("digest", repos = "https://eddelbuettel.r-universe.dev", type =
 
 # packages also installed in essentials-notebook
 pak::pkg_install(upgrade = FALSE, pkg = c(
-  "datacamp/testwhat",
-  "coursekata/coursekata-r@main",
+  "coursekata/testwhat",
+  "coursekata/coursekata-r",
   "fivethirtyeightdata/fivethirtyeightdata",
   "ggpubr",
   "gridExtra",
