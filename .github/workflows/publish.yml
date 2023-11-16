@@ -79,7 +79,6 @@ jobs:
       build-args: |
         PYTHON_VERSION=${{ needs.env.outputs.python-version }}
         R_VERSION=${{ needs.env.outputs.r-version }}
-      build-contexts: scripts=scripts
       cache-from: ${{ github.event.inputs.cache && github.event.inputs.cache-from || '' }}
       cache-to: ${{ github.event.inputs.cache && github.event.inputs.cache-to || '' }}
 
@@ -95,7 +94,6 @@ jobs:
         org.opencontainers.image.description=Base for the essentials- and r-notebook images.
       python-version: ${{ needs.env.outputs.python-version }}
       r-version: ${{ needs.env.outputs.r-version }}
-      build-contexts: scripts=scripts
       cache-from: ${{ needs.env.outputs.cache-from }}
       cache-to: ${{ needs.env.outputs.cache-to }}
 
@@ -111,7 +109,6 @@ jobs:
         org.opencontainers.image.description=CourseKata essentials: everything used in the books.
       python-version: ${{ needs.env.outputs.python-version }}
       r-version: ${{ needs.env.outputs.r-version }}
-      build-contexts: scripts=scripts
       cache-from: ${{ needs.env.outputs.cache-from }}
       cache-to: ${{ needs.env.outputs.cache-to }}
 
@@ -127,7 +124,6 @@ jobs:
         org.opencontainers.image.description=CourseKata essentials and other R packages for teaching and learning data science.
       python-version: ${{ needs.env.outputs.python-version }}
       r-version: ${{ needs.env.outputs.r-version }}
-      build-contexts: scripts=scripts
       cache-from: ${{ needs.env.outputs.cache-from }}
       cache-to: ${{ needs.env.outputs.cache-to }}
 
@@ -143,6 +139,5 @@ jobs:
         org.opencontainers.image.description=R and Python packages for teaching and learning data science.
       python-version: ${{ needs.env.outputs.python-version }}
       r-version: ${{ needs.env.outputs.r-version }}
-      build-contexts: scripts=scripts
       cache-from: ${{ needs.env.outputs.cache-from }}
       cache-to: ${{ needs.env.outputs.cache-to }}
