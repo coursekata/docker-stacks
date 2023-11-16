@@ -1,10 +1,9 @@
-ARG ORG=ghcr.io/coursekata
-ARG BASE_TAG=python-3.11
-
+ARG REGISTRY=ghcr.io
+ARG OWNER=coursekata
 
 # r-builder
 # -------------------------------------
-FROM ${ORG}/essentials-builder:${BASE_TAG} as r-builder
+FROM ${REGISTRY}/${OWNER}/essentials-builder as r-builder
 
 # do as many installs as possible with mamba: faster and ensures deps.
 RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
@@ -47,7 +46,7 @@ RUN --mount=type=bind,source=requirements.r,target=/tmp/requirements.r \
 
 # py-builder
 # -------------------------------------
-FROM ${ORG}/essentials-builder:${BASE_TAG} as py-builder
+FROM ${REGISTRY}/${OWNER}/essentials-builder as py-builder
 
 # make wheels for the Python packages
 RUN --mount=type=cache,target=/tmp/pip-cache,uid=${NB_UID} \
@@ -58,7 +57,7 @@ RUN --mount=type=cache,target=/tmp/pip-cache,uid=${NB_UID} \
 
 # final
 # -------------------------------------
-FROM ${ORG}/base-r-notebook:${BASE_TAG}
+FROM ${REGISTRY}/${OWNER}/base-r-notebook
 LABEL maintainer="CourseKata <tech@coursekata.org>"
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 

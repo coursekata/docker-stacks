@@ -1,7 +1,7 @@
-ARG ORG=ghcr.io/coursekata
-ARG BASE_TAG=r-4.3
+ARG REGISTRY=ghcr.io
+ARG OWNER=coursekata
 
-FROM ${ORG}/r-notebook:${BASE_TAG} as base
+FROM ${REGISTRY}/${OWNER}/r-notebook as base
 LABEL maintainer="CourseKata <tech@coursekata.org>"
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
