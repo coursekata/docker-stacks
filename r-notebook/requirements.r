@@ -1,24 +1,21 @@
 options(warn = 2, Ncpus = max(1L, parallel::detectCores()))
-install.packages("pak")
-install.packages("digest", repos = "https://eddelbuettel.r-universe.dev", type = "source")
 
 # packages also installed in essentials-notebook
-pak::pkg_install(upgrade = FALSE, pkg = c(
-  "coursekata/testwhat",
-  "coursekata/coursekata-r",
-  "fivethirtyeightdata/fivethirtyeightdata",
+remotes::install_github("coursekata/testwhat")
+remotes::install_github("fivethirtyeightdata/fivethirtyeightdata")
+remotes::install_cran(c(
+  "coursekata",
   "ggpubr",
   "gridExtra",
   "lme4",
   "minqa",
   "plotly",
-  "statmod",
-  "dplyr",
-  "readr"
+  "remotes",
+  "statmod"
 ))
 
 # packages only in r-notebook and datascience-notebook
-pak::pkg_install(upgrade = FALSE, pkg = c(
+remotes::install_cran(c(
   "av",
   "car",
   "ClustOfVar",
@@ -33,6 +30,7 @@ pak::pkg_install(upgrade = FALSE, pkg = c(
   "mapdata",
   "mapproj",
   "maps",
+  "neuralnet",
   "OCSdata",
   "profvis",
   "psych",
@@ -40,6 +38,8 @@ pak::pkg_install(upgrade = FALSE, pkg = c(
   "reticulate",
   "simstudy",
   "tidymodels",
-  "tidyverse",
-  "transformr"
+  "tidyverse"
 ))
+
+install.packages("cmdstanr", repos = c("https://mc-stan.org/r-packages/", getOption("repos")))
+cmdstanr::install_cmdstan()

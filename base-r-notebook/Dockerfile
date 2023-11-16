@@ -16,6 +16,7 @@ ENV PYTHON_VERSION=${PYTHON_VERSION}
 
 USER root
 
+# setup R
 ENV TZ=Etc/UTC
 ENV LANG=en_US.UTF-8
 ENV _R_SHLIB_STRIP_=true
@@ -23,18 +24,30 @@ ENV R_HOME=/opt/conda/lib/R
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   --mount=type=cache,target=/var/lib/apt,sharing=locked \
-  --mount=type=bind,from=scripts,target=/tmp/scripts \
-  /tmp/scripts/setup-r.sh
+  apt-get update && export DEBIAN_FRONTEND=noninteractive \
+  && apt-get -y install --no-install-recommends \
+  fonts-dejavu \
+  gcc \
+  gfortran \
+  libcurl4-openssl-dev \
+  pkg-config \
+  r-cran-rodbc \
+  unixodbc \
+  unixodbc-dev
 
 USER ${NB_UID}
 
+# install basic R packages
 RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
   mamba install --yes \
   "pkg-config" \
   "r-base~=${R_VERSION}" \
   "r-irkernel"  \
+  "r-pak" \
+  "r-remotes" \
   && fix-permissions "${CONDA_DIR}" \
-  && fix-permissions "/home/${NB_USER}"
+  && fix-permissions "/home/${NB_USER}" \
+  && Rscript -e 'pak::pak_update()'
 
 # add R mimetype and networking options
 COPY --chown=${NB_UID}:${NB_GID} Rprofile.site "${R_HOME}"/etc/

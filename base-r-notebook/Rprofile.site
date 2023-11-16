@@ -1,13 +1,11 @@
 # prevent "Registered S3 method overwritten" messages
 Sys.setenv(`_R_S3_METHOD_REGISTRATION_NOTE_OVERWRITES_` = "false")
+ppm <- Sys.getenv("PPM", unset = "https://packagemanager.posit.co/cran/__linux__/jammy/latest")
+cran <- Sys.getenv("CRAN", unset = "https://cloud.r-project.org")
 
 options(
   # add a default CRAN mirror and download method
-  repos = c(CRAN = Sys.getenv("CRAN", unset = if ("aarch64" == R.version["arch"]) {
-    "https://cloud.r-project.org/"
-  } else {
-    "https://packagemanager.rstudio.com/cran/__linux__/jammy/latest"
-  })),
+  repos = c(PPM = ppm, CRAN = cran),
 
   # default download method and user agent
   # https://docs.posit.co/rspm/admin/serving-binaries/#binary-user-agents

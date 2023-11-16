@@ -1,56 +1,33 @@
-ARG ORG=ghcr.io/coursekata
-ARG BASE_TAG=python-3.11
+ARG REGISTRY=ghcr.io
+ARG OWNER=coursekata
 
-FROM ${ORG}/base-r-notebook:${BASE_TAG}
+FROM ${REGISTRY}/${OWNER}/base-r-notebook
 LABEL maintainer="CourseKata <tech@coursekata.org>"
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# do as many installs as possible with mamba: faster and ensures deps.
+# install R package dependencies
 RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
   mamba install --yes \
-  # avoid bug in pak: https://github.com/r-lib/pak/issues/393
-  "r-MASS" \
-  # R packages
-  "r-bit" \
-  "r-commonmark" \
-  "r-curl" \
-  "r-data.table" \
-  "r-diffobj" \
-  "r-digest" \
-  "r-dplyr" \
-  "r-farver" \
-  "r-fs" \
-  "r-gridExtra" \
-  "r-jsonlite" \
-  "r-lattice" \
-  "r-lme4" \
-  "r-MatrixModels" \
-  "r-mgcv" \
-  "r-nlme" \
-  "r-nloptr" \
-  "r-plotly" \
-  "r-purrr" \
-  "r-Rcpp" \
-  "r-RcppEigen" \
-  "r-rlang" \
-  "r-statmod" \
-  "r-stringdist" \
-  "r-survival" \
-  "r-testthat" \
-  "r-vctrs" \
   "asttokens" \
   # ensure user has full control of package and home dirs
   && fix-permissions "${CONDA_DIR}" \
   && fix-permissions "/home/${NB_USER}"
 
-# dependencies for the rest of the R packages not installed by mamba
 USER root
 
+# compilers
+# hadolint ignore=DL3059
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   --mount=type=cache,target=/var/lib/apt,sharing=locked \
-  --mount=type=bind,from=scripts,target=/tmp/scripts \
-  /tmp/scripts/setup-tidyverse.sh
+  apt-get update && export DEBIAN_FRONTEND=noninteractive \
+  && apt-get -y install --no-install-recommends \
+  # av
+  cargo \
+  # cmdstanr
+  g++ \
+  # nloptr
+  cmake
 
 USER ${NB_UID}
 
