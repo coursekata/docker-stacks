@@ -35,17 +35,18 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
   "r-minqa" \
   "r-mosaic" \
   "r-nloptr" \
-  "r-pak" \
   "r-palmerpenguins" \
   "r-plotly" \
-  "r-praise" \
   "r-rcppeigen" \
   "r-statmod" \
   "r-stringdist" \
   # ensure user has full control of package and home dirs
   && fix-permissions "${CONDA_DIR}" \
-  && fix-permissions "/home/${NB_USER}"
+  && fix-permissions "/home/${NB_USER}" \
+  && Rscript -e 'install.packages("pak", repos = sprintf("https://r-lib.github.io/p/pak/stable/%s/%s/%s", .Platform$pkgType, R.Version()$os, R.Version()$arch))'
 
 # install the full R package list, ignoring updates except where required
 RUN --mount=type=bind,source=requirements.r,target=/tmp/requirements.r \
   Rscript /tmp/requirements.r
+
+USER ${NB_UID}
