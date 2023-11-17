@@ -43,16 +43,6 @@ on:
         type: string
         required: false
         default: ""
-      cache-from:
-        description: Build cache-from passed to docker/build-push-action.
-        type: string
-        required: false
-        default: type=gha
-      cache-to:
-        description: Build cache-to passed to docker/build-push-action.
-        type: string
-        required: false
-        default: type=gha,mode=max
 
 jobs:
   build:
@@ -125,5 +115,3 @@ jobs:
           platforms: ${{ inputs.platforms }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: ${{ inputs.cache-from }}
-          cache-to: ${{ inputs.cache-to }}
