@@ -10,7 +10,6 @@ remotes::install_cran(upgrade = FALSE, pkgs = c(
   "lme4",
   "minqa",
   "plotly",
-  "remotes",
   "statmod"
 ))
 
