@@ -6,14 +6,6 @@ LABEL maintainer="CourseKata <tech@coursekata.org>"
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# install R package dependencies
-RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
-  mamba install --yes \
-  "asttokens" \
-  # ensure user has full control of package and home dirs
-  && fix-permissions "${CONDA_DIR}" \
-  && fix-permissions "/home/${NB_USER}"
-
 USER root
 
 # compilers
