@@ -14,7 +14,6 @@ remotes::install_cran(upgrade = FALSE, pkgs = c(
   "statmod"
 ))
 
-
 # packages only in r-notebook and datascience-notebook
 remotes::install_cran(upgrade = FALSE, pkgs = c(
   "av",

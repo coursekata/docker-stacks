@@ -8,14 +8,41 @@ FROM ${REGISTRY}/${OWNER}/essentials-builder as r-builder
 # do as many installs as possible with mamba: faster and ensures deps.
 RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
   mamba install --yes \
-  ## av
   "ffmpeg" \
-  ## geospatial
   "gdal" \
   "pkg-config" \
   "proj" \
-  ## gert
-  "libgit2" \
+  "r-BH" \
+  "r-car" \
+  "r-checkmate" \
+  "r-gert" \
+  "r-gganimate" \
+  "r-ggdag" \
+  "r-ggforce" \
+  "r-ggraph" \
+  "r-gh" \
+  "r-gitcreds" \
+  "r-graphlayouts" \
+  "r-igraph" \
+  "r-here" \
+  "r-httr2" \
+  "r-ini" \
+  "r-mapdata" \
+  "r-maps" \
+  "r-neuralnet" \
+  "r-polyclip" \
+  "r-posterior" \
+  "r-profvis" \
+  "r-psych" \
+  "r-rcpptoml" \
+  "r-reticulate" \
+  "r-tensora" \
+  "r-tidygraph" \
+  "r-tidymodels" \
+  "r-tidyverse" \
+  "r-usethis" \
+  "r-v8" \
+  "r-whisker" \
   # ensure user has full control of package and home dirs
   && fix-permissions "${CONDA_DIR}" \
   && fix-permissions "/home/${NB_USER}"

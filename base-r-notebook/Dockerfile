@@ -20,7 +20,7 @@ USER root
 ENV TZ=Etc/UTC
 ENV LANG=en_US.UTF-8
 ENV _R_SHLIB_STRIP_=true
-ENV R_HOME=/opt/conda/lib/R
+ENV R_HOME="${CONDA_DIR}/lib/R"
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   --mount=type=cache,target=/var/lib/apt,sharing=locked \
@@ -43,11 +43,9 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
   "pkg-config" \
   "r-base~=${R_VERSION}" \
   "r-irkernel"  \
-  "r-pak" \
   "r-remotes" \
   && fix-permissions "${CONDA_DIR}" \
-  && fix-permissions "/home/${NB_USER}" \
-  && Rscript -e 'pak::pak_update()'
+  && fix-permissions "/home/${NB_USER}"
 
 # add R mimetype and networking options
 COPY --chown=${NB_UID}:${NB_GID} Rprofile.site "${R_HOME}"/etc/

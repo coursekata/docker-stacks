@@ -23,6 +23,30 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 USER ${NB_UID}
 
+# install R packages from conda where possible
+RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
+  mamba install --yes \
+  "r-ggpubr" \
+  "r-gridextra" \
+  "r-lme4" \
+  "r-lsr" \
+  "r-markdown" \
+  "r-metrics" \
+  "r-minqa" \
+  "r-mosaic" \
+  "r-nloptr" \
+  "r-pak" \
+  "r-palmerpenguins" \
+  "r-plotly" \
+  "r-praise" \
+  "r-rcppeigen" \
+  "r-statmod" \
+  "r-stringdist" \
+  && Rscript -e 'install.packages("pak", repos = sprintf("https://r-lib.github.io/p/pak/stable/%s/%s/%s", .Platform$pkgType, R.Version()$os, R.Version()$arch))' \
+  # ensure user has full control of package and home dirs
+  && fix-permissions "${CONDA_DIR}" \
+  && fix-permissions "/home/${NB_USER}"
+
 # install the full R package list, ignoring updates except where required
 RUN --mount=type=bind,source=requirements.r,target=/tmp/requirements.r \
   Rscript /tmp/requirements.r
