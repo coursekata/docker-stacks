@@ -26,7 +26,6 @@ USER ${NB_UID}
 # install R packages from conda where possible
 RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
   mamba install --yes \
-  "r-fivethirtyeight" \
   "r-ggpubr" \
   "r-gridextra" \
   "r-lme4" \

@@ -5,6 +5,7 @@ remotes::install_github(upgrade = FALSE, "coursekata/testwhat")
 remotes::install_github(upgrade = FALSE, "fivethirtyeightdata/fivethirtyeightdata")
 remotes::install_cran(upgrade = FALSE, pkgs = c(
   "coursekata",
+  "fivethirtyeight",
   "ggpubr",
   "gridExtra",
   "lme4",
