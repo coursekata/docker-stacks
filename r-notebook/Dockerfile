@@ -8,6 +8,7 @@ FROM ${REGISTRY}/${OWNER}/essentials-builder as r-builder
 # do as many installs as possible with mamba: faster and ensures deps.
 RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
   mamba install --yes \
+  "cmdstan" \
   "ffmpeg" \
   "gdal" \
   "pkg-config" \

@@ -40,4 +40,3 @@ remotes::install_cran(upgrade = FALSE, pkgs = c(
 
 stan_repo <- "https://mc-stan.org/r-packages/"
 install.packages("cmdstanr", upgrade = FALSE, repos = c(Stan = stan_repo, getOption("repos")))
-cmdstanr::install_cmdstan()
