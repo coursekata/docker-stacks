@@ -12,5 +12,3 @@ remotes::install_cran(upgrade = FALSE, pkgs = c(
   "plotly",
   "statmod"
 ))
-
-coursekata::coursekata_install()
