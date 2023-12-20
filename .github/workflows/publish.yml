@@ -49,6 +49,7 @@ jobs:
     secrets: inherit
     with:
       runs-on: ${{ needs.env.outputs.runs-on }}
+      free-space: false
       image: base-r-notebook
       labels: |
         org.opencontainers.image.title=Base R Notebook

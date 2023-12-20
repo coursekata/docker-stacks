@@ -48,13 +48,18 @@ on:
         type: boolean
         required: false
         default: true
+      free-space:
+        description: "Whether to free up disk space before building"
+        type: boolean
+        required: false
+        default: true
 
 jobs:
   build:
     runs-on: ${{ inputs.runs-on }}
     steps:
       # https://github.com/jlumbroso/free-disk-space
-      - if: ${{ inputs.runs-on == 'ubuntu-latest' }}
+      - if: ${{ inputs.runs-on == 'ubuntu-latest' && inputs.free-space == true }}
         name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@main
         with:
