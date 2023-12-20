@@ -17,12 +17,13 @@ remotes::install_cran(upgrade = FALSE, pkgs = c(
 # packages only in r-notebook and datascience-notebook
 remotes::install_cran(upgrade = FALSE, pkgs = c(
   "av",
+  "bayesplot",
   "car",
   "dagitty",
+  "emmeans",
   "gganimate",
   "ggdag",
   "gifski",
-  "gridExtra",
   "here",
   "mapdata",
   "mapproj",
@@ -37,6 +38,3 @@ remotes::install_cran(upgrade = FALSE, pkgs = c(
   "tidymodels",
   "tidyverse"
 ))
-
-stan_repo <- "https://mc-stan.org/r-packages/"
-install.packages("cmdstanr", upgrade = FALSE, repos = c(Stan = stan_repo, getOption("repos")))

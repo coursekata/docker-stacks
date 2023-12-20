@@ -11,7 +11,6 @@ DOCKER_BUILD_ARGS?=
 # Need to list the images in build dependency order
 ALL_IMAGES:= \
 	base-r-notebook \
-	essentials-builder \
 	essentials-notebook \
 	r-notebook \
 	datascience-notebook
