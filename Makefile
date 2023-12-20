@@ -39,13 +39,22 @@ create-builder:
 	fi
 	docker buildx use $(BUILDER_NAME)
 build/%: ## build the latest image for a stack using the system's architecture
-	docker build $(DOCKER_BUILD_ARGS) --rm --force-rm --tag "$(REGISTRY)/$(OWNER)/$(notdir $@):latest" "./$(notdir $@)" --build-arg REGISTRY="$(REGISTRY)" --build-arg OWNER="$(OWNER)"
+	docker build $(DOCKER_BUILD_ARGS) --rm --force-rm \
+	--tag "$(REGISTRY)/$(OWNER)/$(notdir $@):latest" \
+	--build-arg REGISTRY="$(REGISTRY)" \
+	--build-arg OWNER="$(OWNER)" \
+	"./$(notdir $@)"
 	@echo
 	@echo -n "Built image size: "
 	@docker images "$(REGISTRY)/$(OWNER)/$(notdir $@):latest" --format "{{.Size}}"
 	@echo
 build-multiarch/%: create-builder ## build the latest image using a multi-arch builder
-	docker buildx build $(DOCKER_BUILD_ARGS) --rm --force-rm --tag "$(REGISTRY)/$(OWNER)/$(notdir $@):latest" --platform linux/amd64,linux/arm64 "./$(notdir $@)" --build-arg REGISTRY="$(REGISTRY)" --build-arg OWNER="$(OWNER)"
+	docker buildx build $(DOCKER_BUILD_ARGS) --rm --force-rm \
+	--tag "$(REGISTRY)/$(OWNER)/$(notdir $@):latest" \
+	--platform linux/amd64,linux/arm64 \
+	--build-arg REGISTRY="$(REGISTRY)" \
+	--build-arg OWNER="$(OWNER)" \
+	"./$(notdir $@)"
 	@echo
 	@echo -n "Built image size: "
 	@docker images "$(REGISTRY)/$(OWNER)/$(notdir $@):latest" --format "{{.Size}}"
@@ -90,3 +99,11 @@ run-shell/%: ## run a bash in interactive mode in a stack
 	docker run -it --rm "$(REGISTRY)/$(OWNER)/$(notdir $@)" $(SHELL)
 run-sudo-shell/%: ## run a bash in interactive mode as root in a stack
 	docker run -it --rm --user root "$(REGISTRY)/$(OWNER)/$(notdir $@)" $(SHELL)
+
+
+
+test/%: ## test a stack
+	@docker run --rm --mount=type=bind,source="./tests/$(notdir $@).sh",target=/tmp/test.sh \
+	"$(REGISTRY)/$(OWNER)/$(notdir $@)" $(SHELL) /tmp/test.sh
+	@echo "Tests for $(notdir $@) passed!"
+test-all: $(foreach I, $(ALL_IMAGES), test/$(I)) ## test all stacks
