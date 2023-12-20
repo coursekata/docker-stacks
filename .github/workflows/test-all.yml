@@ -1,5 +1,5 @@
 ---
-name: Build the Images
+name: Build and Test all Images
 
 on:
   workflow_dispatch:
@@ -12,8 +12,8 @@ on:
   push:
     branches: [test/*]
     paths:
-      - .github/workflows/build-all.yml
-      - .github/workflows/build-and-push.yml
+      - .github/workflows/build-test-publish.yml
+      - .github/workflows/test-all.yml
       - base-r-notebook/**
       - essentials-notebook/**
       - r-notebook/**
@@ -28,73 +28,71 @@ concurrency:
 jobs:
   env:
     runs-on: ubuntu-latest
-    outputs:
-      runs-on: ${{ steps.set-env.outputs.runs-on }}
-      python-version: ${{ steps.set-env.outputs.python-version }}
-      r-version: ${{ steps.set-env.outputs.r-version }}
     steps:
       - name: Set output variables based on the inputs
         id: set-env
         run: |
           echo "runs-on=${{ github.event.inputs.runs-on || 'ubuntu-latest' }}" >> $GITHUB_OUTPUT
-          echo "python-version=3.11" >> $GITHUB_OUTPUT
-          echo "r-version=4.3" >> $GITHUB_OUTPUT
+    outputs:
+      runs-on: ${{ steps.set-env.outputs.runs-on }}
+      python-version: "3.11"
+      r-version: "4.3"
+      tags: |
+        type=raw,value=python-3.11
+        type=raw,value=r-4.3
 
   base-r-notebook:
-    needs: env
-    uses: ./.github/workflows/build-and-push.yml
+    needs: [env]
+    uses: ./.github/workflows/build-test-publish.yml
     secrets: inherit
     with:
-      push: false
-      runs-on: ${{ needs.env.outputs.runs-on }}
       image: base-r-notebook
       labels: |
         org.opencontainers.image.title=Base R Notebook
         org.opencontainers.image.description=Jupyter Lab, Python, and R, and that's it.
-      python-version: ${{ needs.env.outputs.python-version }}
-      r-version: ${{ needs.env.outputs.r-version }}
       build-args: |
         PYTHON_VERSION=${{ needs.env.outputs.python-version }}
         R_VERSION=${{ needs.env.outputs.r-version }}
+      tags: ${{ needs.env.outputs.tags }}
+      runs-on: ${{ needs.env.outputs.runs-on }}
+      free-space: false
+      push: false
 
   essentials-notebook:
     needs: [env, base-r-notebook]
-    uses: ./.github/workflows/build-and-push.yml
+    uses: ./.github/workflows/build-test-publish.yml
     secrets: inherit
     with:
-      push: false
-      runs-on: ${{ needs.env.outputs.runs-on }}
       image: essentials-notebook
       labels: |
         org.opencontainers.image.title=Essentials Notebook
         org.opencontainers.image.description=CourseKata essentials: everything used in the books.
-      python-version: ${{ needs.env.outputs.python-version }}
-      r-version: ${{ needs.env.outputs.r-version }}
+      tags: ${{ needs.env.outputs.tags }}
+      runs-on: ${{ needs.env.outputs.runs-on }}
+      push: false
 
   r-notebook:
     needs: [env, essentials-notebook]
-    uses: ./.github/workflows/build-and-push.yml
+    uses: ./.github/workflows/build-test-publish.yml
     secrets: inherit
     with:
-      push: false
-      runs-on: ${{ needs.env.outputs.runs-on }}
       image: r-notebook
       labels: |
         org.opencontainers.image.title=R Notebook
         org.opencontainers.image.description=CourseKata essentials and other R packages for teaching and learning data science.
-      python-version: ${{ needs.env.outputs.python-version }}
-      r-version: ${{ needs.env.outputs.r-version }}
+      tags: ${{ needs.env.outputs.tags }}
+      runs-on: ${{ needs.env.outputs.runs-on }}
+      push: false
 
   datascience-notebook:
     needs: [env, r-notebook]
-    uses: ./.github/workflows/build-and-push.yml
+    uses: ./.github/workflows/build-test-publish.yml
     secrets: inherit
     with:
-      push: false
-      runs-on: ${{ needs.env.outputs.runs-on }}
       image: datascience-notebook
       labels: |
         org.opencontainers.image.title=Data Science Notebook
         org.opencontainers.image.description=R and Python packages for teaching and learning data science.
-      python-version: ${{ needs.env.outputs.python-version }}
-      r-version: ${{ needs.env.outputs.r-version }}
+      tags: ${{ needs.env.outputs.tags }}
+      runs-on: ${{ needs.env.outputs.runs-on }}
+      push: false
