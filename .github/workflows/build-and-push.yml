@@ -43,6 +43,11 @@ on:
         type: string
         required: false
         default: ""
+      push:
+        description: "Whether to push the image to the registry"
+        type: boolean
+        required: false
+        default: true
 
 jobs:
   build:
@@ -108,7 +113,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
-          push: true
+          push: ${{ inputs.push }}
           context: ${{ inputs.context || inputs.image }}
           build-args: ${{ inputs.build-args }}
           build-contexts: ${{ inputs.build-contexts }}
