@@ -94,6 +94,8 @@ pull-all: $(foreach I, $(ALL_IMAGES), pull/$(I)) ## pull all images
 
 
 
+run/%: ## run a stack on port 8888
+	docker run -it --rm -p 8888:8888 "$(REGISTRY)/$(OWNER)/$(notdir $@)"
 run-shell/%: ## run a bash in interactive mode in a stack
 	docker run -it --rm "$(REGISTRY)/$(OWNER)/$(notdir $@)" $(SHELL)
 run-sudo-shell/%: ## run a bash in interactive mode as root in a stack
