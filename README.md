@@ -12,14 +12,13 @@ There are currently five different images that you can choose from, some of whic
 
 - [essentials-notebook](https://github.com/coursekata/docker-stacks/pkgs/container/essentials-notebook): an image with all of the R packages used in CourseKata books and CourseKata Jupyter Notebooks. If you are coming from the CourseKata book this is a great starting place: you will be able to do everything you did in the books and more!
   - You can see specifically what packages are installed by looking at [essentials-notebook/requirements.r](essentials-notebook/requirements.r).
-- [r-notebook](https://github.com/coursekata/docker-stacks/pkgs/container/r-notebook): this image has all of the contents of the *essentials-notebook* with the addition of other R packages that instructors have requested that we install for data science and statistics.
+- [r-notebook](https://github.com/coursekata/docker-stacks/pkgs/container/r-notebook): this image has all of the contents of the _essentials-notebook_ with the addition of other R packages that instructors have requested that we install for data science and statistics.
   - You can see specifically what packages are installed by looking at [r-notebook/requirements.r](r-notebook/requirements.r)
   - If you have a specific package you think would be useful to install here, please [submit an issue describing your use case](https://github.com/coursekata/docker-stacks/issues).
-- [datascience-notebook](https://github.com/coursekata/docker-stacks/pkgs/container/datascience-notebook): this image builds on *r-notebook* by adding a variety of Python packages for data science and statistics.
+- [datascience-notebook](https://github.com/coursekata/docker-stacks/pkgs/container/datascience-notebook): this image builds on _r-notebook_ by adding a variety of Python packages for data science and statistics.
   - You can see specifically what packages are installed by looking at [datascience-notebook/requirements.r](datascience-notebook/requirements.r) and [datascience-notebook/requirements.txt](datascience-notebook/requirements.txt)
   - If you have a specific package you think would be useful to install here, please [submit an issue describing your use case](https://github.com/coursekata/docker-stacks/issues).
 - [base-r-notebook](https://github.com/coursekata/docker-stacks/pkgs/container/minimal-r-notebook): an image with Python and R installed, and that's it. R is configured to be the default notebook, but both R and Python notebooks are supported. There are no other packages installed on this image. This is a good image to use if you are building your own image from scratch.
-- essentials-builder: **this is likely not an image you want to use**. This image is used to cache build steps common to the essentials- and r-notebook images. R images benefit from multi-staged builds by having a build stage that builds the R package binaries and then just copies the built packages to the final stage (omitting the considerable amount of dependencies needed to build the packages). However, multi-staged builds do not cache all of the build stages, so to take advantage of caching you either need to extract them to their own image (like here) or build to the appropriate target (e.g. `docker build --target <stage>`).
 
 ## Tagging
 
@@ -28,10 +27,6 @@ These images are built based on a variety of triggers, and each trigger results 
 ### You want all the updates and changes
 
 If you want all the updates and changes to these images as we make them, you can use the `latest` tag. This will be the most recently built, stable version of each image. Note that while we try our best to maintain stability in terms of the packages that are installed on each image, by definition images tagged `latest` will be subject to changes as we improve our structure and delivery.
-
-### You mostly want changes, but you need some stability
-
-If you want to ensure that your image always has a specific version of R or Python, but that the installed packages are always up-to-date, choose an image tag that specifies the language version, e.g. `python-3.10` or `r-4.2`. Images tagged like this will get all of the same updates and changes as `latest`, except they will always have their respective Python and R versions installed.
 
 ### You mostly want stability
 
