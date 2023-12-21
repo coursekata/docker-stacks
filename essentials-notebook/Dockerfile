@@ -72,12 +72,7 @@ RUN --mount=type=bind,source="${PY_REQUIREMENTS}",target=/tmp/requirements.txt \
   --mount=type=cache,target="${PIP_CACHE_DIR}",uid="${NB_UID}" \
   --mount=type=cache,from=py-builder,source="${PIP_WHEEL_DIR}",target="${PIP_WHEEL_DIR}" \
   pip3 install --disable-pip-version-check --cache-dir="${PIP_CACHE_DIR}" --find-links="${PIP_WHEEL_DIR}" \
-  -r /tmp/requirements.txt \
-  # install jupyter extensions (prevents user pop-up on first load)
-  && jupyter lab build \
-  # ensure user has full control of package and home dirs
-  && fix-permissions "${CONDA_DIR}" \
-  && fix-permissions "/home/${NB_USER}"
+  -r /tmp/requirements.txt
 
 # copy over R packages
 COPY --from=r-builder --chown=${NB_UID}:${NB_GID} ${R_HOME} ${R_HOME}

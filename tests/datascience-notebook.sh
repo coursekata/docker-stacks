@@ -70,7 +70,6 @@ py_packages=(
   folium
   gensim
   geopandas
-  jupyter-dash
   dtreeviz
   mapclassify
   networkx

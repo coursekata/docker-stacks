@@ -101,16 +101,38 @@ RUN --mount=type=bind,source="${PY_REQUIREMENTS}",target=/tmp/requirements.txt \
   --mount=type=cache,target="${PIP_CACHE_DIR}",uid="${NB_UID}" \
   --mount=type=cache,from=py-builder,source="${PIP_WHEEL_DIR}",target="${PIP_WHEEL_DIR}" \
   pip3 install --disable-pip-version-check --cache-dir="${PIP_CACHE_DIR}" --find-links="${PIP_WHEEL_DIR}" \
-  -r /tmp/requirements.txt \
-  # install jupyter extensions (prevents user pop-up on first load)
-  && jupyter lab build \
-  # ensure user has full control of package and home dirs
-  && fix-permissions "${CONDA_DIR}" \
-  && fix-permissions "/home/${NB_USER}"
+  -r /tmp/requirements.txt
 
 # copy over R packages
 COPY --from=r-builder --chown=${NB_UID}:${NB_GID} ${R_HOME} ${R_HOME}
-COPY --from=r-builder --chown=${NB_UID}:${NB_GID} ${CONDA_DIR}/lib/libnlopt* ${CONDA_DIR}/lib
+# copying these over is hard, just install them
+RUN Rscript -e "install.packages(c('V8', 'ggdag'))"
+# copy shared libraries
+COPY --from=r-builder --chown=${NB_UID}:${NB_GID} \
+  # lme4
+  ${CONDA_DIR}/lib/libnlopt* \
+  # av
+  ${CONDA_DIR}/lib/libaom* \
+  ${CONDA_DIR}/lib/libass* \
+  ${CONDA_DIR}/lib/libavcodec* \
+  ${CONDA_DIR}/lib/libavfilter* \
+  ${CONDA_DIR}/lib/libavformat* \
+  ${CONDA_DIR}/lib/libavutil* \
+  ${CONDA_DIR}/lib/libdav1d* \
+  ${CONDA_DIR}/lib/libmp3lame* \
+  ${CONDA_DIR}/lib/libopenh264* \
+  ${CONDA_DIR}/lib/libopus* \
+  ${CONDA_DIR}/lib/libpostproc* \
+  ${CONDA_DIR}/lib/libSvtAv1Enc* \
+  ${CONDA_DIR}/lib/libswresample* \
+  ${CONDA_DIR}/lib/libswscale* \
+  ${CONDA_DIR}/lib/libvpx* \
+  ${CONDA_DIR}/lib/libx264* \
+  ${CONDA_DIR}/lib/libx265* \
+  # ggdag
+  ${CONDA_DIR}/lib/libglpk* \
+  # output dir
+  ${CONDA_DIR}/lib
 
 # set default kernel
 ARG DEFAULT_KERNEL_NAME

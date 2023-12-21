@@ -51,41 +51,24 @@ RUN --mount=type=bind,source="${PY_REQUIREMENTS}",target=/tmp/requirements.txt \
   && pip3 wheel --cache-dir="${PIP_CACHE_DIR}" --wheel-dir="${PIP_WHEEL_DIR}" -r /tmp/requirements.txt
 
 
-# r-builder
-# -------------------------------------
-FROM ${REGISTRY}/${OWNER}/${BASE_IMAGE} as r-builder
-
-
 # final
 # -------------------------------------
-FROM ${REGISTRY}/${OWNER}/base-r-notebook as final
+FROM ${REGISTRY}/${OWNER}/r-notebook as final
 LABEL maintainer="CourseKata <tech@coursekata.org>"
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 USER ${NB_UID}
-
-# install cmdstan
-RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
-  mamba install --yes "cmdstan" "cmdstanpy" \
-  && Rscript -e 'remotes::install_cran("cmdstanr", repos = "https://mc-stan.org/r-packages/", dependencies = TRUE)' \
-  && fix-permissions "${CONDA_DIR}" \
-  && fix-permissions "/home/${NB_USER}"
 
 # install Python packages from wheels
 ARG PIP_CACHE_DIR PIP_WHEEL_DIR PY_REQUIREMENTS
 RUN --mount=type=bind,source="${PY_REQUIREMENTS}",target=/tmp/requirements.txt \
   --mount=type=cache,target="${PIP_CACHE_DIR}",uid="${NB_UID}" \
   --mount=type=cache,from=py-builder,source="${PIP_WHEEL_DIR}",target="${PIP_WHEEL_DIR}" \
+  --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
   pip3 install --disable-pip-version-check --cache-dir="${PIP_CACHE_DIR}" --find-links="${PIP_WHEEL_DIR}" \
   -r /tmp/requirements.txt \
-  # install jupyter extensions (prevents user pop-up on first load)
-  && jupyter lab build \
-  # ensure user has full control of package and home dirs
-  && fix-permissions "${CONDA_DIR}" \
-  && fix-permissions "/home/${NB_USER}"
-
-# copy over R packages
-COPY --from=r-builder --chown=${NB_UID}:${NB_GID} ${R_HOME} ${R_HOME}
-COPY --from=r-builder --chown=${NB_UID}:${NB_GID} ${CONDA_DIR}/lib/libnlopt* ${CONDA_DIR}/lib
+  # install cmdstan
+  && Rscript -e 'remotes::install_cran("cmdstanr", repos = "https://mc-stan.org/r-packages/", dependencies = TRUE)' \
+  && mamba install --yes "cmdstan"
 
 # set default kernel
 ARG DEFAULT_KERNEL_NAME
