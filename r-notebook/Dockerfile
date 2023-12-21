@@ -90,7 +90,7 @@ RUN --mount=type=bind,source="${R_REQUIREMENTS}",target=/tmp/requirements.r \
 
 # final
 # -------------------------------------
-FROM ${REGISTRY}/${OWNER}/${BASE_IMAGE} as final
+FROM ${REGISTRY}/${OWNER}/base-r-notebook as final
 LABEL maintainer="CourseKata <tech@coursekata.org>"
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 USER ${NB_UID}
@@ -110,6 +110,7 @@ RUN --mount=type=bind,source="${PY_REQUIREMENTS}",target=/tmp/requirements.txt \
 
 # copy over R packages
 COPY --from=r-builder --chown=${NB_UID}:${NB_GID} ${R_HOME} ${R_HOME}
+COPY --from=r-builder --chown=${NB_UID}:${NB_GID} ${CONDA_DIR}/lib/libnlopt* ${CONDA_DIR}/lib
 
 # set default kernel
 ARG DEFAULT_KERNEL_NAME

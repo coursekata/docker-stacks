@@ -51,9 +51,14 @@ RUN --mount=type=bind,source="${PY_REQUIREMENTS}",target=/tmp/requirements.txt \
   && pip3 wheel --cache-dir="${PIP_CACHE_DIR}" --wheel-dir="${PIP_WHEEL_DIR}" -r /tmp/requirements.txt
 
 
+# r-builder
+# -------------------------------------
+FROM ${REGISTRY}/${OWNER}/${BASE_IMAGE} as r-builder
+
+
 # final
 # -------------------------------------
-FROM ${REGISTRY}/${OWNER}/${BASE_IMAGE} as final
+FROM ${REGISTRY}/${OWNER}/base-r-notebook as final
 LABEL maintainer="CourseKata <tech@coursekata.org>"
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 USER ${NB_UID}
@@ -77,6 +82,10 @@ RUN --mount=type=bind,source="${PY_REQUIREMENTS}",target=/tmp/requirements.txt \
   # ensure user has full control of package and home dirs
   && fix-permissions "${CONDA_DIR}" \
   && fix-permissions "/home/${NB_USER}"
+
+# copy over R packages
+COPY --from=r-builder --chown=${NB_UID}:${NB_GID} ${R_HOME} ${R_HOME}
+COPY --from=r-builder --chown=${NB_UID}:${NB_GID} ${CONDA_DIR}/lib/libnlopt* ${CONDA_DIR}/lib
 
 # set default kernel
 ARG DEFAULT_KERNEL_NAME
