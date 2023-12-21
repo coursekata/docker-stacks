@@ -50,3 +50,5 @@ done
 for package in "${py_packages[@]}"; do
   pip show $package &> /dev/null || (echo " ! Python package $package not found" && exit 1)
 done
+
+echo "All tests passed!"

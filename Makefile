@@ -102,7 +102,8 @@ run-sudo-shell/%: ## run a bash in interactive mode as root in a stack
 
 
 test/%: ## test a stack
+	@echo "Testing $(notdir $@) ..."
 	@docker run --rm --mount=type=bind,source="./tests/$(notdir $@).sh",target=/tmp/test.sh \
 	"$(REGISTRY)/$(OWNER)/$(notdir $@)" $(SHELL) /tmp/test.sh
-	@echo "Tests for $(notdir $@) passed!"
+	@echo
 test-all: $(foreach I, $(ALL_IMAGES), test/$(I)) ## test all stacks
