@@ -2,7 +2,22 @@
 
 set -e
 
-packages=(
+r_packages=(
+  # base
+  remotes
+  IRkernel
+  # essentials
+  coursekata
+  gridExtra
+  fivethirtyeight
+  fivethirtyeightdata
+  testwhat
+  ggpubr
+  lme4
+  minqa
+  plotly
+  statmod
+  # r-notebook
   av
   bayesplot
   car
@@ -27,6 +42,10 @@ packages=(
 )
 
 py_packages=(
+  # base
+  # essentials
+  pythonwhat
+  # r-notebook
 )
 
 for package in "${r_packages[@]}"; do

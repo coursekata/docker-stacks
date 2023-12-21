@@ -3,11 +3,13 @@
 set -e
 
 r_packages=(
+  # base
   remotes
   IRkernel
 )
 
 py_packages=(
+  # base
 )
 
 for package in "${r_packages[@]}"; do

@@ -3,6 +3,10 @@
 set -e
 
 r_packages=(
+  # base
+  remotes
+  IRkernel
+  # essentials
   coursekata
   gridExtra
   fivethirtyeight
@@ -16,6 +20,8 @@ r_packages=(
 )
 
 py_packages=(
+  # base
+  # essentials
   pythonwhat
 )
 
