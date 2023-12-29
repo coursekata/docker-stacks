@@ -1,0 +1,81 @@
+---
+name: Test images
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [test/*]
+    paths:
+      - .github/workflows/test.yml
+      - .github/actions/build-test/**
+      - tests/**
+      - base-r-notebook/**
+      - essentials-notebook/**
+      - r-notebook/**
+      - datascience-notebook/**
+
+# https://docs.github.com/en/actions/using-jobs/using-concurrency
+concurrency:
+  # only cancel in-progress jobs or runs for the current workflow - matches against branch & tags
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  base-image: jupyter/minimal-notebook
+  python-version: "3.11"
+  r-version: "4.3"
+  tags: |
+    type=raw,value=python-3.11
+    type=raw,value=r-4.3
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
+
+    steps:
+      # https://github.com/actions/checkout
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # https://github.com/docker/setup-buildx-action
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          # network=host driver-opt needed to push to local registry
+          driver-opts: network=host
+
+      - name: base-r build and test
+        id: base-r
+        uses: ./.github/actions/build-test
+        with:
+          image: base-r-notebook
+          platform: linux/amd64
+          build-args: |
+            PYTHON_VERSION=${{ env.python-version }}
+            R_VERSION=${{ env.r-version }}
+
+      - name: essentials build and test
+        id: essentials
+        uses: ./.github/actions/build-test
+        with:
+          image: essentials-notebook
+          platform: linux/amd64
+          build-args: |
+            BASE_IMAGE=${{ steps.base-r.outputs.image }}
+            PARENT_IMAGE=${{ steps.base-r.outputs.image }}
+
+      - name: r build and test
+        id: r
+        uses: ./.github/actions/build-test
+        with:
+          image: r-notebook
+          platform: linux/amd64
+          build-args: |
+            BASE_IMAGE=${{ steps.base-r.outputs.image }}
+            PARENT_IMAGE=${{ steps.essentials.outputs.image }}

@@ -19,7 +19,8 @@ ARG DEFAULT_KERNEL_NAME=ir
 
 # final
 # -------------------------------------
-FROM jupyter/minimal-notebook:python-${PYTHON_VERSION} as base
+ARG BASE_IMAGE=jupyter/minimal-notebook:python-${PYTHON_VERSION}
+FROM ${BASE_IMAGE} as final
 LABEL maintainer="CourseKata <tech@coursekata.org>"
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive

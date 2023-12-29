@@ -12,6 +12,7 @@ on:
   push:
     branches: [main]
     paths:
+      - .github/actions/build-test-publish
       - .github/workflows/build-test-publish.yml
       - .github/workflows/publish-all.yml
       - base-r-notebook/**
@@ -44,54 +45,81 @@ jobs:
         type=raw,value=python-3.11
         type=raw,value=r-4.3
 
-  base-r-notebook:
+  publish:
     needs: [env]
-    uses: ./.github/workflows/build-test-publish.yml
-    secrets: inherit
-    with:
-      image: base-r-notebook
-      labels: |
-        org.opencontainers.image.title=Base R Notebook
-        org.opencontainers.image.description=Jupyter Lab, Python, and R, and that's it.
-      build-args: |
-        PYTHON_VERSION=${{ needs.env.outputs.python-version }}
-        R_VERSION=${{ needs.env.outputs.r-version }}
-      tags: ${{ needs.env.outputs.tags }}
-      runs-on: ${{ needs.env.outputs.runs-on }}
-      free-space: false
+    runs-on: ubuntu-latest
+    steps:
+      # https://github.com/jlumbroso/free-disk-space
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          dotnet: false
+          haskell: false
+          large-packages: false
+          swap-storage: false
 
-  essentials-notebook:
-    needs: [env, base-r-notebook]
-    uses: ./.github/workflows/build-test-publish.yml
-    secrets: inherit
-    with:
-      image: essentials-notebook
-      labels: |
-        org.opencontainers.image.title=Essentials Notebook
-        org.opencontainers.image.description=CourseKata essentials: everything used in the books.
-      tags: ${{ needs.env.outputs.tags }}
-      runs-on: ${{ needs.env.outputs.runs-on }}
+      # https://github.com/actions/checkout
+      - name: Checkout
+        uses: actions/checkout@v3
 
-  r-notebook:
-    needs: [env, essentials-notebook]
-    uses: ./.github/workflows/build-test-publish.yml
-    secrets: inherit
-    with:
-      image: r-notebook
-      labels: |
-        org.opencontainers.image.title=R Notebook
-        org.opencontainers.image.description=CourseKata essentials and other R packages for teaching and learning data science.
-      tags: ${{ needs.env.outputs.tags }}
-      runs-on: ${{ needs.env.outputs.runs-on }}
+      # https://github.com/docker/setup-qemu-action
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
-  datascience-notebook:
-    needs: [env, r-notebook]
-    uses: ./.github/workflows/build-test-publish.yml
-    secrets: inherit
-    with:
-      image: datascience-notebook
-      labels: |
-        org.opencontainers.image.title=Data Science Notebook
-        org.opencontainers.image.description=R and Python packages for teaching and learning data science.
-      tags: ${{ needs.env.outputs.tags }}
-      runs-on: ${{ needs.env.outputs.runs-on }}
+      # https://github.com/docker/setup-buildx-action
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # https://github.com/docker/login-action
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # https://github.com/docker/login-action
+      - name: Login to Docker Registry
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: base-r-notebook
+        uses: ./.github/actions/build-test-publish
+        with:
+          image: base-r-notebook
+          labels: |
+            org.opencontainers.image.title=Base R Notebook
+            org.opencontainers.image.description=Jupyter Lab, Python, and R, and that's it.
+          build-args: |
+            PYTHON_VERSION=${{ needs.env.outputs.python-version }}
+            R_VERSION=${{ needs.env.outputs.r-version }}
+          tags: ${{ needs.env.outputs.tags }}
+
+      - name: essentials-notebook
+        uses: ./.github/actions/build-test-publish
+        with:
+          image: essentials-notebook
+          labels: |
+            org.opencontainers.image.title=Essentials Notebook
+            org.opencontainers.image.description=CourseKata essentials: everything used in the books.
+          tags: ${{ needs.env.outputs.tags }}
+
+      - name: r-notebook
+        uses: ./.github/actions/build-test-publish
+        with:
+          image: r-notebook
+          labels: |
+            org.opencontainers.image.title=R Notebook
+            org.opencontainers.image.description=CourseKata essentials and other R packages for teaching and learning data science.
+          tags: ${{ needs.env.outputs.tags }}
+
+      - name: datascience-notebook
+        uses: ./.github/actions/build-test-publish
+        with:
+          image: datascience-notebook
+          labels: |
+            org.opencontainers.image.title=Data Science Notebook
+            org.opencontainers.image.description=R and Python packages for teaching and learning data science.
+          tags: ${{ needs.env.outputs.tags }}
