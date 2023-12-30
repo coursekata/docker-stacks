@@ -5,16 +5,16 @@
 ARG REGISTRY=ghcr.io
 ARG OWNER=coursekata
 
-# cache args (no need to change these)
+# env args baked into image
+ARG PYTHON_VERSION=3.11
+ARG R_VERSION=4.3
+ARG DEFAULT_KERNEL_NAME=ir
+
+# cache and build variables (no need to change these)
 ARG PIP_CACHE_DIR=/tmp/pip-cache
 ARG PIP_WHEEL_DIR=/tmp/pip-wheels
 ARG APT_CACHE_DIR=/var/cache/apt
 ARG APT_LIB_DIR=/var/lib/apt
-
-# global args
-ARG PYTHON_VERSION=3.11
-ARG R_VERSION=4.3
-ARG DEFAULT_KERNEL_NAME=ir
 
 
 # final
@@ -50,6 +50,13 @@ RUN --mount=type=cache,target="${APT_CACHE_DIR}",sharing=locked \
   r-cran-rodbc \
   unixodbc \
   unixodbc-dev
+
+# add common utilities
+COPY --chmod=555 bin/ /usr/local/bin/
+RUN chmod 555 \
+  /usr/local/bin/find-shared-libs \
+  /usr/local/bin/diff-shared-libs \
+  /usr/local/bin/copy-shared-libs
 
 USER ${NB_UID}
 

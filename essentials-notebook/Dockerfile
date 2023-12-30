@@ -4,25 +4,24 @@
 # image args
 ARG REGISTRY=ghcr.io
 ARG OWNER=coursekata
+ARG PARENT_IMAGE=base-r-notebook
 ARG BASE_IMAGE=base-r-notebook
-
-# cache args (no need to change these)
-ARG PIP_CACHE_DIR=/tmp/pip-cache
-ARG PIP_WHEEL_DIR=/tmp/pip-wheels
-ARG APT_CACHE_DIR=/var/cache/apt
-ARG APT_LIB_DIR=/var/lib/apt
 
 # build args
 ARG PY_REQUIREMENTS=requirements.txt
 ARG R_REQUIREMENTS=requirements.r
 
-# global args
-ARG DEFAULT_KERNEL_NAME=ir
+# cache and build variables (no need to change these)
+ARG PIP_CACHE_DIR=/tmp/pip-cache
+ARG PIP_WHEEL_DIR=/tmp/pip-wheels
+ARG APT_CACHE_DIR=/var/cache/apt
+ARG APT_LIB_DIR=/var/lib/apt
+ARG SHARED_LIBS_LIST=/tmp/shared-libs.txt
 
 
 # py-builder
 # -------------------------------------
-FROM ${REGISTRY}/${OWNER}/${BASE_IMAGE} as py-builder
+FROM ${REGISTRY}/${OWNER}/${PARENT_IMAGE} as py-builder
 
 # make wheels for the Python packages
 ARG PIP_CACHE_DIR PIP_WHEEL_DIR PY_REQUIREMENTS
@@ -34,14 +33,11 @@ RUN --mount=type=bind,source="${PY_REQUIREMENTS}",target=/tmp/requirements.txt \
 
 # r-builder
 # -------------------------------------
-FROM ${REGISTRY}/${OWNER}/${BASE_IMAGE} as r-builder
+FROM ${REGISTRY}/${OWNER}/${PARENT_IMAGE} as r-builder
 
 # install R packages from conda where possible
-ARG R_REQUIREMENTS
-RUN --mount=type=bind,source="${R_REQUIREMENTS}",target=/tmp/requirements.r \
-  --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
+RUN --mount=type=cache,target="${CONDA_DIR}/pkgs",uid=${NB_UID},sharing=locked \
   mamba install --yes \
-  "rust" \
   "r-ggpubr" \
   "r-gridextra" \
   "r-lme4" \
@@ -52,18 +48,42 @@ RUN --mount=type=bind,source="${R_REQUIREMENTS}",target=/tmp/requirements.r \
   "r-palmerpenguins" \
   "r-plotly" \
   "r-stringdist" \
-  # install all other R packages
-  && Rscript /tmp/requirements.r \
   # ensure user has full control of package and home dirs
   && fix-permissions "${CONDA_DIR}" \
   && fix-permissions "/home/${NB_USER}"
+
+# install all other R packages
+ARG R_REQUIREMENTS
+RUN --mount=type=bind,source="${R_REQUIREMENTS}",target=/tmp/requirements.r \
+  Rscript /tmp/requirements.r
+
+
+# pre-shared-libs
+# -------------------------------------
+FROM ${REGISTRY}/${OWNER}/${BASE_IMAGE} as pre-shared-libs
+ARG SHARED_LIBS_LIST
+RUN find-shared-libs "${R_HOME}/library" > "${SHARED_LIBS_LIST}"
+
+
+# new-shared-libs
+# -------------------------------------
+FROM r-builder as new-shared-libs
+ARG SHARED_LIBS_LIST
+COPY --from=pre-shared-libs "${SHARED_LIBS_LIST}" /tmp/pre-shared-libs.txt
+RUN find-shared-libs "${R_HOME}/library" > /tmp/post-shared-libs.txt \
+  && diff-shared-libs /tmp/pre-shared-libs.txt /tmp/post-shared-libs.txt > "${SHARED_LIBS_LIST}" \
+  && echo "Base shared libraries:" \
+  && echo "$(< /tmp/pre-shared-libs.txt)" \
+  && echo "\n\nNew shared libraries:" \
+  && echo "$(< /tmp/post-shared-libs.txt)" \
+  && echo "\n\nShared libraries to copy:" \
+  && echo "$(< "${SHARED_LIBS_LIST}")"
 
 
 # final
 # -------------------------------------
 FROM ${REGISTRY}/${OWNER}/${BASE_IMAGE} as final
 LABEL maintainer="CourseKata <tech@coursekata.org>"
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 USER ${NB_UID}
 
 # install Python packages from wheels
@@ -74,10 +94,9 @@ RUN --mount=type=bind,source="${PY_REQUIREMENTS}",target=/tmp/requirements.txt \
   pip3 install --disable-pip-version-check --cache-dir="${PIP_CACHE_DIR}" --find-links="${PIP_WHEEL_DIR}" \
   -r /tmp/requirements.txt
 
-# copy over R packages
-COPY --from=r-builder --chown=${NB_UID}:${NB_GID} ${R_HOME} ${R_HOME}
-COPY --from=r-builder --chown=${NB_UID}:${NB_GID} ${CONDA_DIR}/lib/libnlopt* ${CONDA_DIR}/lib
-
-# set default kernel
-ARG DEFAULT_KERNEL_NAME
-ENV DEFAULT_KERNEL_NAME=${DEFAULT_KERNEL_NAME}
+# copy over R packages and shared libraries
+ARG SHARED_LIBS_LIST
+COPY --from=r-builder --chown=${NB_UID}:${NB_GID} "${R_HOME}/" "${R_HOME}"
+RUN --mount=type=cache,from=r-builder,source=/,target=/mounted-r-builder \
+  --mount=type=bind,from=new-shared-libs,source="${SHARED_LIBS_LIST}",target="${SHARED_LIBS_LIST}" \
+  copy-shared-libs "${SHARED_LIBS_LIST}" /mounted-r-builder /

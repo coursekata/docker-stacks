@@ -4,25 +4,24 @@
 # image args
 ARG REGISTRY=ghcr.io
 ARG OWNER=coursekata
-ARG BASE_IMAGE=essentials-notebook
-
-# cache args (no need to change these)
-ARG PIP_CACHE_DIR=/tmp/pip-cache
-ARG PIP_WHEEL_DIR=/tmp/pip-wheels
-ARG APT_CACHE_DIR=/var/cache/apt
-ARG APT_LIB_DIR=/var/lib/apt
+ARG PARENT_IMAGE=essentials-notebook
+ARG BASE_IMAGE=base-r-notebook
 
 # build args
 ARG PY_REQUIREMENTS=requirements.txt
 ARG R_REQUIREMENTS=requirements.r
 
-# global args
-ARG DEFAULT_KERNEL_NAME=ir
+# cache and build variables (no need to change these)
+ARG PIP_CACHE_DIR=/tmp/pip-cache
+ARG PIP_WHEEL_DIR=/tmp/pip-wheels
+ARG APT_CACHE_DIR=/var/cache/apt
+ARG APT_LIB_DIR=/var/lib/apt
+ARG SHARED_LIBS_LIST=/tmp/shared-libs.txt
 
 
 # py-builder
 # -------------------------------------
-FROM ${REGISTRY}/${OWNER}/${BASE_IMAGE} as py-builder
+FROM ${REGISTRY}/${OWNER}/${PARENT_IMAGE} as py-builder
 
 # make wheels for the Python packages
 ARG PIP_CACHE_DIR PIP_WHEEL_DIR PY_REQUIREMENTS
@@ -34,12 +33,10 @@ RUN --mount=type=bind,source="${PY_REQUIREMENTS}",target=/tmp/requirements.txt \
 
 # r-builder
 # -------------------------------------
-FROM ${REGISTRY}/${OWNER}/${BASE_IMAGE} as r-builder
+FROM ${REGISTRY}/${OWNER}/${PARENT_IMAGE} as r-builder
 
 # install R packages from conda where possible
-ARG R_REQUIREMENTS
-RUN --mount=type=bind,source="${R_REQUIREMENTS}",target=/tmp/requirements.r \
-  --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
+RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
   mamba install --yes \
   "ffmpeg" \
   "gdal" \
@@ -78,21 +75,51 @@ RUN --mount=type=bind,source="${R_REQUIREMENTS}",target=/tmp/requirements.r \
   "r-tidyverse" \
   "r-usethis" \
   "r-v8" \
-  "r-whisker" \
-  # install all other R packages
-  && export CARGO_NET_GIT_FETCH_WITH_CLI=true \
-  && Rscript -e 'install.packages("pak", repos = sprintf("https://r-lib.github.io/p/pak/stable/%s/%s/%s", .Platform$pkgType, R.Version()$os, R.Version()$arch))' \
-  && Rscript /tmp/requirements.r \
-  # ensure user has full control of package and home dirs
-  && fix-permissions "${CONDA_DIR}" \
-  && fix-permissions "/home/${NB_USER}"
+  "r-whisker"
+
+# install all other R packages
+ARG R_REQUIREMENTS
+RUN --mount=type=bind,source="${R_REQUIREMENTS}",target=/tmp/requirements.r \
+  export CARGO_NET_GIT_FETCH_WITH_CLI=true \
+  && Rscript /tmp/requirements.r
+
+
+# pre-shared-libs
+# -------------------------------------
+FROM ${REGISTRY}/${OWNER}/${BASE_IMAGE} as pre-shared-libs
+ARG SHARED_LIBS_LIST
+RUN find-shared-libs "${R_HOME}/library" > "${SHARED_LIBS_LIST}"
+
+
+# new-shared-libs
+# -------------------------------------
+FROM r-builder as new-shared-libs
+
+USER root
+ARG APT_CACHE_DIR APT_LIB_DIR
+# hadolint ignore=DL3008,DL3009
+RUN --mount=type=cache,target="${APT_CACHE_DIR}",sharing=locked \
+  --mount=type=cache,target="${APT_LIB_DIR}",sharing=locked \
+  apt-get update && apt-get upgrade -y && apt-get -y install --no-install-recommends \
+  tree
+USER ${NB_UID}
+
+ARG SHARED_LIBS_LIST
+COPY --from=pre-shared-libs "${SHARED_LIBS_LIST}" /tmp/pre-shared-libs.txt
+RUN find-shared-libs "${R_HOME}/library" > /tmp/post-shared-libs.txt \
+  && diff-shared-libs /tmp/pre-shared-libs.txt /tmp/post-shared-libs.txt > "${SHARED_LIBS_LIST}" \
+  && echo "Contents of CONDA_DIR:" \
+  && tree "${CONDA_DIR}" \
+  && echo "\n\nNew shared libraries:" \
+  && echo "$(< /tmp/post-shared-libs.txt)" \
+  && echo "\n\nShared libraries to copy:" \
+  && echo "$(< "${SHARED_LIBS_LIST}")"
 
 
 # final
 # -------------------------------------
-FROM ${REGISTRY}/${OWNER}/base-r-notebook as final
+FROM ${REGISTRY}/${OWNER}/${BASE_IMAGE} as final
 LABEL maintainer="CourseKata <tech@coursekata.org>"
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 USER ${NB_UID}
 
 # install Python packages from wheels
@@ -103,37 +130,16 @@ RUN --mount=type=bind,source="${PY_REQUIREMENTS}",target=/tmp/requirements.txt \
   pip3 install --disable-pip-version-check --cache-dir="${PIP_CACHE_DIR}" --find-links="${PIP_WHEEL_DIR}" \
   -r /tmp/requirements.txt
 
-# copy over R packages
-COPY --from=r-builder --chown=${NB_UID}:${NB_GID} ${R_HOME} ${R_HOME}
-# copying these over is hard, just install them
-RUN Rscript -e "install.packages(c('V8', 'ggdag'))"
-# copy shared libraries
-COPY --from=r-builder --chown=${NB_UID}:${NB_GID} \
-  # lme4
-  ${CONDA_DIR}/lib/libnlopt* \
-  # av
-  ${CONDA_DIR}/lib/libaom* \
-  ${CONDA_DIR}/lib/libass* \
-  ${CONDA_DIR}/lib/libavcodec* \
-  ${CONDA_DIR}/lib/libavfilter* \
-  ${CONDA_DIR}/lib/libavformat* \
-  ${CONDA_DIR}/lib/libavutil* \
-  ${CONDA_DIR}/lib/libdav1d* \
-  ${CONDA_DIR}/lib/libmp3lame* \
-  ${CONDA_DIR}/lib/libopenh264* \
-  ${CONDA_DIR}/lib/libopus* \
-  ${CONDA_DIR}/lib/libpostproc* \
-  ${CONDA_DIR}/lib/libSvtAv1Enc* \
-  ${CONDA_DIR}/lib/libswresample* \
-  ${CONDA_DIR}/lib/libswscale* \
-  ${CONDA_DIR}/lib/libvpx* \
-  ${CONDA_DIR}/lib/libx264* \
-  ${CONDA_DIR}/lib/libx265* \
-  # ggdag
-  ${CONDA_DIR}/lib/libglpk* \
-  # output dir
-  ${CONDA_DIR}/lib
-
-# set default kernel
-ARG DEFAULT_KERNEL_NAME
-ENV DEFAULT_KERNEL_NAME=${DEFAULT_KERNEL_NAME}
+# copy over R packages and shared libraries
+USER root
+ARG SHARED_LIBS_LIST
+COPY --from=r-builder --chown=${NB_UID}:${NB_GID} "${R_HOME}/" "${R_HOME}"
+RUN --mount=type=cache,from=r-builder,source=/,target=/mounted-r-builder \
+  --mount=type=bind,from=new-shared-libs,source="${SHARED_LIBS_LIST}",target="${SHARED_LIBS_LIST}" \
+  copy-shared-libs "${SHARED_LIBS_LIST}" /mounted-r-builder / \
+  # this is hard to copy over from the r-builder image
+  && Rscript -e 'remotes::install_cran("V8", force = TRUE)' \
+  # ensure user has full control of package and home dirs
+  && fix-permissions "${CONDA_DIR}" \
+  && fix-permissions "/home/${NB_USER}"
+USER ${NB_UID}

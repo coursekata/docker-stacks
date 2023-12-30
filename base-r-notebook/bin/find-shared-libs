@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Check for correct number of arguments
+if [ "$#" -ne 1 ]; then
+    echo "Usage: $0 <libraries-directory>"
+    exit 1
+fi
+
+# Binary files to search for shared libraries
+R_LIBS_DIR=$1
+
+# Generate a list of shared libraries required by R packages
+ldd ${R_LIBS_DIR}/*/libs/*.so | \
+  grep "=> /" | \
+  awk '{print $3}' | \
+  xargs realpath --no-symlinks | \
+  sort -u

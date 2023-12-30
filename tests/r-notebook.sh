@@ -32,6 +32,7 @@ r_packages=(
   maps
   neuralnet
   OCSdata
+  posterior
   profvis
   psych
   RcppTOML
