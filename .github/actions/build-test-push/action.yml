@@ -1,0 +1,102 @@
+---
+name: Build, Test, and Publish an Image
+description: Build and test a Docker image, and optionally publish the result to a registry.
+inputs:
+  image:
+    description: The name of the image to build
+    required: true
+  platforms:
+    description: The platform to build for
+    required: false
+    default: linux/amd64,linux/arm64
+  build-args:
+    description: Extra build arguments to pass to the image
+    required: false
+    default: ""
+  publish:
+    description: Whether to publish the image to remote registries
+    required: false
+    default: "false"
+  labels:
+    description: "Labels to add to the image"
+    required: false
+    default: ""
+  tags:
+    description: "Tags to add to the image"
+    required: false
+    default: ""
+outputs:
+  imageid:
+    description: Image ID
+    value: ${{ steps.build.outputs.image-id }}
+  digest:
+    description: Image digest
+    value: ${{ steps.build.outputs.digest }}
+  metadata:
+    description: Build result metadata
+    value: ${{ steps.build.outputs.metadata }}
+  image:
+    description: Image name
+    value: ${{ inputs.image }}:buildcache
+
+runs:
+  using: "composite"
+  steps:
+    # https://github.com/docker/build-push-action
+    - name: Build
+      id: build
+      uses: docker/build-push-action@v5
+      with:
+        context: ${{ inputs.image }}
+        platforms: ${{ inputs.platforms }}
+        build-args: |
+          REGISTRY=localhost:5000
+          OWNER=${{ github.repository_owner }}
+          ${{ inputs.build-args }}
+        tags: localhost:5000/${{ github.repository_owner }}/${{ inputs.image }}:buildcache
+        push: true
+
+    - name: Test
+      shell: bash
+      run: |
+        IFS=','
+        while read -r platform; do
+          docker run --rm --platform=${platform} \
+            --mount=type=bind,source="./tests/${{ inputs.image }}.sh",target=/tmp/test.sh \
+            localhost:5000/${{ github.repository_owner }}/${{ inputs.image }}:buildcache \
+            bash /tmp/test.sh
+        done <<< "$(echo ${{ inputs.platforms }} | tr ',' '\n')"
+
+    # https://github.com/docker/metadata-action
+    - name: Image Metadata
+      id: meta
+      if: ${{ inputs.publish == 'true' }}
+      uses: docker/metadata-action@v5
+      with:
+        images: |
+          ${{ github.repository_owner }}/${{ inputs.image }}
+          ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}
+        tags: |
+          type=raw,value=latest,enable={{is_default_branch}}
+          type=schedule,pattern={{date 'YYYY-MM-DD'}}
+          type=sha
+          ${{ inputs.tags }}
+        labels: |
+          org.opencontainers.image.title=${{ inputs.image }}
+          org.opencontainers.image.url=https://github.com/${{ github.repository_owner }}/docker-stacks/pkgs/container/${{ inputs.image }}
+          ${{ inputs.labels }}
+
+    # https://github.com/docker/build-push-action
+    - name: Push
+      if: ${{ inputs.publish == 'true' }}
+      uses: docker/build-push-action@v5
+      with:
+        context: ${{ inputs.image }}
+        platforms: ${{ inputs.platforms }}
+        build-args: |
+          REGISTRY=localhost:5000
+          OWNER=${{ github.repository_owner }}
+          ${{ inputs.build-args }}
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        push: true
