@@ -35,6 +35,15 @@ RUN --mount=type=bind,source="${PY_REQUIREMENTS}",target=/tmp/requirements.txt \
 # -------------------------------------
 FROM ${REGISTRY}/${OWNER}/${PARENT_IMAGE} as r-builder
 
+USER root
+ARG APT_CACHE_DIR APT_LIB_DIR
+# hadolint ignore=DL3008,DL3009
+RUN --mount=type=cache,target="${APT_CACHE_DIR}",sharing=locked \
+  --mount=type=cache,target="${APT_LIB_DIR}",sharing=locked \
+  apt-get update && apt-get upgrade -y && apt-get -y install --no-install-recommends \
+  libavfilter-dev
+USER ${NB_UID}
+
 # install R packages from conda where possible
 RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
   mamba install --yes \
@@ -94,15 +103,6 @@ RUN find-shared-libs "${R_HOME}/library" > "${SHARED_LIBS_LIST}"
 # new-shared-libs
 # -------------------------------------
 FROM r-builder as new-shared-libs
-
-USER root
-ARG APT_CACHE_DIR APT_LIB_DIR
-# hadolint ignore=DL3008,DL3009
-RUN --mount=type=cache,target="${APT_CACHE_DIR}",sharing=locked \
-  --mount=type=cache,target="${APT_LIB_DIR}",sharing=locked \
-  apt-get update && apt-get upgrade -y && apt-get -y install --no-install-recommends \
-  tree
-USER ${NB_UID}
 
 ARG SHARED_LIBS_LIST
 COPY --from=pre-shared-libs "${SHARED_LIBS_LIST}" /tmp/pre-shared-libs.txt
