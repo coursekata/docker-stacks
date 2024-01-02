@@ -47,10 +47,7 @@ RUN --mount=type=cache,target="${CONDA_DIR}/pkgs",uid=${NB_UID},sharing=locked \
   "r-mosaic" \
   "r-palmerpenguins" \
   "r-plotly" \
-  "r-stringdist" \
-  # ensure user has full control of package and home dirs
-  && fix-permissions "${CONDA_DIR}" \
-  && fix-permissions "/home/${NB_USER}"
+  "r-stringdist"
 
 # install all other R packages
 ARG R_REQUIREMENTS
@@ -71,13 +68,7 @@ FROM r-builder as new-shared-libs
 ARG SHARED_LIBS_LIST
 COPY --from=pre-shared-libs "${SHARED_LIBS_LIST}" /tmp/pre-shared-libs.txt
 RUN find-shared-libs "${R_HOME}/library" > /tmp/post-shared-libs.txt \
-  && diff-shared-libs /tmp/pre-shared-libs.txt /tmp/post-shared-libs.txt > "${SHARED_LIBS_LIST}" \
-  && echo "Base shared libraries:" \
-  && echo "$(< /tmp/pre-shared-libs.txt)" \
-  && echo "\n\nNew shared libraries:" \
-  && echo "$(< /tmp/post-shared-libs.txt)" \
-  && echo "\n\nShared libraries to copy:" \
-  && echo "$(< "${SHARED_LIBS_LIST}")"
+  && diff-shared-libs /tmp/pre-shared-libs.txt /tmp/post-shared-libs.txt > "${SHARED_LIBS_LIST}"
 
 
 # final

@@ -65,9 +65,7 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
   mamba install --yes \
   "r-base~=${R_VERSION}" \
   "r-irkernel"  \
-  "r-remotes" \
-  && fix-permissions "${CONDA_DIR}" \
-  && fix-permissions "/home/${NB_USER}"
+  "r-remotes"
 
 # add R mimetype and networking options
 COPY --chown=${NB_UID}:${NB_GID} Rprofile.site "${R_HOME}"/etc/

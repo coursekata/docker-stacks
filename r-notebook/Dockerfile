@@ -107,13 +107,7 @@ USER ${NB_UID}
 ARG SHARED_LIBS_LIST
 COPY --from=pre-shared-libs "${SHARED_LIBS_LIST}" /tmp/pre-shared-libs.txt
 RUN find-shared-libs "${R_HOME}/library" > /tmp/post-shared-libs.txt \
-  && diff-shared-libs /tmp/pre-shared-libs.txt /tmp/post-shared-libs.txt > "${SHARED_LIBS_LIST}" \
-  && echo "Contents of CONDA_DIR:" \
-  && tree "${CONDA_DIR}" \
-  && echo "\n\nNew shared libraries:" \
-  && echo "$(< /tmp/post-shared-libs.txt)" \
-  && echo "\n\nShared libraries to copy:" \
-  && echo "$(< "${SHARED_LIBS_LIST}")"
+  && diff-shared-libs /tmp/pre-shared-libs.txt /tmp/post-shared-libs.txt > "${SHARED_LIBS_LIST}"
 
 
 # final
@@ -136,10 +130,8 @@ ARG SHARED_LIBS_LIST
 COPY --from=r-builder --chown=${NB_UID}:${NB_GID} "${R_HOME}/" "${R_HOME}"
 RUN --mount=type=cache,from=r-builder,source=/,target=/mounted-r-builder \
   --mount=type=bind,from=new-shared-libs,source="${SHARED_LIBS_LIST}",target="${SHARED_LIBS_LIST}" \
-  copy-shared-libs "${SHARED_LIBS_LIST}" /mounted-r-builder / \
-  # this is hard to copy over from the r-builder image
-  && Rscript -e 'remotes::install_cran("V8", force = TRUE)' \
-  # ensure user has full control of package and home dirs
-  && fix-permissions "${CONDA_DIR}" \
-  && fix-permissions "/home/${NB_USER}"
+  copy-shared-libs "${SHARED_LIBS_LIST}" /mounted-r-builder /
 USER ${NB_UID}
+
+# this is hard to copy over from the r-builder image
+RUN Rscript -e 'remotes::install_cran("V8", force = TRUE)'
