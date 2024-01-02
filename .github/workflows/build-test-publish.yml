@@ -4,34 +4,56 @@ name: Build, Test, and Publish an Image
 on:
   workflow_call:
     inputs:
+      runs-on:
+        description: The platform to run the action on
+        type: string
+        required: false
+        default: ubuntu-latest
+      free-disk-space:
+        description: Whether to free disk space before building
+        type: boolean
+        required: false
+        default: false
+      image:
+        description: The image to build
+        type: string
+        required: true
+      build-args:
+        description: Build arguments to pass to the image
+        type: string
+        required: false
       publish:
         description: Whether to publish the image to remote registries
         type: boolean
         required: false
         default: false
-      base-image:
-        description: The base image to use
-        type: string
-        required: false
-        default: jupyter/minimal-notebook
-      python-version:
-        description: The Python version to use
-        type: string
-        required: false
-        default: "3.11"
-      r-version:
-        description: The R version to use
-        type: string
-        required: false
-        default: "4.3"
       tags:
         description: Tags to add to the image
         type: string
         required: false
+      labels:
+        description: Labels to add to the image
+        type: string
+        required: false
+    outputs:
+      image:
+        description: The image name
+        value: ${{ jobs.docker.outputs.image }}
+      digest:
+        description: The image digest
+        value: ${{ jobs.docker.outputs.digest }}
+      tags:
+        description: The image tags
+        value: ${{ jobs.docker.outputs.tags }}
 
 jobs:
   docker:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs-on }}
+
+    outputs:
+      image: ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}
+      digest: ${{ steps.build.outputs.digest }}
+      tags: ${{ steps.meta.outputs.tags }}
 
     services:
       registry:
@@ -42,6 +64,7 @@ jobs:
     steps:
       # https://github.com/jlumbroso/free-disk-space
       - name: Free Disk Space (Ubuntu)
+        if: inputs.free-disk-space == 'true'
         uses: jlumbroso/free-disk-space@main
         with:
           dotnet: false
@@ -79,57 +102,79 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
 
-      - name: base-r build and test
-        id: base-r
-        uses: ./.github/actions/build-test-push
+      # https://github.com/docker/build-push-action
+      - name: Build for linux/amd64
+        id: build-amd64
+        uses: docker/build-push-action@v5
         with:
-          image: base-r-notebook
-          tags: ${{ inputs.tags }}
-          labels: |
-            org.opencontainers.image.title=Base R Notebook
-            org.opencontainers.image.description=Jupyter Lab, Python, and R, and that's it.
-          build-args: |
-            PYTHON_VERSION=${{ inputs.python-version }}
-            R_VERSION=${{ inputs.r-version }}
-          publish: ${{ inputs.publish }}
+          context: ${{ inputs.image }}
+          platforms: linux/amd64
+          build-args: ${{ inputs.build-args }}
+          tags: localhost:5000/${{ github.repository_owner }}/${{ inputs.image }}:amd64
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}:buildcache-amd64,mode=max
+          push: true
 
-      - name: essentials build and test
-        id: essentials
-        uses: ./.github/actions/build-test-push
-        with:
-          image: essentials-notebook
-          tags: ${{ inputs.tags }}
-          labels: |
-            org.opencontainers.image.title=Essentials Notebook
-            org.opencontainers.image.description=CourseKata essentials: everything used in the books.
-          build-args: |
-            BASE_IMAGE=${{ steps.base-r.outputs.image }}
-            PARENT_IMAGE=${{ steps.base-r.outputs.image }}
-          publish: ${{ inputs.publish }}
+      - name: Test for linux/amd64
+        shell: bash
+        run: |
+          docker run --rm --platform=linux/amd64 \
+            --mount=type=bind,source="./tests/${{ inputs.image }}.sh",target=/tmp/test.sh \
+            localhost:5000/${{ github.repository_owner }}/${{ inputs.image }}:amd64 \
+            bash /tmp/test.sh
 
-      - name: r build and test
-        id: r
-        uses: ./.github/actions/build-test-push
+      # https://github.com/docker/build-push-action
+      - name: Build for linux/arm64
+        id: build-arm64
+        uses: docker/build-push-action@v5
         with:
-          image: r-notebook
-          tags: ${{ inputs.tags }}
-          labels: |
-            org.opencontainers.image.title=R Notebook
-            org.opencontainers.image.description=CourseKata essentials and other R packages for teaching and learning data science.
-          build-args: |
-            BASE_IMAGE=${{ steps.base-r.outputs.image }}
-            PARENT_IMAGE=${{ steps.essentials.outputs.image }}
-          publish: ${{ inputs.publish }}
+          context: ${{ inputs.image }}
+          platforms: linux/arm64
+          build-args: ${{ inputs.build-args }}
+          tags: localhost:5000/${{ github.repository_owner }}/${{ inputs.image }}:arm64
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}:buildcache-arm64,mode=max
+          push: true
 
-      - name: datascience build and test
-        uses: ./.github/actions/build-test-push
+      - name: Test for linux/arm64
+        shell: bash
+        run: |
+          docker run --rm --platform=linux/arm64 \
+            --mount=type=bind,source="./tests/${{ inputs.image }}.sh",target=/tmp/test.sh \
+            localhost:5000/${{ github.repository_owner }}/${{ inputs.image }}:arm64 \
+            bash /tmp/test.sh
+
+      # https://github.com/docker/metadata-action
+      - name: Image Metadata
+        id: meta
+        if: ${{ inputs.publish == 'true' }}
+        uses: docker/metadata-action@v5
         with:
-          image: datascience-notebook
-          tags: ${{ inputs.tags }}
+          images: |
+            ${{ github.repository_owner }}/${{ inputs.image }}
+            ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=schedule,pattern={{date 'YYYY-MM-DD'}}
+            type=sha
+            ${{ inputs.tags }}
           labels: |
-            org.opencontainers.image.title=Data Science Notebook
-            org.opencontainers.image.description=R and Python packages for teaching and learning data science.
-          build-args: |
-            BASE_IMAGE=${{ steps.base-r.outputs.image }}
-            PARENT_IMAGE=${{ steps.r.outputs.image }}
-          publish: ${{ inputs.publish }}
+            org.opencontainers.image.title=${{ inputs.image }}
+            org.opencontainers.image.url=https://github.com/${{ github.repository_owner }}/docker-stacks/pkgs/container/${{ inputs.image }}
+            ${{ inputs.labels }}
+
+      # https://github.com/docker/build-push-action
+      - name: Build and push multi-arch
+        id: build
+        if: ${{ inputs.publish == 'true' }}
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ inputs.image }}
+          platforms: linux/amd64,linux/arm64
+          build-args: ${{ inputs.build-args }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: |
+            type=registry,ref=localhost:5000/${{ github.repository_owner }}/${{ inputs.image }}:buildcache-amd64
+            type=registry,ref=localhost:5000/${{ github.repository_owner }}/${{ inputs.image }}:buildcache-arm64
+          push: true
