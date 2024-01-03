@@ -14,128 +14,75 @@ on:
         type: boolean
         required: false
         default: false
-      base-image:
-        description: The base image to use
-        type: string
-        required: false
-        default: jupyter/minimal-notebook
-      python-version:
-        description: The Python version to use
-        type: string
-        required: false
-        default: "3.11"
-      r-version:
-        description: The R version to use
-        type: string
-        required: false
-        default: "4.3"
-      tags:
-        description: Tags to add to the image
-        type: string
-        required: false
 
 jobs:
-  docker:
-    runs-on: ${{ inputs.runs-on }}
+  base-r:
+    uses: ./.github/workflows/build-test-publish.yml
+    secrets: inherit
+    with:
+      runs-on: ${{ inputs.runs-on }}
+      image: base-r-notebook
+      labels: |
+        org.opencontainers.image.title=Base R Notebook
+        org.opencontainers.image.description=Jupyter Lab, Python, and R, and that's it.
+      tags: |
+        type=raw,value=python-3.11
+        type=raw,value=r-4.3
+      build-args: |
+        PYTHON_VERSION=3.11
+        R_VERSION=4.3
+      publish: ${{ inputs.publish }}
 
-    services:
-      registry:
-        image: registry:2
-        ports:
-          - 5000:5000
+  essentials:
+    needs: [base-r]
+    uses: ./.github/workflows/build-test-publish.yml
+    secrets: inherit
+    with:
+      runs-on: ${{ inputs.runs-on }}
+      image: essentials-notebook
+      labels: |
+        org.opencontainers.image.title=Essentials Notebook
+        org.opencontainers.image.description=CourseKata essentials: everything used in the books.
+      tags: |
+        type=raw,value=python-3.11
+        type=raw,value=r-4.3
+      build-args: |
+        BASE_IMAGE=${{ needs.base-r.outputs.image }}@${{ needs.base-r.outputs.digest}}
+        PARENT_IMAGE=${{ needs.base-r.outputs.image }}
+      publish: ${{ inputs.publish }}
 
-    steps:
-      # https://github.com/jlumbroso/free-disk-space
-      - name: Free Disk Space (Ubuntu)
-        if: inputs.runs-on != 'self-hosted' && runner.os == 'Linux'
-        uses: jlumbroso/free-disk-space@main
-        with:
-          dotnet: false
-          haskell: false
-          large-packages: false
-          swap-storage: false
+  r:
+    needs: [base-r, essentials]
+    uses: ./.github/workflows/build-test-publish.yml
+    secrets: inherit
+    with:
+      runs-on: ${{ inputs.runs-on }}
+      image: r-notebook
+      labels: |
+        org.opencontainers.image.title=R Notebook
+        org.opencontainers.image.description=CourseKata essentials and other R packages for teaching and learning data science.
+      tags: |
+        type=raw,value=python-3.11
+        type=raw,value=r-4.3
+      build-args: |
+        BASE_IMAGE=${{ needs.base-r.outputs.image }}@${{ needs.base-r.outputs.digest}}
+        PARENT_IMAGE=${{ needs.essentials.outputs.image }}@${{ needs.essentials.outputs.digest}}
+      publish: ${{ inputs.publish }}
 
-      # https://github.com/actions/checkout
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      # https://github.com/docker/setup-qemu-action
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      # https://github.com/docker/setup-buildx-action
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          # network=host driver-opt needed to push to local registry
-          driver-opts: network=host
-
-      # https://github.com/docker/login-action
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      # https://github.com/docker/login-action
-      - name: Login to Docker Registry
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_TOKEN }}
-
-      - name: base-r build and test
-        id: base-r
-        uses: ./.github/actions/build-test-push
-        with:
-          image: base-r-notebook
-          tags: ${{ inputs.tags }}
-          labels: |
-            org.opencontainers.image.title=Base R Notebook
-            org.opencontainers.image.description=Jupyter Lab, Python, and R, and that's it.
-          build-args: |
-            PYTHON_VERSION=${{ inputs.python-version }}
-            R_VERSION=${{ inputs.r-version }}
-          publish: ${{ inputs.publish }}
-
-      - name: essentials build and test
-        id: essentials
-        uses: ./.github/actions/build-test-push
-        with:
-          image: essentials-notebook
-          tags: ${{ inputs.tags }}
-          labels: |
-            org.opencontainers.image.title=Essentials Notebook
-            org.opencontainers.image.description=CourseKata essentials: everything used in the books.
-          build-args: |
-            BASE_IMAGE=${{ steps.base-r.outputs.image }}
-            PARENT_IMAGE=${{ steps.base-r.outputs.image }}
-          publish: ${{ inputs.publish }}
-
-      - name: r build and test
-        id: r
-        uses: ./.github/actions/build-test-push
-        with:
-          image: r-notebook
-          tags: ${{ inputs.tags }}
-          labels: |
-            org.opencontainers.image.title=R Notebook
-            org.opencontainers.image.description=CourseKata essentials and other R packages for teaching and learning data science.
-          build-args: |
-            BASE_IMAGE=${{ steps.base-r.outputs.image }}
-            PARENT_IMAGE=${{ steps.essentials.outputs.image }}
-          publish: ${{ inputs.publish }}
-
-      - name: datascience build and test
-        uses: ./.github/actions/build-test-push
-        with:
-          image: datascience-notebook
-          tags: ${{ inputs.tags }}
-          labels: |
-            org.opencontainers.image.title=Data Science Notebook
-            org.opencontainers.image.description=R and Python packages for teaching and learning data science.
-          build-args: |
-            BASE_IMAGE=${{ steps.base-r.outputs.image }}
-            PARENT_IMAGE=${{ steps.r.outputs.image }}
-          publish: ${{ inputs.publish }}
+  datascience:
+    needs: [base-r, r]
+    uses: ./.github/workflows/build-test-publish.yml
+    secrets: inherit
+    with:
+      runs-on: ${{ inputs.runs-on }}
+      image: datascience-notebook
+      labels: |
+        org.opencontainers.image.title=Data Science Notebook
+        org.opencontainers.image.description=R and Python packages for teaching and learning data science.
+      tags: |
+        type=raw,value=python-3.11
+        type=raw,value=r-4.3
+      build-args: |
+        BASE_IMAGE=${{ needs.base-r.outputs.image }}@${{ needs.base-r.outputs.digest}}
+        PARENT_IMAGE=${{ needs.r.outputs.image }}@${{ needs.r.outputs.digest}}
+      publish: ${{ inputs.publish }}
