@@ -4,6 +4,7 @@
 
 SHELL:=bash
 
+DS_REGISTRY?=ghcr.io
 DS_OWNER?=coursekata
 DS_BUILDER_NAME?=docker-stacks-builder
 DS_BUILD_ARGS?=
@@ -60,16 +61,16 @@ endef
 # test an image for a given platform
 define test_image
 	@echo
-	@echo "Pulling $(notdir $(2)) ($(1)) from build cache..."
+	@echo "Pulling $(notdir $(2)) ($(1))..."
 	@DOCKER_CLI_HINTS=false \
-		docker pull -q --platform "$(1)" "$(LOCAL_REGISTRY)/$(DS_OWNER)/$(notdir $(2))"
+		docker pull -q --platform "$(1)" "$(3)/$(DS_OWNER)/$(notdir $(2))"
 
 	@echo
 	@echo "Testing $(notdir $(2)) ($(1))..."
 	@docker run $(DOCKER_RUN_ARGS) --rm \
 		--platform="$(1)" \
 		--mount=type=bind,source="./tests/$(notdir $(2)).sh",target=/tmp/test.sh \
-		"$(LOCAL_REGISTRY)/$(DS_OWNER)/$(notdir $(2))" $(SHELL) /tmp/test.sh
+		"$(3)/$(DS_OWNER)/$(notdir $(2))" $(SHELL) /tmp/test.sh
 endef
 
 
@@ -114,15 +115,26 @@ build-all: $(foreach I, $(ALL_IMAGES), build/$(I)) ## build all stacks
 build-all-multiarch: $(foreach I, $(ALL_IMAGES), build-multiarch/$(I)) ## build all stacks for all architectures
 
 test/%: ## test a stack
-	$(call test_image,$(CURRENT_PLATFORM),$@)
+	$(call test_image,$(CURRENT_PLATFORM),$@,$(LOCAL_REGISTRY))
 test-amd64/%: ## test a stack using amd64 architecture
-	$(call test_image,linux/amd64,$@)
+	$(call test_image,linux/amd64,$@,$(LOCAL_REGISTRY))
 test-arm64/%: ## test a stack using arm64 architecture
-	$(call test_image,linux/arm64,$@)
+	$(call test_image,linux/arm64,$@,$(LOCAL_REGISTRY))
 test-multiarch/%: test-amd64/% test-arm64/% ## test a stack for all architectures
 	@:
 test-all: $(foreach I, $(ALL_IMAGES), test/$(I)) ## test all stacks
 test-all-multiarch: $(foreach I, $(ALL_IMAGES), test-multiarch/$(I)) ## test all stacks for all architectures
+
+test-remote/%: ## test a stack using a remote registry
+	$(call test_image,$(CURRENT_PLATFORM),$@,$(DS_REGISTRY))
+test-remote-amd64/%: ## test a stack using amd64 architecture and a remote registry
+	$(call test_image,linux/amd64,$@,$(DS_REGISTRY))
+test-remote-arm64/%: ## test a stack using arm64 architecture and a remote registry
+	$(call test_image,linux/arm64,$@,$(DS_REGISTRY))
+test-remote-multiarch/%: test-remote-amd64/% test-remote-arm64/% ## test a stack for all architectures using a remote registry
+	@:
+test-remote-all: $(foreach I, $(ALL_IMAGES), test-remote/$(I)) ## test all stacks using a remote registry
+test-remote-all-multiarch: $(foreach I, $(ALL_IMAGES), test-remote-multiarch/$(I)) ## test all stacks for all architectures using a remote registry
 
 build-test/%: build/% test/% ## build and test a stack
 	@:
