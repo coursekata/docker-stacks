@@ -35,6 +35,7 @@ on:
         description: Labels to add to the image
         type: string
         required: false
+
     outputs:
       image:
         description: The image name
