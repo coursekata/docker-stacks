@@ -43,9 +43,6 @@ on:
       digest:
         description: The image digest
         value: ${{ jobs.docker.outputs.digest }}
-      tags:
-        description: The image tags
-        value: ${{ jobs.docker.outputs.tags }}
 
 jobs:
   docker:
@@ -54,7 +51,6 @@ jobs:
     outputs:
       image: ${{ inputs.image }}
       digest: ${{ steps.build.outputs.digest }}
-      tags: ${{ steps.meta.outputs.tags }}
 
     services:
       registry:
