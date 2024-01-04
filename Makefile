@@ -14,6 +14,8 @@ DS_RUN_ARGS?=
 export DOCKER_BUILDKIT:=1
 # Activate experimental mode
 export DOCKER_CLI_EXPERIMENTAL=enabled
+# Load the GitHub Personal Access Token from the environment
+export github_token:=$(shell gh auth token)
 
 # Check if the local registry is running
 LOCAL_REGISTRY_UP := $(shell docker ps --filter name=registry --format "{{.Names}}" | grep -q registry && echo true || echo false)
@@ -44,6 +46,7 @@ define build_image
 	@echo
 	docker buildx build $(COMMON_BUILD_ARGS) $(BUILD_ARGS) \
 		--platform $(1) \
+		--secret id=github_token \
 		--tag "$(LOCAL_REGISTRY)/$(DS_OWNER)/$(notdir $(2))" \
 		--push \
 		"./$(notdir $(2))"

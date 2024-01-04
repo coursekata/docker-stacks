@@ -88,9 +88,10 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
 
 # install all other R packages
 ARG R_REQUIREMENTS
+ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
 RUN --mount=type=bind,source="${R_REQUIREMENTS}",target=/tmp/requirements.r \
-  export CARGO_NET_GIT_FETCH_WITH_CLI=true \
-  && Rscript /tmp/requirements.r
+  --mount=type=secret,id=github_token,uid=${NB_UID} \
+  GITHUB_PAT=$(cat /run/secrets/github_token) Rscript /tmp/requirements.r
 
 
 # pre-shared-libs

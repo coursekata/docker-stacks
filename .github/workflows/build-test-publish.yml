@@ -109,6 +109,7 @@ jobs:
           context: ${{ inputs.image }}
           platforms: linux/amd64
           build-args: ${{ inputs.build-args }}
+          secrets: "github_token=${{ secrets.GITHUB_TOKEN }}"
           tags: localhost:5000/${{ github.repository_owner }}/${{ inputs.image }}:amd64
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}
           cache-to: type=registry,ref=localhost:5000/${{ github.repository_owner }}/${{ inputs.image }}:buildcache-amd64,mode=max
@@ -130,6 +131,7 @@ jobs:
           context: ${{ inputs.image }}
           platforms: linux/arm64
           build-args: ${{ inputs.build-args }}
+          secrets: "github_token=${{ secrets.GITHUB_TOKEN }}"
           tags: localhost:5000/${{ github.repository_owner }}/${{ inputs.image }}:arm64
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}
           cache-to: type=registry,ref=localhost:5000/${{ github.repository_owner }}/${{ inputs.image }}:buildcache-arm64,mode=max
@@ -173,6 +175,7 @@ jobs:
           build-args: |
             BUILDKIT_INLINE_CACHE=1
             ${{ inputs.build-args }}
+          secrets: "github_token=${{ secrets.GITHUB_TOKEN }}"
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: |
