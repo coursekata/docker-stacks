@@ -1,0 +1,101 @@
+---
+name: Publish selected image
+
+on:
+  workflow_dispatch:
+    inputs:
+      image:
+        description: The image to build
+        required: true
+        type: choice
+        options:
+          - base-r
+          - essentials
+          - r
+          - datascience
+    root-image:
+      description: (base-r-notebook) The fully qualified base image to use
+      required: false
+      type: string
+      default: jupyter/minimal-notebook:latest
+    base-image:
+      description: (*-notebook) The fully qualified base image to use when
+      required: false
+      type: string
+      default: ghcr.io/coursekata/base-r-notebook:latest
+    parent-image:
+      description: (*-notebook) The fully qualified parent image to use
+      required: false
+      type: string
+
+jobs:
+  base-r:
+    if: inputs.image == 'base-r'
+    uses: ./.github/workflows/build-test-publish.yml
+    secrets: inherit
+    with:
+      image: base-r-notebook
+      labels: |
+        org.opencontainers.image.title=Base R Notebook
+        org.opencontainers.image.description=Jupyter Lab, Python, and R, and that's it.
+      tags: |
+        type=raw,value=python-3.11
+        type=raw,value=r-4.3
+      build-args: |
+        PYTHON_VERSION=3.11
+        R_VERSION=4.3
+        BASE_IMAGE=${{ inputs.root-image }}
+      publish: true
+
+  essentials:
+    if: inputs.image == 'essentials' && inputs.parent-image != ""
+    uses: ./.github/workflows/build-test-publish.yml
+    secrets: inherit
+    with:
+      image: essentials-notebook
+      labels: |
+        org.opencontainers.image.title=Essentials Notebook
+        org.opencontainers.image.description=CourseKata essentials: everything used in the books.
+      tags: |
+        type=raw,value=python-3.11
+        type=raw,value=r-4.3
+      build-args: |
+        BASE_IMAGE=${{ inputs.base-image }}
+        PARENT_IMAGE=${{ inputs.parent-image }}
+      publish: true
+
+  r:
+    if: inputs.image == 'r' && inputs.parent-image != ""
+    uses: ./.github/workflows/build-test-publish.yml
+    secrets: inherit
+    with:
+      image: r-notebook
+      labels: |
+        org.opencontainers.image.title=R Notebook
+        org.opencontainers.image.description=CourseKata essentials and other R packages for teaching and learning data science.
+      tags: |
+        type=raw,value=python-3.11
+        type=raw,value=r-4.3
+      build-args: |
+        BASE_IMAGE=${{ inputs.base-image }}
+        PARENT_IMAGE=${{ inputs.parent-image }}
+      publish: true
+      free-disk-space: true
+
+  datascience:
+    if: inputs.image == 'datascience' && inputs.parent-image != ""
+    uses: ./.github/workflows/build-test-publish.yml
+    secrets: inherit
+    with:
+      image: datascience-notebook
+      labels: |
+        org.opencontainers.image.title=Data Science Notebook
+        org.opencontainers.image.description=R and Python packages for teaching and learning data science.
+      tags: |
+        type=raw,value=python-3.11
+        type=raw,value=r-4.3
+      build-args: |
+        BASE_IMAGE=${{ inputs.base-image }}
+        PARENT_IMAGE=${{ inputs.parent-image }}
+      publish: true
+      free-disk-space: true
