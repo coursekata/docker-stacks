@@ -70,6 +70,7 @@ jobs:
         BASE_IMAGE=${{ needs.base-r.outputs.image }}@${{ needs.base-r.outputs.digest}}
         PARENT_IMAGE=${{ needs.essentials.outputs.image }}@${{ needs.essentials.outputs.digest}}
       publish: true
+      free-disk-space: true
 
   datascience:
     needs: [base-r, r]
@@ -87,3 +88,4 @@ jobs:
         BASE_IMAGE=${{ needs.base-r.outputs.image }}@${{ needs.base-r.outputs.digest}}
         PARENT_IMAGE=${{ needs.r.outputs.image }}@${{ needs.r.outputs.digest}}
       publish: true
+      free-disk-space: true

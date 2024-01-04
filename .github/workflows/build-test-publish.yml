@@ -61,7 +61,7 @@ jobs:
     steps:
       # https://github.com/jlumbroso/free-disk-space
       - name: Free Disk Space (Ubuntu)
-        if: inputs.free-disk-space == 'true'
+        if: inputs.free-disk-space
         uses: jlumbroso/free-disk-space@main
         with:
           dotnet: false
