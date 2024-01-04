@@ -50,8 +50,8 @@ jobs:
         type=raw,value=python-3.11
         type=raw,value=r-4.3
       build-args: |
-        BASE_IMAGE=${{ needs.base-r.outputs.image }}@${{ needs.base-r.outputs.digest}}
-        PARENT_IMAGE=${{ needs.base-r.outputs.image }}@${{ needs.base-r.outputs.digest}}
+        BASE_NAME=${{ needs.base-r.outputs.image }}@${{ needs.base-r.outputs.digest}}
+        PARENT_NAME=${{ needs.base-r.outputs.image }}@${{ needs.base-r.outputs.digest}}
       publish: true
 
   r:
@@ -67,8 +67,8 @@ jobs:
         type=raw,value=python-3.11
         type=raw,value=r-4.3
       build-args: |
-        BASE_IMAGE=${{ needs.base-r.outputs.image }}@${{ needs.base-r.outputs.digest}}
-        PARENT_IMAGE=${{ needs.essentials.outputs.image }}@${{ needs.essentials.outputs.digest}}
+        BASE_NAME=${{ needs.base-r.outputs.image }}@${{ needs.base-r.outputs.digest}}
+        PARENT_NAME=${{ needs.essentials.outputs.image }}@${{ needs.essentials.outputs.digest}}
       publish: true
       free-disk-space: true
 
@@ -85,7 +85,7 @@ jobs:
         type=raw,value=python-3.11
         type=raw,value=r-4.3
       build-args: |
-        BASE_IMAGE=${{ needs.base-r.outputs.image }}@${{ needs.base-r.outputs.digest}}
-        PARENT_IMAGE=${{ needs.r.outputs.image }}@${{ needs.r.outputs.digest}}
+        BASE_NAME=${{ needs.base-r.outputs.image }}@${{ needs.base-r.outputs.digest}}
+        PARENT_NAME=${{ needs.r.outputs.image }}@${{ needs.r.outputs.digest}}
       publish: true
       free-disk-space: true

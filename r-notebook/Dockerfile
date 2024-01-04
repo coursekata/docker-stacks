@@ -4,8 +4,12 @@
 # image args
 ARG REGISTRY=ghcr.io
 ARG OWNER=coursekata
-ARG PARENT_IMAGE=essentials-notebook
-ARG BASE_IMAGE=base-r-notebook
+
+ARG PARENT_NAME=essentials-notebook
+ARG PARENT_IMAGE=${REGISTRY}/${OWNER}/${PARENT_NAME}
+
+ARG BASE_NAME=base-r-notebook
+ARG BASE_IMAGE=${REGISTRY}/${OWNER}/${BASE_NAME}
 
 # build args
 ARG PY_REQUIREMENTS=requirements.txt
@@ -21,7 +25,7 @@ ARG SHARED_LIBS_LIST=/tmp/shared-libs.txt
 
 # py-builder
 # -------------------------------------
-FROM ${REGISTRY}/${OWNER}/${PARENT_IMAGE} as py-builder
+FROM ${PARENT_IMAGE} as py-builder
 
 # make wheels for the Python packages
 ARG PIP_CACHE_DIR PIP_WHEEL_DIR PY_REQUIREMENTS
@@ -33,7 +37,7 @@ RUN --mount=type=bind,source="${PY_REQUIREMENTS}",target=/tmp/requirements.txt \
 
 # r-builder
 # -------------------------------------
-FROM ${REGISTRY}/${OWNER}/${PARENT_IMAGE} as r-builder
+FROM ${PARENT_IMAGE} as r-builder
 
 USER root
 ARG APT_CACHE_DIR APT_LIB_DIR
@@ -96,7 +100,7 @@ RUN --mount=type=bind,source="${R_REQUIREMENTS}",target=/tmp/requirements.r \
 
 # pre-shared-libs
 # -------------------------------------
-FROM ${REGISTRY}/${OWNER}/${BASE_IMAGE} as pre-shared-libs
+FROM ${BASE_IMAGE} as pre-shared-libs
 ARG SHARED_LIBS_LIST
 RUN find-shared-libs "${R_HOME}/library" > "${SHARED_LIBS_LIST}"
 
@@ -113,7 +117,7 @@ RUN find-shared-libs "${R_HOME}/library" > /tmp/post-shared-libs.txt \
 
 # final
 # -------------------------------------
-FROM ${REGISTRY}/${OWNER}/${BASE_IMAGE} as final
+FROM ${BASE_IMAGE} as final
 LABEL maintainer="CourseKata <tech@coursekata.org>"
 USER ${NB_UID}
 
