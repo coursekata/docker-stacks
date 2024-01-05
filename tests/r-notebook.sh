@@ -29,7 +29,6 @@ r_packages=(
   here
   mapdata
   mapproj
-  maps
   neuralnet
   OCSdata
   posterior

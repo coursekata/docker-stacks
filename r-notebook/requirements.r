@@ -1,6 +1,6 @@
 options(warn = 2, Ncpus = max(1L, parallel::detectCores()))
 
-# packages also installed in essentials-notebook
+# packages already installed in essentials-notebook
 remotes::install_github(upgrade = FALSE, "coursekata/testwhat")
 remotes::install_github(upgrade = FALSE, "fivethirtyeightdata/fivethirtyeightdata")
 remotes::install_cran(upgrade = FALSE, pkgs = c(
@@ -9,7 +9,6 @@ remotes::install_cran(upgrade = FALSE, pkgs = c(
   "ggpubr",
   "gridExtra",
   "lme4",
-  "minqa",
   "plotly",
   "statmod"
 ))
@@ -27,9 +26,9 @@ remotes::install_cran(upgrade = FALSE, pkgs = c(
   "here",
   "mapdata",
   "mapproj",
-  "maps",
   "neuralnet",
   "OCSdata",
+  "posterior",
   "profvis",
   "psych",
   "RcppTOML",

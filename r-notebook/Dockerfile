@@ -51,44 +51,43 @@ USER ${NB_UID}
 # install R packages from conda where possible
 RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
   mamba install --yes \
-  "ffmpeg" \
-  "gdal" \
-  "pkg-config" \
-  "proj" \
-  "rust" \
+  # "r-av" \
+    "ffmpeg" \
   "r-bayesplot" \
-  "r-BH" \
   "r-car" \
-  "r-checkmate" \
+  "r-dagitty" \
   "r-emmeans" \
-  "r-gert" \
   "r-gganimate" \
   "r-ggdag" \
-  "r-ggforce" \
-  "r-ggraph" \
-  "r-gh" \
-  "r-gitcreds" \
-  "r-graphlayouts" \
-  "r-igraph" \
+  # "r-gifski" \
+    "rust" \
   "r-here" \
-  "r-httr2" \
-  "r-ini" \
   "r-mapdata" \
-  "r-maps" \
+  # "r-mapproj" \
   "r-neuralnet" \
-  "r-polyclip" \
+  # "r-ocsdata" \
+    "r-credentials" \
+    "r-gert" \
+    "r-gh" \
+    "r-gitcreds" \
+    "r-httr2" \
+    "r-ini" \
+    "r-zip" \
+    "r-usethis" \
+    "r-whisker" \
   "r-posterior" \
   "r-profvis" \
   "r-psych" \
   "r-rcpptoml" \
   "r-reticulate" \
-  "r-tensora" \
-  "r-tidygraph" \
+  # "r-simstudy" \
+    "r-bh" \
+    # "r-bigmemory" \
+    "r-bigmemory.sri" \
+    # "r-fastglm" \
+    # "r-mvnfast" \
   "r-tidymodels" \
-  "r-tidyverse" \
-  "r-usethis" \
-  "r-v8" \
-  "r-whisker"
+  "r-tidyverse"
 
 # install all other R packages
 ARG R_REQUIREMENTS
