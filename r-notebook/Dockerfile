@@ -53,6 +53,7 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
   mamba install --yes \
   # "r-av" \
     "ffmpeg" \
+    "pkg-config" \
   "r-bayesplot" \
   "r-car" \
   "r-dagitty" \
