@@ -119,7 +119,7 @@ build-arm64/%: setup-docker ## build the latest image for a stack using arm64 ar
 build-multiarch/%: create-builder ## build the latest image using a multi-arch builder
 	$(call build_image,$(platforms),$@)
 build-all: $(foreach I, $(ALL_IMAGES), build/$(I)) ## build all stacks
-build-all-multiarch: $(foreach I, $(ALL_IMAGES), build-multiarch/$(I)) ## build all stacks for all architectures
+build-multiarch-all: $(foreach I, $(ALL_IMAGES), build-multiarch/$(I)) ## build all stacks for all architectures
 
 test/%: ## test a stack
 	$(call test_image,$(CURRENT_PLATFORM),$@,$(LOCAL_REGISTRY))
@@ -130,7 +130,7 @@ test-arm64/%: ## test a stack using arm64 architecture
 test-multiarch/%: test-amd64/% test-arm64/% ## test a stack for all architectures
 	@:
 test-all: $(foreach I, $(ALL_IMAGES), test/$(I)) ## test all stacks
-test-all-multiarch: $(foreach I, $(ALL_IMAGES), test-multiarch/$(I)) ## test all stacks for all architectures
+test-multiarch-all: $(foreach I, $(ALL_IMAGES), test-multiarch/$(I)) ## test all stacks for all architectures
 
 test-remote/%: ## test a stack using a remote registry
 	$(call test_image,$(CURRENT_PLATFORM),$@,$(DS_REGISTRY))
@@ -141,7 +141,7 @@ test-remote-arm64/%: ## test a stack using arm64 architecture and a remote regis
 test-remote-multiarch/%: test-remote-amd64/% test-remote-arm64/% ## test a stack for all architectures using a remote registry
 	@:
 test-remote-all: $(foreach I, $(ALL_IMAGES), test-remote/$(I)) ## test all stacks using a remote registry
-test-remote-all-multiarch: $(foreach I, $(ALL_IMAGES), test-remote-multiarch/$(I)) ## test all stacks for all architectures using a remote registry
+test-remote-multiarch-all: $(foreach I, $(ALL_IMAGES), test-remote-multiarch/$(I)) ## test all stacks for all architectures using a remote registry
 
 build-test/%: build/% test/% ## build and test a stack
 	@:
@@ -152,7 +152,7 @@ build-test-arm64/%: build-arm64/% test-arm64/% ## build and test a stack using a
 build-test-multiarch/%: build-multiarch/% test-multiarch/% ## build and test a stack for all architectures
 	@:
 build-test-all: $(foreach I, $(ALL_IMAGES), build-test/$(I)) ## build and test all stacks
-build-test-all-multiarch: $(foreach I, $(ALL_IMAGES), build-test-multiarch/$(I)) ## build and test all stacks for all architectures
+build-test-multiarch-all: $(foreach I, $(ALL_IMAGES), build-test-multiarch/$(I)) ## build and test all stacks for all architectures
 
 cont-clean-all: cont-stop-all cont-rm-all ## clean all containers (stop + rm)
 cont-stop-all: ## stop all containers
