@@ -8,7 +8,6 @@ remotes::install_cran(upgrade = FALSE, pkgs = c(
   "ggpubr",
   "gridExtra",
   "lme4",
-  "minqa",
   "plotly",
   "statmod"
 ))

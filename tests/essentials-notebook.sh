@@ -15,6 +15,7 @@ r_packages=(
   ggpubr
   lme4
   minqa
+  pak
   plotly
   statmod
 )
