@@ -65,7 +65,8 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
   mamba install --yes \
   "r-base~=${R_VERSION}" \
   "r-irkernel"  \
-  "r-remotes"
+  "r-remotes" \
+  && Rscript -e 'install.packages("pak", repos = sprintf("https://r-lib.github.io/p/pak/stable/%s/%s/%s", .Platform$pkgType, R.Version()$os, R.Version()$arch))'
 
 # add R mimetype and networking options
 COPY --chown=${NB_UID}:${NB_GID} Rprofile.site "${R_HOME}"/etc/
