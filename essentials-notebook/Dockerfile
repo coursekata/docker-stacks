@@ -49,9 +49,11 @@ RUN --mount=type=cache,target="${CONDA_DIR}/pkgs",uid=${NB_UID},sharing=locked \
   "r-markdown" \
   "r-metrics" \
   "r-mosaic" \
+  "r-pak" \
   "r-palmerpenguins" \
   "r-plotly" \
-  "r-stringdist"
+  "r-stringdist" \
+  && Rscript -e "pak::pak_update()"
 
 # install all other R packages
 ARG R_REQUIREMENTS
