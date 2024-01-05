@@ -92,7 +92,11 @@ help:
 create-builder:
 	@if ! docker buildx ls | grep -q $(DS_BUILDER_NAME); then \
 		echo "Creating builder $(DS_BUILDER_NAME) ..."; \
-		docker buildx create --name=$(DS_BUILDER_NAME) --driver=docker-container --driver-opt=network=host; \
+		docker buildx create --name=$(DS_BUILDER_NAME) \
+			--driver=docker-container \
+			--driver-opt=network=host \
+			--driver-opt=env.BUILDKIT_STEP_LOG_MAX_SIZE=-1 \
+			--driver-opt=env.BUILDKIT_STEP_LOG_MAX_SPEED=-1 ; \
 		docker buildx inspect --bootstrap $(DS_BUILDER_NAME); \
 	fi
 	@echo "Using builder $(DS_BUILDER_NAME)"
