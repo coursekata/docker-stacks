@@ -95,8 +95,7 @@ create-builder:
 		docker buildx create --name=$(DS_BUILDER_NAME) \
 			--driver=docker-container \
 			--driver-opt=network=host \
-			--driver-opt=env.BUILDKIT_STEP_LOG_MAX_SIZE=-1 \
-			--driver-opt=env.BUILDKIT_STEP_LOG_MAX_SPEED=-1 ; \
+			--driver-opt=env.BUILDKIT_STEP_LOG_MAX_SIZE=-1 ; \
 		docker buildx inspect --bootstrap $(DS_BUILDER_NAME); \
 	fi
 	@echo "Using builder $(DS_BUILDER_NAME)"
