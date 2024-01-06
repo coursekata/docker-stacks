@@ -183,14 +183,14 @@ run-arm64/%: ## run a stack on port 8888 using arm64 architecture
 
 run-shell/%: ## run a bash in interactive mode in a stack
 	docker run -it --rm $(DS_RUN_ARGS) "$(LOCAL_REGISTRY)/$(DS_OWNER)/$(notdir $@)" $(SHELL)
-run-amd64-shell/%: ## run a bash in interactive mode using amd64 architecture
+run-shell-amd64/%: ## run a bash in interactive mode using amd64 architecture
 	docker run -it --rm $(DS_RUN_ARGS) --platform linux/amd64 "$(LOCAL_REGISTRY)/$(DS_OWNER)/$(notdir $@)" $(SHELL)
-run-arm64-shell/%: ## run a bash in interactive mode using arm64 architecture
+run-shell-arm64/%: ## run a bash in interactive mode using arm64 architecture
 	docker run -it --rm $(DS_RUN_ARGS) --platform linux/arm64 "$(LOCAL_REGISTRY)/$(DS_OWNER)/$(notdir $@)" $(SHELL)
 
 run-sudo-shell/%: ## run a bash in interactive mode as root in a stack
 	docker run -it --rm --user root $(DS_RUN_ARGS)  "$(LOCAL_REGISTRY)/$(DS_OWNER)/$(notdir $@)" $(SHELL)
-run-amd64-sudo-shell/%: ## run a bash in interactive mode as root using amd64 architecture
+run-sudo-shell-amd64/%: ## run a bash in interactive mode as root using amd64 architecture
 	docker run -it --rm --user root $(DS_RUN_ARGS) --platform linux/amd64 "$(LOCAL_REGISTRY)/$(DS_OWNER)/$(notdir $@)" $(SHELL)
-run-arm64-sudo-shell/%: ## run a bash in interactive mode as root using arm64 architecture
+run-sudo-shell-arm64/%: ## run a bash in interactive mode as root using arm64 architecture
 	docker run -it --rm --user root $(DS_RUN_ARGS) --platform linux/arm64 "$(LOCAL_REGISTRY)/$(DS_OWNER)/$(notdir $@)" $(SHELL)
