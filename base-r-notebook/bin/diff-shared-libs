@@ -11,4 +11,4 @@ PREVIOUS_LIBS_FILE=$1
 CURRENT_LIBS_FILE=$2
 
 # Output new shared libraries that are in the current list but not in the previous one
-comm -13 <(sort ${PREVIOUS_LIBS_FILE}) <(sort ${CURRENT_LIBS_FILE})
+comm -13 <(sort -u ${PREVIOUS_LIBS_FILE}) <(sort -u ${CURRENT_LIBS_FILE})

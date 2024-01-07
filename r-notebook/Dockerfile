@@ -45,15 +45,25 @@ ARG APT_CACHE_DIR APT_LIB_DIR
 RUN --mount=type=cache,target="${APT_CACHE_DIR}",sharing=locked \
   --mount=type=cache,target="${APT_LIB_DIR}",sharing=locked \
   apt-get update && apt-get upgrade -y && apt-get -y install --no-install-recommends \
-  libavfilter-dev
+  # install a few pre-compiled packages not on conda
+  # note that this is not a robust process --- this will overwrite the R_HOME/site-library if it
+  # already exists, and it will not copy over any shared libraries (because these don't need that)
+  #
+  # ideally, this would be done with conda
+  #
+  # this also doesn't clean up the superfluous R installation that is added, and instead relies on
+  # the multi-stage build to avoid the mess
+  r-cran-bigmemory \
+  r-cran-mapproj \
+  r-cran-mvnfast \
+  && mv /usr/lib/R/site-library ${R_HOME}/site-library \
+  && chown -R ${NB_UID}:${NB_GID} ${R_HOME}/site-library
 USER ${NB_UID}
 
 # install R packages from conda where possible
 RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
   mamba install --yes \
-  # "r-av" \
-    "ffmpeg" \
-    "pkg-config" \
+  "r-av" \
   "r-bayesplot" \
   "r-car" \
   "r-dagitty" \
@@ -112,6 +122,7 @@ FROM r-builder as new-shared-libs
 ARG SHARED_LIBS_LIST
 COPY --from=pre-shared-libs "${SHARED_LIBS_LIST}" /tmp/pre-shared-libs.txt
 RUN find-shared-libs "${R_HOME}/library" > /tmp/post-shared-libs.txt \
+  && find-shared-libs "${R_HOME}/site-library" >> /tmp/post-shared-libs.txt \
   && diff-shared-libs /tmp/pre-shared-libs.txt /tmp/post-shared-libs.txt > "${SHARED_LIBS_LIST}"
 
 
