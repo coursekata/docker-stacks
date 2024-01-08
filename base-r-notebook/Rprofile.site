@@ -1,31 +1,25 @@
 # prevent "Registered S3 method overwritten" messages
-Sys.setenv(`_R_S3_METHOD_REGISTRATION_NOTE_OVERWRITES_` = "false")
+prevent_s3_msgs <- Sys.getenv("_R_S3_METHOD_REGISTRATION_NOTE_OVERWRITES_", unset = "false")
+Sys.setenv(`_R_S3_METHOD_REGISTRATION_NOTE_OVERWRITES_` = prevent_s3_msgs)
+
+# add a default CRAN mirror
 ppm <- Sys.getenv("PPM", unset = "https://packagemanager.posit.co/cran/__linux__/jammy/latest")
 cran <- Sys.getenv("CRAN", unset = "https://cloud.r-project.org")
+options(repos = c(PPM = ppm, CRAN = cran))
 
-options(
-  # add a default CRAN mirror and download method
-  repos = c(PPM = ppm, CRAN = cran),
-
-  # default download method and user agent
-  # https://docs.posit.co/rspm/admin/serving-binaries/#binary-user-agents
-  download.file.method = "libcurl",
-  HTTPUserAgent = sprintf(
-    "R/%s R (%s)",
-    getRversion(),
-    paste(
-      getRversion(),
-      R.version["platform"],
-      R.version["arch"],
-      R.version["os"]
-    )
-  ),
-
-  # Add R mimetype to specify how the plot returns from R to the browser.
-  # https://notebook.community/andrie/jupyter-notebook-samples/Changing%20R%20plot%20options%20in%20Jupyter # nolint
-  jupyter.plot_mimetypes = c(
-    "text/plain", # plot description, always keep
-    "image/svg+xml",
-    "image/png"
-  )
+# setup user agent for RSPM
+# https://docs.posit.co/rspm/admin/serving-binaries/#binary-user-agents
+user_agent <- sprintf(
+  "R/%s R (%s)",
+  getRversion(),
+  paste(getRversion(), R.version["platform"], R.version["arch"], R.version["os"])
 )
+options(download.file.method = "libcurl", HTTPUserAgent = user_agent)
+
+# Add R mimetype to specify how the plot returns from R to the browser.
+# https://notebook.community/andrie/jupyter-notebook-samples/Changing%20R%20plot%20options%20in%20Jupyter # nolint
+options(jupyter.plot_mimetypes = c(
+  "text/plain", # plot description, always keep
+  "image/svg+xml",
+  "image/png"
+))

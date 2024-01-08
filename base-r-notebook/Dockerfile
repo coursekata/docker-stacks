@@ -30,14 +30,18 @@ ARG R_VERSION PYTHON_VERSION
 ENV R_VERSION=${R_VERSION}
 ENV PYTHON_VERSION=${PYTHON_VERSION}
 
-USER root
+# set default kernel
+ARG DEFAULT_KERNEL_NAME
+ENV DEFAULT_KERNEL_NAME=${DEFAULT_KERNEL_NAME}
 
-# setup R
+# R settings
 ENV TZ=Etc/UTC
 ENV LANG=en_US.UTF-8
 ENV _R_SHLIB_STRIP_=true
 ENV R_HOME="${CONDA_DIR}/lib/R"
 
+# R system dependencies
+USER root
 ARG APT_CACHE_DIR APT_LIB_DIR
 # hadolint ignore=DL3008,DL3009
 RUN --mount=type=cache,target="${APT_CACHE_DIR}",sharing=locked \
@@ -50,27 +54,23 @@ RUN --mount=type=cache,target="${APT_CACHE_DIR}",sharing=locked \
   r-cran-rodbc \
   unixodbc \
   unixodbc-dev
+USER ${NB_UID}
+
+# install R, Jupyter kernel, and package manager(s)
+RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
+  mamba install --yes \
+  "r-base~=${R_VERSION}" \
+  "r-irkernel" \
+  "r-remotes"
+
+# add R mimetype and networking options
+COPY --chown=${NB_UID}:${NB_GID} Rprofile.site "${R_HOME}"/etc/
 
 # add common utilities
+USER root
 COPY --chmod=555 bin/ /usr/local/bin/
 RUN chmod 555 \
   /usr/local/bin/find-shared-libs \
   /usr/local/bin/diff-shared-libs \
   /usr/local/bin/copy-shared-libs
-
 USER ${NB_UID}
-
-# install basic R packages
-RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
-  mamba install --yes \
-  "r-base~=${R_VERSION}" \
-  "r-irkernel"  \
-  "r-remotes" \
-  && Rscript -e 'install.packages("pak", repos = sprintf("https://r-lib.github.io/p/pak/stable/%s/%s/%s", .Platform$pkgType, R.Version()$os, R.Version()$arch))'
-
-# add R mimetype and networking options
-COPY --chown=${NB_UID}:${NB_GID} Rprofile.site "${R_HOME}"/etc/
-
-# set default kernel
-ARG DEFAULT_KERNEL_NAME
-ENV DEFAULT_KERNEL_NAME=${DEFAULT_KERNEL_NAME}
