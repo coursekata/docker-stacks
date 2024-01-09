@@ -26,21 +26,14 @@ ARG SHARED_LIBS_LIST=/tmp/shared-libs.txt
 # -------------------------------------
 FROM ${PARENT_IMAGE} as base
 
-USER root
-
 # install cmdstan dependencies
+USER root
 ARG APT_CACHE_DIR APT_LIB_DIR
-# hadolint ignore=DL3008,DL3009
 RUN --mount=type=cache,target="${APT_CACHE_DIR}",sharing=locked \
   --mount=type=cache,target="${APT_LIB_DIR}",sharing=locked \
   apt-get update && apt-get upgrade -y && apt-get -y install --no-install-recommends \
   g++
-
 USER ${NB_UID}
-
-# install cmdstan
-RUN Rscript -e 'remotes::install_cran("cmdstanr", repos = "https://mc-stan.org/r-packages/", dependencies = TRUE)' \
-  && Rscript -e 'cmdstanr::install_cmdstan()'
 
 
 # py-builder
@@ -63,6 +56,12 @@ RUN --mount=type=bind,source="${PY_REQUIREMENTS}",target=/tmp/requirements.txt \
 # -------------------------------------
 FROM base
 LABEL maintainer="CourseKata <tech@coursekata.org>"
+
+# install cmdstan
+RUN R_REMOTES_UPGRADE="never" Rscript \
+  -e 'stan <- "https://mc-stan.org/r-packages/"' \
+  -e 'remotes::install_cran("cmdstanr", repos = c(stan, getOption("repos")), dependencies = TRUE)' \
+  -e 'cmdstanr::install_cmdstan()'
 
 # install Python packages from wheels
 ARG PIP_CACHE_DIR PIP_WHEEL_DIR PY_REQUIREMENTS
