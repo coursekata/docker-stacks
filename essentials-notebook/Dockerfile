@@ -46,6 +46,7 @@ RUN --mount=type=cache,target="${CONDA_DIR}/pkgs",uid=${NB_UID},sharing=locked \
   --mount=type=bind,source="${R_REQUIREMENTS}",target=/tmp/requirements.r \
   --mount=type=secret,id=github_token,uid=${NB_UID} \
   GITHUB_PAT=$(cat /run/secrets/github_token) \
+  R_REMOTES_UPGRADE="never" \
   # install R packages from conda where possible
   mamba install --yes \
   # "r-testwhat" \

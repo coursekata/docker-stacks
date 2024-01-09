@@ -1,9 +1,12 @@
-options(warn = 2, Ncpus = max(1L, parallel::detectCores()))
+options(Ncpus = max(1L, parallel::detectCores()))
 
 # packages already installed in essentials-notebook
-remotes::install_github(upgrade = FALSE, "coursekata/testwhat")
-remotes::install_github(upgrade = FALSE, "fivethirtyeightdata/fivethirtyeightdata")
-remotes::install_cran(upgrade = FALSE, pkgs = c(
+remotes::install_github(c(
+  "coursekata/testwhat",
+  "fivethirtyeightdata/fivethirtyeightdata"
+))
+
+remotes::install_cran(c(
   "coursekata",
   "fivethirtyeight",
   "ggpubr",
@@ -14,7 +17,7 @@ remotes::install_cran(upgrade = FALSE, pkgs = c(
 ))
 
 # packages only in r-notebook and datascience-notebook
-remotes::install_cran(upgrade = FALSE, pkgs = c(
+remotes::install_cran(c(
   "av",
   "bayesplot",
   "car",

@@ -1,8 +1,11 @@
-options(warn = 2, Ncpus = max(1L, parallel::detectCores()))
+options(Ncpus = max(1L, parallel::detectCores()))
 
-remotes::install_github(upgrade = FALSE, "coursekata/testwhat")
-remotes::install_github(upgrade = FALSE, "fivethirtyeightdata/fivethirtyeightdata")
-remotes::install_cran(upgrade = FALSE, pkgs = c(
+remotes::install_github(c(
+  "coursekata/testwhat",
+  "fivethirtyeightdata/fivethirtyeightdata"
+))
+
+remotes::install_cran(c(
   "coursekata",
   "fivethirtyeight",
   "ggpubr",

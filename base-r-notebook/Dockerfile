@@ -39,6 +39,7 @@ ENV TZ=Etc/UTC
 ENV LANG=en_US.UTF-8
 ENV _R_SHLIB_STRIP_=true
 ENV R_HOME="${CONDA_DIR}/lib/R"
+ENV R_REMOTES_NO_ERRORS_FROM_WARNINGS="false"
 
 # R system dependencies
 USER root
