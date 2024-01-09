@@ -23,3 +23,6 @@ options(jupyter.plot_mimetypes = c(
   "image/svg+xml",
   "image/png"
 ))
+
+# don't show all startup messages for CourseKata
+options(coursekata.quiet = TRUE)
