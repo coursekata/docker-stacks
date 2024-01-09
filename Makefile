@@ -4,14 +4,6 @@
 
 SHELL:=bash
 
-DS_REGISTRY?=ghcr.io
-DS_OWNER?=coursekata
-DS_BUILDER_NAME?=docker-stacks-builder
-DS_BUILD_ARGS?=
-DS_RUN_ARGS?=
-
-DS_PRECOMPILE?=r-rust/gifski
-
 # Enable BuildKit for Docker build
 export DOCKER_BUILDKIT:=1
 # Activate experimental mode
@@ -27,9 +19,21 @@ LOCAL_REGISTRY_PORT := $(shell \
 		docker port registry | cut -d: -f2; \
 	else \
 		ports=($$(seq 5000 6000)); \
-		for port in $${ports[@]}; do if ! nc -z localhost $$port; then echo $$port; break; fi; done; \
+		for port in $${ports[@]}; do \
+			if ! nc -z localhost $$port > /dev/null 2>&1; then \
+				echo $$port; \
+				break; \
+			fi; \
+		done; \
 	fi)
 LOCAL_REGISTRY := localhost:$(LOCAL_REGISTRY_PORT)
+
+DS_REGISTRY?=$(LOCAL_REGISTRY)
+DS_OWNER?=coursekata
+DS_BUILDER_NAME?=docker-stacks-builder
+DS_BUILD_ARGS?=
+DS_RUN_ARGS?=
+DS_PRECOMPILE?=r-rust/gifski
 
 # Need to list the images in build dependency order
 ALL_IMAGES:= \
@@ -41,46 +45,12 @@ ALL_IMAGES:= \
 # get current platform and set to either linux/amd64 or linux/arm64
 CURRENT_PLATFORM := $(shell docker version --format '{{.Server.Os}}/{{.Server.Arch}}')
 CURRENT_ARCH := $(shell docker version --format '{{.Server.Arch}}')
-COMMON_BUILD_ARGS?=--build-arg REGISTRY=$(LOCAL_REGISTRY) --build-arg DS_OWNER=$(DS_OWNER)
+COMMON_BUILD_ARGS?=--build-arg REGISTRY=$(DS_REGISTRY) --build-arg DS_OWNER=$(DS_OWNER)
 
-# build an image for a given platform
-define build_image
-	@echo
-	docker buildx build $(COMMON_BUILD_ARGS) $(BUILD_ARGS) \
-		--platform $(1) \
-		--secret id=github_token \
-		--tag "$(LOCAL_REGISTRY)/$(DS_OWNER)/$(notdir $(2))" \
-		--cache-from type=registry,ref="$(LOCAL_REGISTRY)/$(DS_OWNER)/$(notdir $(2))" \
-		--cache-to type=inline \
-		--push \
-		"./$(notdir $(2))"
-
-	@echo
-	@echo "Pulling $(notdir $(2)) from build cache..."
-	@DOCKER_CLI_HINTS=false \
-		docker pull --platform="$(shell echo $(1) | cut -d, -f1)" \
-		"$(LOCAL_REGISTRY)/$(DS_OWNER)/$(notdir $(2))"
-
-	@echo
-	@docker images "$(LOCAL_REGISTRY)/$(DS_OWNER)/$(notdir $(2))"
-endef
-
-# test an image for a given platform
-define test_image
-	@echo
-	@echo "Pulling $(notdir $(2)) ($(1))..."
-	@DOCKER_CLI_HINTS=false \
-		docker pull -q --platform "$(1)" "$(3)/$(DS_OWNER)/$(notdir $(2))"
-
-	@echo
-	@echo "Testing $(notdir $(2)) ($(1))..."
-	@docker run $(DOCKER_RUN_ARGS) --rm \
-		--platform="$(1)" \
-		--mount=type=bind,source="./tests/$(notdir $(2)).sh",target=/tmp/test.sh \
-		"$(3)/$(DS_OWNER)/$(notdir $(2))" $(SHELL) /tmp/test.sh
-endef
-
-
+# terminal colors
+success := $(shell tput setaf 3)
+info := $(shell tput setaf 4)
+sgr0 := $(shell tput sgr0)
 
 # https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 .PHONY: help
@@ -95,22 +65,43 @@ help:
 
 create-builder:
 	@if ! docker buildx ls | grep -q $(DS_BUILDER_NAME); then \
-		echo "Creating builder $(DS_BUILDER_NAME) ..."; \
+		printf '$(info)Creating builder $(DS_BUILDER_NAME)$(sgr0)\n'; \
 		docker buildx create --name=$(DS_BUILDER_NAME) \
 			--driver=docker-container \
 			--driver-opt=network=host \
 			--driver-opt=env.BUILDKIT_STEP_LOG_MAX_SIZE=-1 ; \
 		docker buildx inspect --bootstrap $(DS_BUILDER_NAME); \
 	fi
-	@echo "Using builder $(DS_BUILDER_NAME)"
 	@docker buildx use $(DS_BUILDER_NAME)
+	@printf '$(success)Using builder $(DS_BUILDER_NAME)$(sgr0)\n'
 create-registry:
-	@if [ "$(LOCAL_REGISTRY_UP)" = "false" ]; then \
-		echo "Creating local registry on port $(LOCAL_REGISTRY_PORT) ..."; \
+	@if [ ! "$(LOCAL_REGISTRY_UP)" = "true" ]; then \
+		@printf '$(info)Local registry not running, starting one on port $(LOCAL_REGISTRY_PORT)$(sgr0)'; \
 		docker run -d --rm --name registry -p $(LOCAL_REGISTRY_PORT):5000 registry:2; \
-	fi
-	@echo Local registry running at localhost:$(LOCAL_REGISTRY_PORT)
+	fi;
+	@printf '$(success)Using registry $(LOCAL_REGISTRY)$(sgr0)\n'
 setup-docker: create-builder create-registry
+
+# build an image for a given platform
+define build_image
+	@printf '\n$(info)Building $(notdir $(2)) ($(1))$(sgr0)\n'
+	docker buildx build $(COMMON_BUILD_ARGS) $(BUILD_ARGS) \
+		--platform $(1) \
+		--secret id=github_token \
+		--tag "$(LOCAL_REGISTRY)/$(DS_OWNER)/$(notdir $(2))" \
+		--cache-from type=registry,ref="$(LOCAL_REGISTRY)/$(DS_OWNER)/$(notdir $(2))" \
+		--cache-to type=inline \
+		--push \
+		"./$(notdir $(2))"
+
+	@printf '\n$(info)Pulling $(notdir $(2)) from build cache...$(sgr0)\n'
+	@DOCKER_CLI_HINTS=false \
+		docker pull --platform="$(shell echo $(1) | cut -d, -f1)" \
+		"$(DS_REGISTRY)/$(DS_OWNER)/$(notdir $(2))"
+
+	@printf '\n$(success)Built $(notdir $(2)) ($(1))$(sgr0)\n'
+	@docker images "$(DS_REGISTRY)/$(DS_OWNER)/$(notdir $(2))"
+endef
 
 platforms=linux/amd64,linux/arm64
 build/%: setup-docker ## build the latest image for a stack using the system's architecture
@@ -119,32 +110,34 @@ build-amd64/%: setup-docker ## build the latest image for a stack using amd64 ar
 	$(call build_image,linux/amd64,$@)
 build-arm64/%: setup-docker ## build the latest image for a stack using arm64 architecture
 	$(call build_image,linux/arm64,$@)
-build-multiarch/%: create-builder ## build the latest image using a multi-arch builder
+build-multiarch/%: setup-docker ## build the latest image using a multi-arch builder
 	$(call build_image,$(platforms),$@)
 build-all: $(foreach I, $(ALL_IMAGES), build/$(I)) ## build all stacks
 build-multiarch-all: $(foreach I, $(ALL_IMAGES), build-multiarch/$(I)) ## build all stacks for all architectures
 
+# test an image for a given platform
+define test_image
+	@printf '\n$(info)Pulling $(notdir $(2)) ($(1))$(sgr0)\n'
+	@DOCKER_CLI_HINTS=false \
+		docker pull -q --platform "$(1)" "$(3)/$(DS_OWNER)/$(notdir $(2))"
+
+	@printf '$(info)Testing $(notdir $(2)) ($(1))$(sgr0)\n'
+	@docker run $(DOCKER_RUN_ARGS) --rm \
+		--platform="$(1)" \
+		--mount=type=bind,source="./tests/$(notdir $(2)).sh",target=/tmp/test.sh \
+		"$(3)/$(DS_OWNER)/$(notdir $(2))" $(SHELL) /tmp/test.sh
+endef
+
 test/%: ## test a stack
-	$(call test_image,$(CURRENT_PLATFORM),$@,$(LOCAL_REGISTRY))
+	$(call test_image,$(CURRENT_PLATFORM),$@,$(DS_REGISTRY))
 test-amd64/%: ## test a stack using amd64 architecture
-	$(call test_image,linux/amd64,$@,$(LOCAL_REGISTRY))
+	$(call test_image,linux/amd64,$@,$(DS_REGISTRY))
 test-arm64/%: ## test a stack using arm64 architecture
-	$(call test_image,linux/arm64,$@,$(LOCAL_REGISTRY))
+	$(call test_image,linux/arm64,$@,$(DS_REGISTRY))
 test-multiarch/%: test-amd64/% test-arm64/% ## test a stack for all architectures
 	@:
 test-all: $(foreach I, $(ALL_IMAGES), test/$(I)) ## test all stacks
 test-multiarch-all: $(foreach I, $(ALL_IMAGES), test-multiarch/$(I)) ## test all stacks for all architectures
-
-test-remote/%: ## test a stack using a remote registry
-	$(call test_image,$(CURRENT_PLATFORM),$@,$(DS_REGISTRY))
-test-remote-amd64/%: ## test a stack using amd64 architecture and a remote registry
-	$(call test_image,linux/amd64,$@,$(DS_REGISTRY))
-test-remote-arm64/%: ## test a stack using arm64 architecture and a remote registry
-	$(call test_image,linux/arm64,$@,$(DS_REGISTRY))
-test-remote-multiarch/%: test-remote-amd64/% test-remote-arm64/% ## test a stack for all architectures using a remote registry
-	@:
-test-remote-all: $(foreach I, $(ALL_IMAGES), test-remote/$(I)) ## test all stacks using a remote registry
-test-remote-multiarch-all: $(foreach I, $(ALL_IMAGES), test-remote-multiarch/$(I)) ## test all stacks for all architectures using a remote registry
 
 build-test/%: build/% test/% ## build and test a stack
 	@:
@@ -179,25 +172,25 @@ img-rm-dang: ## remove dangling images (tagged None)
 	-docker rmi --force $(shell docker images -f "dangling=true" --quiet) 2> /dev/null
 
 run/%: ## run a stack on port 8888
-	docker run -it --rm -p 8888:8888 $(DS_RUN_ARGS) "$(LOCAL_REGISTRY)/$(DS_OWNER)/$(notdir $@)"
+	docker run -it --rm -p 8888:8888 $(DS_RUN_ARGS) "$(DS_REGISTRY)/$(DS_OWNER)/$(notdir $@)"
 run-amd64/%: ## run a stack on port 8888 using amd64 architecture
-	docker run -it --rm -p 8888:8888 $(DS_RUN_ARGS) --platform linux/amd64 "$(LOCAL_REGISTRY)/$(DS_OWNER)/$(notdir $@)"
+	docker run -it --rm -p 8888:8888 $(DS_RUN_ARGS) --platform linux/amd64 "$(DS_REGISTRY)/$(DS_OWNER)/$(notdir $@)"
 run-arm64/%: ## run a stack on port 8888 using arm64 architecture
-	docker run -it --rm -p 8888:8888 $(DS_RUN_ARGS) --platform linux/arm64 "$(LOCAL_REGISTRY)/$(DS_OWNER)/$(notdir $@)"
+	docker run -it --rm -p 8888:8888 $(DS_RUN_ARGS) --platform linux/arm64 "$(DS_REGISTRY)/$(DS_OWNER)/$(notdir $@)"
 
 run-shell/%: ## run a bash in interactive mode in a stack
-	docker run -it --rm $(DS_RUN_ARGS) "$(LOCAL_REGISTRY)/$(DS_OWNER)/$(notdir $@)" $(SHELL)
+	docker run -it --rm $(DS_RUN_ARGS) "$(DS_REGISTRY)/$(DS_OWNER)/$(notdir $@)" $(SHELL)
 run-shell-amd64/%: ## run a bash in interactive mode using amd64 architecture
-	docker run -it --rm $(DS_RUN_ARGS) --platform linux/amd64 "$(LOCAL_REGISTRY)/$(DS_OWNER)/$(notdir $@)" $(SHELL)
+	docker run -it --rm $(DS_RUN_ARGS) --platform linux/amd64 "$(DS_REGISTRY)/$(DS_OWNER)/$(notdir $@)" $(SHELL)
 run-shell-arm64/%: ## run a bash in interactive mode using arm64 architecture
-	docker run -it --rm $(DS_RUN_ARGS) --platform linux/arm64 "$(LOCAL_REGISTRY)/$(DS_OWNER)/$(notdir $@)" $(SHELL)
+	docker run -it --rm $(DS_RUN_ARGS) --platform linux/arm64 "$(DS_REGISTRY)/$(DS_OWNER)/$(notdir $@)" $(SHELL)
 
 run-sudo-shell/%: ## run a bash in interactive mode as root in a stack
-	docker run -it --rm --user root $(DS_RUN_ARGS)  "$(LOCAL_REGISTRY)/$(DS_OWNER)/$(notdir $@)" $(SHELL)
+	docker run -it --rm --user root $(DS_RUN_ARGS)  "$(DS_REGISTRY)/$(DS_OWNER)/$(notdir $@)" $(SHELL)
 run-sudo-shell-amd64/%: ## run a bash in interactive mode as root using amd64 architecture
-	docker run -it --rm --user root $(DS_RUN_ARGS) --platform linux/amd64 "$(LOCAL_REGISTRY)/$(DS_OWNER)/$(notdir $@)" $(SHELL)
+	docker run -it --rm --user root $(DS_RUN_ARGS) --platform linux/amd64 "$(DS_REGISTRY)/$(DS_OWNER)/$(notdir $@)" $(SHELL)
 run-sudo-shell-arm64/%: ## run a bash in interactive mode as root using arm64 architecture
-	docker run -it --rm --user root $(DS_RUN_ARGS) --platform linux/arm64 "$(LOCAL_REGISTRY)/$(DS_OWNER)/$(notdir $@)" $(SHELL)
+	docker run -it --rm --user root $(DS_RUN_ARGS) --platform linux/arm64 "$(DS_REGISTRY)/$(DS_OWNER)/$(notdir $@)" $(SHELL)
 
 define build-r-package
 	docker run --rm $(DS_RUN_ARGS) \
