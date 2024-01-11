@@ -83,12 +83,7 @@ py_packages=(
   yellowbrick
 )
 
-for package in "${r_packages[@]}"; do
-  Rscript -e "suppressPackageStartupMessages(library($package))"
-done
-
-for package in "${py_packages[@]}"; do
-  pip show $package &> /dev/null || (echo " ! Python package $package not found" && exit 1)
-done
-
-echo "All tests passed!"
+"$(dirname "$0")/test-r-packages.sh" "${r_packages[@]}" & r_pid=$!
+"$(dirname "$0")/test-python-packages.sh" "${py_packages[@]}" & py_pid=$!
+for job in $r_pid $py_pid; do wait $job || exit 1; done
+echo -e "\033[32mAll tests passed!\033[0m"

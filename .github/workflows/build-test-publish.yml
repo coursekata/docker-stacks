@@ -125,6 +125,8 @@ jobs:
         shell: bash
         run: |
           docker run --rm --platform=linux/arm64 \
+            --mount=type=bind,source="./tests/test-r-packages.sh",target=/tmp/test-r-packages.sh \
+            --mount=type=bind,source="./tests/test-python-packages.sh",target=/tmp/test-python-packages.sh \
             --mount=type=bind,source="./tests/${{ inputs.image }}.sh",target=/tmp/test.sh \
             localhost:5000/${{ github.repository_owner }}/${{ inputs.image }}:arm64 \
             bash /tmp/test.sh
@@ -148,6 +150,8 @@ jobs:
         shell: bash
         run: |
           docker run --rm --platform=linux/amd64 \
+            --mount=type=bind,source="./tests/test-r-packages.sh",target=/tmp/test-r-packages.sh \
+            --mount=type=bind,source="./tests/test-python-packages.sh",target=/tmp/test-python-packages.sh \
             --mount=type=bind,source="./tests/${{ inputs.image }}.sh",target=/tmp/test.sh \
             localhost:5000/${{ github.repository_owner }}/${{ inputs.image }}:amd64 \
             bash /tmp/test.sh

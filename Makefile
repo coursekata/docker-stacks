@@ -26,7 +26,7 @@ LOCAL_REGISTRY_PORT := $(shell \
 			fi; \
 		done; \
 	fi)
-LOCAL_REGISTRY := localhost:$(LOCAL_REGISTRY_PORT)
+LOCAL_REGISTRY:=localhost:$(LOCAL_REGISTRY_PORT)
 
 DS_REGISTRY?=$(LOCAL_REGISTRY)
 DS_OWNER?=coursekata
@@ -119,11 +119,14 @@ build-multiarch-all: $(foreach I, $(ALL_IMAGES), build-multiarch/$(I)) ## build 
 define test_image
 	@printf '\n$(info)Pulling $(notdir $(2)) ($(1))$(sgr0)\n'
 	@DOCKER_CLI_HINTS=false \
-		docker pull -q --platform "$(1)" "$(3)/$(DS_OWNER)/$(notdir $(2))"
+		docker pull --platform "$(1)" "$(3)/$(DS_OWNER)/$(notdir $(2))"
 
+	@echo
 	@printf '$(info)Testing $(notdir $(2)) ($(1))$(sgr0)\n'
 	@docker run $(DOCKER_RUN_ARGS) --rm \
 		--platform="$(1)" \
+		--mount=type=bind,source="./tests/test-r-packages.sh",target=/tmp/test-r-packages.sh \
+		--mount=type=bind,source="./tests/test-python-packages.sh",target=/tmp/test-python-packages.sh \
 		--mount=type=bind,source="./tests/$(notdir $(2)).sh",target=/tmp/test.sh \
 		"$(3)/$(DS_OWNER)/$(notdir $(2))" $(SHELL) /tmp/test.sh
 endef
