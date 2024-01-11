@@ -13,6 +13,9 @@ on:
       - essentials-notebook/**
       - r-notebook/**
       - datascience-notebook/**
+  schedule:
+    # Weekly, at 03:00 on Monday UTC time (see https://crontab.guru)
+    - cron: "0 3 * * 1"
 
 # https://docs.github.com/en/actions/using-jobs/using-concurrency
 concurrency:
