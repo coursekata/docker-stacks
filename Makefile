@@ -48,7 +48,7 @@ CURRENT_ARCH := $(shell docker version --format '{{.Server.Arch}}')
 COMMON_BUILD_ARGS?=--build-arg REGISTRY=$(DS_REGISTRY) --build-arg DS_OWNER=$(DS_OWNER)
 
 # terminal colors
-success := $(shell tput setaf 3)
+success := $(shell tput setaf 2)
 info := $(shell tput setaf 4)
 sgr0 := $(shell tput sgr0)
 
