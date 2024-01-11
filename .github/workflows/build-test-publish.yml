@@ -35,6 +35,11 @@ on:
         description: Labels to add to the image
         type: string
         required: false
+      no-cache:
+        description: Whether to disable the build cache
+        type: boolean
+        required: false
+        default: false
 
     outputs:
       image:
@@ -113,6 +118,7 @@ jobs:
           tags: localhost:5000/${{ github.repository_owner }}/${{ inputs.image }}:arm64
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}
           cache-to: type=registry,ref=localhost:5000/${{ github.repository_owner }}/${{ inputs.image }}:buildcache-arm64,mode=max
+          no-cache: ${{ inputs.no-cache }}
           push: true
 
       - name: Test for linux/arm64
@@ -135,6 +141,7 @@ jobs:
           tags: localhost:5000/${{ github.repository_owner }}/${{ inputs.image }}:amd64
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}
           cache-to: type=registry,ref=localhost:5000/${{ github.repository_owner }}/${{ inputs.image }}:buildcache-amd64,mode=max
+          no-cache: ${{ inputs.no-cache }}
           push: true
 
       - name: Test for linux/amd64
@@ -172,13 +179,12 @@ jobs:
         with:
           context: ${{ inputs.image }}
           platforms: linux/amd64,linux/arm64
-          build-args: |
-            BUILDKIT_INLINE_CACHE=1
-            ${{ inputs.build-args }}
+          build-args: ${{ inputs.build-args }}
           secrets: "github_token=${{ secrets.GITHUB_TOKEN }}"
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: |
             type=registry,ref=localhost:5000/${{ github.repository_owner }}/${{ inputs.image }}:buildcache-amd64
             type=registry,ref=localhost:5000/${{ github.repository_owner }}/${{ inputs.image }}:buildcache-arm64
+          cache-to: type=inline
           push: true

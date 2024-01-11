@@ -29,6 +29,7 @@ jobs:
     secrets: inherit
     with:
       image: base-r-notebook
+      no-cache: ${{ github.event_name == 'schedule' }}
       labels: |
         org.opencontainers.image.title=Base R Notebook
         org.opencontainers.image.description=Jupyter Lab, Python, and R, and that's it.
@@ -46,6 +47,7 @@ jobs:
     secrets: inherit
     with:
       image: essentials-notebook
+      no-cache: ${{ github.event_name == 'schedule' }}
       labels: |
         org.opencontainers.image.title=Essentials Notebook
         org.opencontainers.image.description=CourseKata essentials: everything used in the books.
@@ -63,6 +65,7 @@ jobs:
     secrets: inherit
     with:
       image: r-notebook
+      no-cache: ${{ github.event_name == 'schedule' }}
       labels: |
         org.opencontainers.image.title=R Notebook
         org.opencontainers.image.description=CourseKata essentials and other R packages for teaching and learning data science.
@@ -81,6 +84,7 @@ jobs:
     secrets: inherit
     with:
       image: datascience-notebook
+      no-cache: ${{ github.event_name == 'schedule' }}
       labels: |
         org.opencontainers.image.title=Data Science Notebook
         org.opencontainers.image.description=R and Python packages for teaching and learning data science.
