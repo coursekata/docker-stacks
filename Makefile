@@ -196,7 +196,7 @@ run-sudo-shell-arm64/%: ## run a bash in interactive mode as root using arm64 ar
 	docker run -it --rm --user root $(DS_RUN_ARGS) --platform linux/arm64 "$(DS_REGISTRY)/$(DS_OWNER)/$(notdir $@)" $(SHELL)
 
 define build-r-package
-	docker run --rm $(DS_RUN_ARGS) \
+	@docker run --rm $(DS_RUN_ARGS) \
 		--platform $(2) \
 		-e GH_TOKEN=$(github_token) \
 		-v "$(PWD)/$(3):/home/jovyan" \
