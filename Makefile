@@ -12,7 +12,7 @@ export DOCKER_CLI_EXPERIMENTAL=enabled
 export github_token:=$(shell gh auth token)
 
 # Check if the local registry is running
-LOCAL_REGISTRY_UP := $(shell docker ps --filter name=registry --format "{{.Names}}" | grep -q registry && echo true || echo false)
+LOCAL_REGISTRY_UP := $(shell docker ps --filter name="^registry$$" --format "{{.Names}}" | grep -q registry && echo true || echo false)
 # Determine the port for the local registry (either the running one or one between 5000 and 6000)
 LOCAL_REGISTRY_PORT := $(shell \
 	if [ "$(LOCAL_REGISTRY_UP)" = "true" ]; then \
