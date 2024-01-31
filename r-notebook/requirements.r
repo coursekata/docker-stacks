@@ -2,12 +2,12 @@ options(Ncpus = max(1L, parallel::detectCores()))
 
 # packages already installed in essentials-notebook
 remotes::install_github(c(
+  "coursekata/coursekata-r",
   "coursekata/testwhat",
   "fivethirtyeightdata/fivethirtyeightdata"
 ))
 
 remotes::install_cran(c(
-  "coursekata",
   "fivethirtyeight",
   "ggpubr",
   "gridExtra",
