@@ -40,8 +40,25 @@ r_packages=(
   simstudy
   tidymodels
   tidyverse
+  gt
+  gtsummary
+  lmerTest
+  broom.mixed
+  DHARMa
+  marginaleffects
+  modelsummary
+  easystats
+  ggstatsplot
+  janitor
+  loo
+  tidybayes
+  datapasta
   # datascience-notebook
+  brms
   cmdstanr
+  ggstatsplot
+  rstanarm
+  rethinking
 )
 
 py_packages=(

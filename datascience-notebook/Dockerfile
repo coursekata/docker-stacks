@@ -41,8 +41,7 @@ USER ${NB_UID}
 FROM base as py-builder
 
 RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
-  mamba install --yes \
-  "gdal"
+  mamba install --yes "gdal"
 
 # make wheels for the Python packages
 ARG PIP_CACHE_DIR PIP_WHEEL_DIR PY_REQUIREMENTS
@@ -57,11 +56,56 @@ RUN --mount=type=bind,source="${PY_REQUIREMENTS}",target=/tmp/requirements.txt \
 FROM base
 LABEL maintainer="CourseKata <tech@coursekata.org>"
 
-# install cmdstan
+# install cmdstan and related requests
+RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
+  mamba install --yes \
+  # "r-brms"
+    "r-bridgesampling" \
+    "r-brobdingnag" \
+    "r-colourpicker" \
+    "r-dt" \
+    "r-dygraphs"  \
+    "r-inline" \
+    "r-nleqslv" \
+    "r-rcppparallel" \
+    "r-shinyjs" \
+    "r-shinythemes" \
+    "r-threejs" \
+    "r-xts" \
+  # "r-ggstatsplot"
+    "r-afex" \
+    # "r-bwstest" \
+    "r-desolve" \
+    "r-elliptic" \
+    "r-ggcorrplot" \
+    "r-gmp" \
+    "r-ggside" \
+    # "r-hypergeo" \
+      # "r-contfrac" \
+    # "r-ksamples" \
+    "r-multcompview" \
+    # "r-paletteer" \
+    "r-pbapply" \
+    # "r-pmcmrplus" \
+    "r-prismatic" \
+    "r-reshape" \
+    "r-rmpfr" \
+    # "r-statsexpressions" \
+      # "r-bayesfactor" \
+      # "r-suppdists" \
+      # "r-wrs2" \
+    "r-zeallot" \
+  # "r-rethinking"
+    "r-coda" \
+    "r-digest"
+
 RUN R_REMOTES_UPGRADE="never" Rscript \
   -e 'stan <- "https://mc-stan.org/r-packages/"' \
   -e 'remotes::install_cran("cmdstanr", repos = c(stan, getOption("repos")), dependencies = TRUE)' \
-  -e 'cmdstanr::install_cmdstan()'
+  -e 'cmdstanr::install_cmdstan()' \
+  -e 'remotes::install_cran(c("brms", "ggstatsplot", "rstanarm"))' \
+  -e 'remotes::install_github("rmcelreath/rethinking")'
+
 
 # install Python packages from wheels
 ARG PIP_CACHE_DIR PIP_WHEEL_DIR PY_REQUIREMENTS

@@ -29,6 +29,7 @@ r_packages=(
   here
   mapdata
   mapproj
+  mobilizr
   neuralnet
   OCSdata
   posterior
@@ -39,6 +40,18 @@ r_packages=(
   simstudy
   tidymodels
   tidyverse
+  gt
+  gtsummary
+  lmerTest
+  broom.mixed
+  DHARMa
+  marginaleffects
+  modelsummary
+  easystats
+  janitor
+  loo
+  tidybayes
+  datapasta
 )
 
 py_packages=(

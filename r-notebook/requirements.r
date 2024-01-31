@@ -4,7 +4,8 @@ options(Ncpus = max(1L, parallel::detectCores()))
 remotes::install_github(c(
   "coursekata/coursekata-r",
   "coursekata/testwhat",
-  "fivethirtyeightdata/fivethirtyeightdata"
+  "fivethirtyeightdata/fivethirtyeightdata",
+  "mobilizingcs/mobilizr"
 ))
 
 remotes::install_cran(c(
@@ -20,15 +21,26 @@ remotes::install_cran(c(
 remotes::install_cran(c(
   "av",
   "bayesplot",
+  "broom.mixed",
   "car",
   "dagitty",
+  "datapasta",
+  "DHARMa",
+  "easystats",
   "emmeans",
   "gganimate",
   "ggdag",
+  "ggeffects",
   "gifski",
+  "gt",
+  "gtsummary",
   "here",
+  "janitor",
+  "lmerTest",
+  "loo",
   "mapdata",
   "mapproj",
+  "marginaleffects",
   "neuralnet",
   "OCSdata",
   "posterior",
@@ -37,6 +49,7 @@ remotes::install_cran(c(
   "RcppTOML",
   "reticulate",
   "simstudy",
+  "tidybayes",
   "tidymodels",
   "tidyverse"
 ))

@@ -45,15 +45,28 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
   mamba install --yes \
     "r-av" \
     "r-bayesplot" \
+    "r-broom.mixed" \
     "r-car" \
     "r-dagitty" \
+    "r-datapasta" \
+    "r-devtools" \
+    # "r-dharma" \
+    # "r-easystats" \
     "r-emmeans" \
     "r-fs" \
     "r-gganimate" \
     "r-ggdag" \
+    "r-ggeffects" \
+    "r-gifski" \
+    "r-gt" \
     "r-here" \
+    "r-janitor" \
+    "r-lmertest" \
+    "r-loo" \
     "r-mapdata" \
     # "r-mapproj" \
+    "r-marginaleffects" \
+    "r-modelsummary" \
     "r-neuralnet" \
     # "r-ocsdata" \
       "r-credentials" \
@@ -77,19 +90,9 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
       "r-bigmemory.sri" \
       # "r-fastglm" \
       # "r-mvnfast" \
+    "r-tidybayes" \
     "r-tidymodels" \
     "r-tidyverse"
-
-# install pre-compiled packages stored in repo
-ARG R_PRECOMPILED_PACKAGES
-RUN --mount=type=bind,source="${R_PRECOMPILED_PACKAGES}",target=/tmp/precompiled-packages \
-  R_REMOTES_UPGRADE="never" \
-  Rscript \
-    -e "pkg_dir <- '/tmp/precompiled-packages'" \
-    -e "pkg_names <- c('gifski')" \
-    -e "pkg_glob <- function(pkg) { sprintf('*/%s*%s.tar.gz', pkg, R.version['platform']) }" \
-    -e 'pkgs <- purrr::map_chr(pkg_names, ~fs::dir_ls(pkg_dir, glob = pkg_glob(.x))[1])' \
-    -e 'remotes::install_local(pkgs, build = FALSE)'
 
 # install all other R packages
 ARG R_REQUIREMENTS
@@ -97,8 +100,7 @@ RUN --mount=type=bind,source="${R_REQUIREMENTS}",target=/tmp/requirements.r \
   --mount=type=secret,id=github_token,uid=${NB_UID} \
   GITHUB_PAT=$(cat /run/secrets/github_token) \
   R_REMOTES_UPGRADE="never" \
-  # remove packages that are pre-compiled then pipe to R
-  grep -vwE "(\"gifski\")" /tmp/requirements.r | R --slave
+  Rscript /tmp/requirements.r
 
 
 # pre-shared-libs
