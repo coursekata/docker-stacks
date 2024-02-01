@@ -85,7 +85,7 @@ setup-docker: create-builder create-registry
 # build an image for a given platform
 define build_image
 	@printf '\n$(info)Building $(notdir $(2)) ($(1))$(sgr0)\n'
-	docker buildx build $(COMMON_BUILD_ARGS) $(BUILD_ARGS) \
+	docker buildx build $(COMMON_BUILD_ARGS) $(DS_BUILD_ARGS) \
 		--platform $(1) \
 		--secret id=github_token \
 		--tag "$(LOCAL_REGISTRY)/$(DS_OWNER)/$(notdir $(2))" \
