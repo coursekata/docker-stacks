@@ -51,7 +51,28 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
     "r-datapasta" \
     "r-devtools" \
     # "r-dharma" \
+      "r-mass" \
+      "r-ape" \
+      "r-doparallel" \
+      "r-foreach" \
+      "r-gap" \
+      "r-glmmtmb" \
+      "r-lme4" \
+      "r-lmtest" \
+      "r-mgcv" \
+      # "r-qgam" \
+      "r-sfsmisc" \
     # "r-easystats" \
+      "r-bayestestr" \
+      "r-correlation" \
+      "r-datawizard" \
+      "r-effectsize" \
+      "r-insight" \
+      "r-modelbased" \
+      "r-parameters" \
+      "r-performance" \
+      # "r-report" \
+      "r-see" \
     "r-emmeans" \
     "r-fs" \
     "r-gganimate" \
@@ -86,10 +107,10 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
     "r-reticulate" \
     # "r-simstudy" \
       "r-bh" \
-      # "r-bigmemory" \
+      "r-bigmemory" \
       "r-bigmemory.sri" \
       # "r-fastglm" \
-      # "r-mvnfast" \
+      "r-mvnfast" \
     "r-tidybayes" \
     "r-tidymodels" \
     "r-tidyverse"
