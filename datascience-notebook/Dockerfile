@@ -59,20 +59,8 @@ LABEL maintainer="CourseKata <tech@coursekata.org>"
 # install cmdstan and related requests
 RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
   mamba install --yes \
-  # "r-brms"
-    "r-bridgesampling" \
-    "r-brobdingnag" \
-    "r-colourpicker" \
-    "r-dt" \
-    "r-dygraphs"  \
-    "r-inline" \
-    "r-nleqslv" \
-    "r-rcppparallel" \
-    "r-shinyjs" \
-    "r-shinythemes" \
-    "r-threejs" \
-    "r-xts" \
-  # "r-ggstatsplot"
+  "r-brms" \
+  # "r-ggstatsplot" \
     "r-afex" \
     # "r-bwstest" \
     "r-desolve" \
@@ -88,6 +76,7 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
     "r-pbapply" \
     # "r-pmcmrplus" \
     "r-prismatic" \
+    "r-rcppgsl" \
     "r-reshape" \
     "r-rmpfr" \
     # "r-statsexpressions" \
@@ -98,14 +87,14 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
   # "r-rethinking"
     "r-coda" \
     "r-digest"
+  # "r-rstanarm"
 
 RUN R_REMOTES_UPGRADE="never" Rscript \
   -e 'stan <- "https://mc-stan.org/r-packages/"' \
-  -e 'remotes::install_cran("cmdstanr", repos = c(stan, getOption("repos")), dependencies = TRUE)' \
+  -e 'remotes::install_cran("cmdstanr"), repos = c(stan, getOption("repos")), dependencies = TRUE)' \
   -e 'cmdstanr::install_cmdstan()' \
   -e 'remotes::install_cran(c("brms", "ggstatsplot", "rstanarm"))' \
   -e 'remotes::install_github("rmcelreath/rethinking")'
-
 
 # install Python packages from wheels
 ARG PIP_CACHE_DIR PIP_WHEEL_DIR PY_REQUIREMENTS

@@ -64,7 +64,7 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
     "r-lmertest" \
     "r-loo" \
     "r-mapdata" \
-    # "r-mapproj" \
+    "r-mapproj" \
     "r-marginaleffects" \
     "r-modelsummary" \
     "r-neuralnet" \
