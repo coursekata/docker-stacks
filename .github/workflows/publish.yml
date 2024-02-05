@@ -58,6 +58,7 @@ jobs:
         BASE_NAME=${{ needs.base-r.outputs.image }}@${{ needs.base-r.outputs.digest}}
         PARENT_NAME=${{ needs.base-r.outputs.image }}@${{ needs.base-r.outputs.digest}}
       publish: true
+      free-disk-space: true
 
   r:
     needs: [base-r, essentials]
