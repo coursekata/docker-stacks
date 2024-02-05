@@ -91,7 +91,7 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
 
 RUN R_REMOTES_UPGRADE="never" Rscript \
   -e 'stan <- "https://mc-stan.org/r-packages/"' \
-  -e 'remotes::install_cran("cmdstanr"), repos = c(stan, getOption("repos")), dependencies = TRUE)' \
+  -e 'remotes::install_cran("cmdstanr", repos = c(stan, getOption("repos")), dependencies = TRUE)' \
   -e 'cmdstanr::install_cmdstan()' \
   -e 'remotes::install_cran(c("brms", "ggstatsplot", "rstanarm"))' \
   -e 'remotes::install_github("rmcelreath/rethinking")'
