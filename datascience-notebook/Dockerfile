@@ -93,8 +93,8 @@ RUN R_REMOTES_UPGRADE="never" Rscript \
   -e 'stan <- "https://mc-stan.org/r-packages/"' \
   -e 'remotes::install_cran("cmdstanr", repos = c(stan, getOption("repos")), dependencies = TRUE)' \
   -e 'cmdstanr::install_cmdstan()' \
-  -e 'remotes::install_cran(c("brms", "ggstatsplot", "rstanarm"))' \
-  -e 'remotes::install_github("rmcelreath/rethinking")'
+  -e 'remotes::install_cran(c("ggstatsplot", "rstanarm"), upgrade = FALSE)' \
+  -e 'remotes::install_github("rmcelreath/rethinking", upgrade = FALSE)'
 
 # install Python packages from wheels
 ARG PIP_CACHE_DIR PIP_WHEEL_DIR PY_REQUIREMENTS
