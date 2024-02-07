@@ -97,3 +97,4 @@ jobs:
         PARENT_NAME=${{ needs.r.outputs.image }}@${{ needs.r.outputs.digest}}
       publish: true
       free-disk-space: true
+      free-more-disk-space: true

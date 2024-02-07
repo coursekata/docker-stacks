@@ -14,6 +14,11 @@ on:
         type: boolean
         required: false
         default: false
+      free-more-disk-space:
+        description: Whether to free more disk space before building
+        type: boolean
+        required: false
+        default: false
       image:
         description: The image to build
         type: string
@@ -69,10 +74,10 @@ jobs:
         if: inputs.free-disk-space
         uses: jlumbroso/free-disk-space@main
         with:
-          dotnet: false
+          dotnet: ${{ inputs.free-more-disk-space }}
           haskell: false
-          large-packages: false
-          swap-storage: false
+          large-packages: ${{ inputs.free-more-disk-space }}
+          swap-storage: ${{ inputs.free-more-disk-space }}
 
       # https://github.com/actions/checkout
       - name: Checkout
