@@ -56,6 +56,7 @@ RUN --mount=type=cache,target="${CONDA_DIR}/pkgs",uid=${NB_UID},sharing=locked \
     "r-praise" \
     "r-r6" \
     "r-stringdist" \
+    "r-xfun" \
   # "r-coursekata" \
     # "r-dslabs" \
     # "r-Lock5withR"
@@ -63,13 +64,17 @@ RUN --mount=type=cache,target="${CONDA_DIR}/pkgs",uid=${NB_UID},sharing=locked \
     "r-metrics" \
     "r-mosaic" \
     "r-palmerpenguins" \
-    # "r-supernova" \
+    "r-supernova" \
   "r-fivethirtyeight" \
   "r-ggpubr" \
   "r-gridextra" \
   "r-lme4" \
   "r-plotly" \
   "r-statmod" \
+  # pak is required by coursekata, but sometimes has trouble when installed from conda
+  && Rscript \
+    -e 'repo <- sprintf("https://r-lib.github.io/p/pak/stable/%s/%s/%s", .Platform$pkgType, R.Version()$os, R.Version()$arch)' \
+    -e 'install.packages("pak", repos = repo)' \
   # finish with the full R package install script (it skips packages already installed)
   && Rscript /tmp/requirements.r
 
