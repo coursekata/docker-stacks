@@ -45,8 +45,6 @@ ARG R_REQUIREMENTS
 RUN --mount=type=cache,target="${CONDA_DIR}/pkgs",uid=${NB_UID},sharing=locked \
   --mount=type=bind,source="${R_REQUIREMENTS}",target=/tmp/requirements.r \
   --mount=type=secret,id=github_token,uid=${NB_UID} \
-  GITHUB_PAT=$(cat /run/secrets/github_token) \
-  R_REMOTES_UPGRADE="never" \
   # install R packages from conda where possible
   mamba install --yes \
   # "r-testwhat" \
@@ -71,6 +69,10 @@ RUN --mount=type=cache,target="${CONDA_DIR}/pkgs",uid=${NB_UID},sharing=locked \
   "r-lme4" \
   "r-plotly" \
   "r-statmod" \
+  # set variables for remotes
+  && export \
+    GITHUB_PAT=$(cat /run/secrets/github_token) \
+    R_REMOTES_UPGRADE="never" \
   # pak is required by coursekata, but sometimes has trouble when installed from conda
   && Rscript \
     -e 'repo <- sprintf("https://r-lib.github.io/p/pak/stable/%s/%s/%s", .Platform$pkgType, R.Version()$os, R.Version()$arch)' \
