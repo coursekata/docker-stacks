@@ -33,7 +33,6 @@ DS_OWNER?=coursekata
 DS_BUILDER_NAME?=docker-stacks-builder
 DS_BUILD_ARGS?=
 DS_RUN_ARGS?=
-DS_PRECOMPILE?=r-rust/gifski
 
 # Need to list the images in build dependency order
 ALL_IMAGES:= \
@@ -194,25 +193,3 @@ run-sudo-shell-amd64/%: ## run a bash in interactive mode as root using amd64 ar
 	docker run -it --rm --user root $(DS_RUN_ARGS) --platform linux/amd64 "$(DS_REGISTRY)/$(DS_OWNER)/$(notdir $@)" $(SHELL)
 run-sudo-shell-arm64/%: ## run a bash in interactive mode as root using arm64 architecture
 	docker run -it --rm --user root $(DS_RUN_ARGS) --platform linux/arm64 "$(DS_REGISTRY)/$(DS_OWNER)/$(notdir $@)" $(SHELL)
-
-define build-r-package
-	@docker run --rm $(DS_RUN_ARGS) \
-		--platform $(2) \
-		-e GH_TOKEN=$(github_token) \
-		-v "$(PWD)/$(3):/home/jovyan" \
-		"$(LOCAL_REGISTRY)/$(DS_OWNER)/package-builder" \
-		"$(1)"
-endef
-
-precompile-r-amd64: build-multiarch/package-builder ## build an R package from GitHub source to amd64 binary
-	@echo
-	@echo "Precompiling R packages for amd64..."
-	@mkdir -p r-notebook/precompiled
-	$(foreach package,$(DS_PRECOMPILE),$(call build-r-package,$(package),linux/amd64,r-notebook/precompiled);)
-precompile-r-arm64: build-multiarch/package-builder ## build an R package from GitHub source to arm64 binary
-	@echo
-	@echo "Precompiling R packages for arm64..."
-	@mkdir -p r-notebook/precompiled
-	$(foreach package,$(DS_PRECOMPILE),$(call build-r-package,$(package),linux/arm64,r-notebook/precompiled);)
-precompile-r-multiarch: precompile-r-amd64 precompile-r-arm64 ## build an R package from GitHub source
-	@:
