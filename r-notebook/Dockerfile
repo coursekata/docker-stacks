@@ -73,6 +73,7 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
     "r-ggeffects" \
     "r-gifski" \
     "r-gt" \
+    "r-gtsummary" \
     "r-here" \
     "r-janitor" \
     "r-lmertest" \
@@ -80,6 +81,11 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
     "r-mapdata" \
     "r-mapproj" \
     "r-marginaleffects" \
+    # "r-mobilizr" \
+      "r-wordcloud" \
+      "r-rpart.plot" \
+      "r-log4r" \
+      "r-xml" \
     "r-modelsummary" \
     "r-neuralnet" \
     # "r-ocsdata" \
@@ -104,6 +110,7 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
       "r-bigmemory.sri" \
       "r-fastglm" \
       "r-mvnfast" \
+      # "r-pbv" \
     "r-tidybayes" \
     "r-tidymodels" \
     "r-tidyverse" \
