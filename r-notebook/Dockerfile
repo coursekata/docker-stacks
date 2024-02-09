@@ -50,18 +50,7 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
     "r-dagitty" \
     "r-datapasta" \
     "r-devtools" \
-    # "r-dharma" \
-      "r-mass" \
-      "r-ape" \
-      "r-doparallel" \
-      "r-foreach" \
-      "r-gap" \
-      "r-glmmtmb" \
-      "r-lme4" \
-      "r-lmtest" \
-      "r-mgcv" \
-      # "r-qgam" \
-      "r-sfsmisc" \
+    "r-dharma" \
     # "r-easystats" \
       "r-bayestestr" \
       "r-correlation" \
