@@ -98,7 +98,7 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
       "r-bh" \
       "r-bigmemory" \
       "r-bigmemory.sri" \
-      # "r-fastglm" \
+      "r-fastglm" \
       "r-mvnfast" \
     "r-tidybayes" \
     "r-tidymodels" \
