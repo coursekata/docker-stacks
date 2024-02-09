@@ -4,12 +4,8 @@
 # image args
 ARG REGISTRY=ghcr.io
 ARG OWNER=coursekata
-
 ARG PARENT_NAME=base-r-notebook
 ARG PARENT_IMAGE=${REGISTRY}/${OWNER}/${PARENT_NAME}
-
-ARG BASE_NAME=base-r-notebook
-ARG BASE_IMAGE=${REGISTRY}/${OWNER}/${BASE_NAME}
 
 # build args
 ARG PY_REQUIREMENTS=requirements.txt
@@ -37,7 +33,7 @@ RUN --mount=type=bind,source="${PY_REQUIREMENTS}",target=/tmp/requirements.txt \
 
 # final
 # -------------------------------------
-FROM ${BASE_IMAGE} as final
+FROM ${PARENT_IMAGE} as final
 LABEL maintainer="CourseKata <tech@coursekata.org>"
 USER ${NB_UID}
 

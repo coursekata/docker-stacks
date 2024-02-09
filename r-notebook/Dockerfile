@@ -4,12 +4,8 @@
 # image args
 ARG REGISTRY=ghcr.io
 ARG OWNER=coursekata
-
 ARG PARENT_NAME=essentials-notebook
 ARG PARENT_IMAGE=${REGISTRY}/${OWNER}/${PARENT_NAME}
-
-ARG BASE_NAME=base-r-notebook
-ARG BASE_IMAGE=${REGISTRY}/${OWNER}/${BASE_NAME}
 
 # build args
 ARG PY_REQUIREMENTS=requirements.txt
