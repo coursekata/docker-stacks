@@ -118,7 +118,9 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
   && \
     GITHUB_PAT=$(cat /run/secrets/github_token) \
     R_REMOTES_UPGRADE="never" \
-    Rscript /tmp/requirements.r
+    Rscript /tmp/requirements.r  \
+  # this doesn't install correctly from conda for arm64
+  && Rscript -e 'remotes::install_cran("V8", force = TRUE)'
 
 # install Python packages from wheels
 ARG PIP_CACHE_DIR PIP_WHEEL_DIR PY_REQUIREMENTS
