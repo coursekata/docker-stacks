@@ -54,6 +54,7 @@ LABEL maintainer="CourseKata <tech@coursekata.org>"
 
 # install cmdstan and related requests
 RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
+  # install packages from conda where possible
   mamba install --yes \
   "r-brms" \
   # "r-ggstatsplot" \
@@ -81,10 +82,10 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
     "r-zeallot" \
   # "r-rethinking"
     "r-coda" \
-    "r-digest"
+    "r-digest" \
   # "r-rstanarm"
-
-RUN R_REMOTES_UPGRADE="never" Rscript \
+  # install all other R packages
+  && R_REMOTES_UPGRADE="never" Rscript \
   -e 'stan <- "https://mc-stan.org/r-packages/"' \
   -e 'remotes::install_cran("cmdstanr", repos = c(stan, getOption("repos")), dependencies = TRUE)' \
   -e 'cmdstanr::install_cmdstan()' \

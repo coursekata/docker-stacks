@@ -37,11 +37,11 @@ RUN --mount=type=bind,source="${PY_REQUIREMENTS}",target=/tmp/requirements.txt \
 FROM ${PARENT_IMAGE} as final
 LABEL maintainer="CourseKata <tech@coursekata.org>"
 
-# install R packages from conda where possible
 ARG R_REQUIREMENTS
 RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
   --mount=type=bind,source="${R_REQUIREMENTS}",target=/tmp/requirements.r \
   --mount=type=secret,id=github_token,uid=${NB_UID} \
+  # install R packages from conda where possible
   mamba install --yes \
     "r-av" \
     "r-bayesplot" \
