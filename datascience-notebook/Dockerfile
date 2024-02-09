@@ -62,14 +62,13 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
   "r-brms" \
   # "r-ggstatsplot" \
     "r-afex" \
-    # "r-bwstest" \
+    "r-bwstest" \
     "r-desolve" \
     "r-elliptic" \
     "r-ggcorrplot" \
     "r-gmp" \
     "r-ggside" \
-    # "r-hypergeo" \
-      # "r-contfrac" \
+    "r-hypergeo" \
     # "r-ksamples" \
     "r-multcompview" \
     # "r-paletteer" \
@@ -81,7 +80,7 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
     "r-rmpfr" \
     # "r-statsexpressions" \
       # "r-bayesfactor" \
-      # "r-suppdists" \
+      "r-suppdists" \
       # "r-wrs2" \
     "r-zeallot" \
   # "r-rethinking"
