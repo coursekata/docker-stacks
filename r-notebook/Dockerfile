@@ -126,6 +126,4 @@ RUN --mount=type=bind,source="${PY_REQUIREMENTS}",target=/tmp/requirements.txt \
   --mount=type=cache,target="${PIP_CACHE_DIR}",uid="${NB_UID}" \
   --mount=type=cache,from=py-builder,source="${PIP_WHEEL_DIR}",target="${PIP_WHEEL_DIR}" \
   pip3 install --disable-pip-version-check --cache-dir="${PIP_CACHE_DIR}" --find-links="${PIP_WHEEL_DIR}" \
-  -r /tmp/requirements.txt \
-  # this is hard to copy over from the r-builder image
-  && Rscript -e 'remotes::install_cran("V8", force = TRUE)'
+  -r /tmp/requirements.txt
