@@ -76,7 +76,7 @@ create-builder:
 	@printf '$(success)Using builder $(DS_BUILDER_NAME)$(sgr0)\n'
 create-registry:
 	@if [ ! "$(LOCAL_REGISTRY_UP)" = "true" ]; then \
-		printf '$(info)Local registry not running, starting one on port $(LOCAL_REGISTRY_PORT)$(sgr0)'; \
+		printf '$(info)Local registry not running, starting one on port $(LOCAL_REGISTRY_PORT)$(sgr0) \n'; \
 		docker run -d --rm --name registry -p $(LOCAL_REGISTRY_PORT):5000 registry:2; \
 	fi;
 	@printf '$(success)Using registry $(LOCAL_REGISTRY)$(sgr0)\n'
