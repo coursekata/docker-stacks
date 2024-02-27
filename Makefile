@@ -122,7 +122,7 @@ define test_image
 
 	@echo
 	@printf '$(info)Testing $(notdir $(2)) ($(1))$(sgr0)\n'
-	@docker run $(DOCKER_RUN_ARGS) --rm \
+	@docker run $(DS_RUN_ARGS) --rm \
 		--platform="$(1)" \
 		--mount=type=bind,source="./tests/test-r-packages.sh",target=/tmp/test-r-packages.sh \
 		--mount=type=bind,source="./tests/test-python-packages.sh",target=/tmp/test-python-packages.sh \
