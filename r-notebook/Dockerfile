@@ -43,6 +43,7 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
   --mount=type=secret,id=github_token,uid=${NB_UID} \
   # install R packages from conda where possible
   mamba install --yes \
+    "ocl-icd-system" \
     "r-av" \
     "r-bayesplot" \
     "r-broom.mixed" \
