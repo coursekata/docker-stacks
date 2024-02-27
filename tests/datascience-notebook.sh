@@ -100,6 +100,10 @@ py_packages=(
   yellowbrick
 )
 
+# set the cmdstan path because it won't be loaded when running this script with bash -c
+export CMDSTAN="${CONDA_DIR}/bin/cmdstan"
+Rscript -e "options(warn=2); cmdstanr::cmdstan_path() |> invisible()"
+
 "$(dirname "$0")/test-r-packages.sh" "${r_packages[@]}" & r_pid=$!
 "$(dirname "$0")/test-python-packages.sh" "${py_packages[@]}" & py_pid=$!
 for job in $r_pid $py_pid; do wait $job || exit 1; done
