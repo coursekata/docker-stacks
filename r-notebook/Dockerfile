@@ -66,13 +66,6 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
     "r-emmeans" \
     "r-fs" \
     "r-gganimate" \
-      "r-classInt" \
-      "r-lpSolve" \
-      "r-s2" \
-      "r-sf" \
-      # "r-transformr" \
-      "r-units" \
-      "r-wk" \
     "r-ggdag" \
     "r-ggeffects" \
     "r-gifski" \
