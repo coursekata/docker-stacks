@@ -15,26 +15,11 @@ ARG PIP_CACHE_DIR=/tmp/pip-cache
 ARG PIP_WHEEL_DIR=/tmp/pip-wheels
 ARG APT_CACHE_DIR=/var/cache/apt
 ARG APT_LIB_DIR=/var/lib/apt
-ARG SHARED_LIBS_LIST=/tmp/shared-libs.txt
-
-
-# base
-# -------------------------------------
-FROM ${PARENT_IMAGE} as base
-
-# install cmdstan dependencies
-USER root
-ARG APT_CACHE_DIR APT_LIB_DIR
-RUN --mount=type=cache,target="${APT_CACHE_DIR}",sharing=locked \
-  --mount=type=cache,target="${APT_LIB_DIR}",sharing=locked \
-  apt-get update && apt-get upgrade -y && apt-get -y install --no-install-recommends \
-  g++
-USER ${NB_UID}
 
 
 # py-builder
 # -------------------------------------
-FROM base as py-builder
+FROM ${PARENT_IMAGE} as py-builder
 
 RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
   mamba install --yes "gdal"
@@ -49,7 +34,7 @@ RUN --mount=type=bind,source="${PY_REQUIREMENTS}",target=/tmp/requirements.txt \
 
 # final
 # -------------------------------------
-FROM base
+FROM ${PARENT_IMAGE} as base
 LABEL maintainer="CourseKata <tech@coursekata.org>"
 
 # install cmdstan and related requests

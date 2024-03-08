@@ -66,12 +66,3 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
 
 # add R mimetype and networking options
 COPY --chown=${NB_UID}:${NB_GID} Rprofile.site "${R_HOME}"/etc/
-
-# add common utilities
-USER root
-COPY --chmod=555 bin/ /usr/local/bin/
-RUN chmod 555 \
-  /usr/local/bin/find-shared-libs \
-  /usr/local/bin/diff-shared-libs \
-  /usr/local/bin/copy-shared-libs
-USER ${NB_UID}

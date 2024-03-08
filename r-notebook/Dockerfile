@@ -17,7 +17,6 @@ ARG PIP_CACHE_DIR=/tmp/pip-cache
 ARG PIP_WHEEL_DIR=/tmp/pip-wheels
 ARG APT_CACHE_DIR=/var/cache/apt
 ARG APT_LIB_DIR=/var/lib/apt
-ARG SHARED_LIBS_LIST=/tmp/shared-libs.txt
 
 
 # py-builder
