@@ -72,6 +72,7 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
     "r-gtsummary" \
     "r-here" \
     "r-janitor" \
+    "r-kknn" \
     "r-lmertest" \
     "r-loo" \
     "r-mapdata" \
@@ -99,6 +100,7 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
     "r-psych" \
     "r-purrr" \
     "r-rcpptoml" \
+    "r-readxl" \
     "r-reticulate" \
     # "r-simstudy" \
       "r-bh" \
