@@ -22,7 +22,7 @@ ARG APT_LIB_DIR=/var/lib/apt
 FROM ${PARENT_IMAGE} as py-builder
 
 RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
-  mamba install --yes "gdal"
+  mamba install --yes "gdal" "gxx"
 
 # make wheels for the Python packages
 ARG PIP_CACHE_DIR PIP_WHEEL_DIR PY_REQUIREMENTS
