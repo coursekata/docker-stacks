@@ -43,29 +43,8 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
   mamba install --yes \
   "cmdstan" \
   "r-brms" \
-  # "r-ggstatsplot" \
-    "r-afex" \
-    "r-bwstest" \
-    "r-desolve" \
-    "r-elliptic" \
-    "r-ggcorrplot" \
-    "r-gmp" \
-    "r-ggside" \
-    "r-hypergeo" \
-    "r-ksamples" \
-    "r-multcompview" \
-    # "r-paletteer" \
-    "r-pbapply" \
-    "r-pmcmrplus" \
-    "r-prismatic" \
-    "r-rcppgsl" \
-    "r-reshape" \
-    "r-rmpfr" \
-    # "r-statsexpressions" \
-      "r-bayesfactor" \
-      "r-suppdists" \
-      # "r-wrs2" \
-    "r-zeallot" \
+  # "r-cmdstanr" \
+  "r-ggstatsplot" \
   # "r-rethinking"
     "r-coda" \
     "r-digest" \
@@ -73,7 +52,7 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
   # install all other R packages
   && R_REMOTES_UPGRADE="never" Rscript \
     -e 'stan <- "https://mc-stan.org/r-packages/"' \
-    -e 'remotes::install_cran(c("ggstatsplot", "rstanarm", "cmdstanr"), upgrade = FALSE, repos = c(stan, getOption("repos")))' \
+    -e 'remotes::install_cran("cmdstanr", upgrade = FALSE, repos = c(stan, getOption("repos")))' \
     -e 'remotes::install_github("rmcelreath/rethinking", upgrade = FALSE)'
 
 # install Python packages from wheels
