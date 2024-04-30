@@ -2,8 +2,7 @@ options(Ncpus = max(1L, parallel::detectCores()))
 
 remotes::install_github(c(
   "coursekata/coursekata-r",
-  "coursekata/testwhat",
-  "fivethirtyeightdata/fivethirtyeightdata"
+  "coursekata/testwhat"
 ))
 
 remotes::install_cran(c(
