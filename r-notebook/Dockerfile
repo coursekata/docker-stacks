@@ -51,17 +51,7 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
     "r-datapasta" \
     "r-devtools" \
     "r-dharma" \
-    # "r-easystats" \
-      "r-bayestestr" \
-      "r-correlation" \
-      "r-datawizard" \
-      "r-effectsize" \
-      "r-insight" \
-      "r-modelbased" \
-      "r-parameters" \
-      "r-performance" \
-      # "r-report" \
-      "r-see" \
+    "r-easystats" \
     "r-emmeans" \
     "r-fs" \
     "r-gganimate" \
