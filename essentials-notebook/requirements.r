@@ -1,5 +1,6 @@
-options(Ncpus = max(1L, parallel::detectCores()))
+options(Ncpus = max(1L, parallel::detectCores()), warn = 2)
 
+# packages for essentials-notebook
 remotes::install_github(c(
   "coursekata/testwhat",
   "fivethirtyeightdata/fivethirtyeightdata",

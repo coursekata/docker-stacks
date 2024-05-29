@@ -50,14 +50,7 @@ RUN --mount=type=cache,target="${CONDA_DIR}/pkgs",uid=${NB_UID},sharing=locked \
     "r-r6" \
     "r-stringdist" \
     "r-xfun" \
-  # "r-coursekata" \
-    # "r-dslabs" \
-    # "r-Lock5withR"
-    "r-lsr" \
-    "r-metrics" \
-    "r-mosaic" \
-    "r-palmerpenguins" \
-    "r-supernova" \
+  "r-coursekata" \
   "r-fivethirtyeight" \
   "r-ggpubr" \
   "r-gridextra" \
