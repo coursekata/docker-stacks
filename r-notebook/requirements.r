@@ -1,14 +1,14 @@
-options(Ncpus = max(1L, parallel::detectCores()))
+options(Ncpus = max(1L, parallel::detectCores()), warn = 2)
 
-# packages already installed in essentials-notebook
+# packages for essentials-notebook
 remotes::install_github(c(
-  "coursekata/coursekata-r",
   "coursekata/testwhat",
   "fivethirtyeightdata/fivethirtyeightdata",
-  "mobilizingcs/mobilizr"
+  "rpruim/Lock5withR"
 ))
 
 remotes::install_cran(c(
+  "coursekata",
   "fivethirtyeight",
   "ggpubr",
   "gridExtra",
@@ -17,7 +17,11 @@ remotes::install_cran(c(
   "statmod"
 ))
 
-# packages only in r-notebook and datascience-notebook
+# packages for r-notebook
+remotes::install_github(c(
+  "mobilizingcs/mobilizr"
+))
+
 remotes::install_cran(c(
   "av",
   "bayesplot",

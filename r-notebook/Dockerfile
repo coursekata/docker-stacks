@@ -10,7 +10,6 @@ ARG PARENT_IMAGE=${REGISTRY}/${OWNER}/${PARENT_NAME}
 # build args
 ARG PY_REQUIREMENTS=requirements.txt
 ARG R_REQUIREMENTS=requirements.r
-ARG R_PRECOMPILED_PACKAGES=precompiled
 
 # cache and build variables (no need to change these)
 ARG PIP_CACHE_DIR=/tmp/pip-cache
