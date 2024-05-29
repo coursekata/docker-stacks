@@ -9,6 +9,7 @@ ARG PARENT_IMAGE=${REGISTRY}/${OWNER}/${PARENT_NAME}
 
 # build args
 ARG PY_REQUIREMENTS=requirements.txt
+ARG R_REQUIREMENTS=requirements.r
 
 # cache and build variables (no need to change these)
 ARG PIP_CACHE_DIR=/tmp/pip-cache
@@ -39,21 +40,23 @@ LABEL maintainer="CourseKata <tech@coursekata.org>"
 
 # install cmdstan and related requests
 RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
+  --mount=type=bind,source="${R_REQUIREMENTS}",target=/tmp/requirements.r \
+  --mount=type=secret,id=github_token,uid=${NB_UID} \
   # install packages from conda where possible
   mamba install --yes \
   "cmdstan" \
   "r-brms" \
-  # "r-cmdstanr" \
+  "r-cmdstanr" \
   "r-ggstatsplot" \
   # "r-rethinking"
     "r-coda" \
     "r-digest" \
   "r-rstanarm" \
   # install all other R packages
-  && R_REMOTES_UPGRADE="never" Rscript \
-    -e 'stan <- "https://mc-stan.org/r-packages/"' \
-    -e 'remotes::install_cran("cmdstanr", upgrade = FALSE, repos = c(stan, getOption("repos")))' \
-    -e 'remotes::install_github("rmcelreath/rethinking", upgrade = FALSE)'
+  && \
+    GITHUB_PAT=$(cat /run/secrets/github_token) \
+    R_REMOTES_UPGRADE="never" \
+    Rscript /tmp/requirements.r
 
 # install Python packages from wheels
 ARG PIP_CACHE_DIR PIP_WHEEL_DIR PY_REQUIREMENTS
