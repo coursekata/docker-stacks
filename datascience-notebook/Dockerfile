@@ -38,11 +38,11 @@ RUN --mount=type=bind,source="${PY_REQUIREMENTS}",target=/tmp/requirements.txt \
 FROM ${PARENT_IMAGE} as base
 LABEL maintainer="CourseKata <tech@coursekata.org>"
 
-# install cmdstan and related requests
+ARG R_REQUIREMENTS
 RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
   --mount=type=bind,source="${R_REQUIREMENTS}",target=/tmp/requirements.r \
   --mount=type=secret,id=github_token,uid=${NB_UID} \
-  # install packages from conda where possible
+  # install R packages from conda where possible
   mamba install --yes \
   "cmdstan" \
   "r-brms" \
@@ -52,11 +52,8 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
     "r-coda" \
     "r-digest" \
   "r-rstanarm" \
-  # install all other R packages
-  && \
-    GITHUB_PAT=$(cat /run/secrets/github_token) \
-    R_REMOTES_UPGRADE="never" \
-    Rscript /tmp/requirements.r
+  # install all R packages (skips those already installed)
+  && GITHUB_PAT=$(cat /run/secrets/github_token) R_REMOTES_UPGRADE="never" Rscript /tmp/requirements.r
 
 # install Python packages from wheels
 ARG PIP_CACHE_DIR PIP_WHEEL_DIR PY_REQUIREMENTS

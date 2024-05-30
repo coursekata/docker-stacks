@@ -1,28 +1,26 @@
-options(Ncpus = max(1L, parallel::detectCores()), warn = 2)
+options(Ncpus = max(1L, parallel::detectCores() - 1), warn = 2)
 
-# packages for essentials-notebook
 remotes::install_github(c(
+  # essentials-notebook
+  "coursekata/fivethirtyeightdata",
+  "coursekata/Lock5withR",
   "coursekata/testwhat",
-  "fivethirtyeightdata/fivethirtyeightdata",
-  "rpruim/Lock5withR"
+
+  # r-notebook
+  "mobilizingcs/mobilizr"
 ))
 
 remotes::install_cran(c(
+  # essentials-notebook
   "coursekata",
   "fivethirtyeight",
   "ggpubr",
   "gridExtra",
   "lme4",
   "plotly",
-  "statmod"
-))
+  "statmod",
 
-# packages for r-notebook
-remotes::install_github(c(
-  "mobilizingcs/mobilizr"
-))
-
-remotes::install_cran(c(
+  # r-notebook
   "av",
   "bayesplot",
   "broom.mixed",
@@ -55,11 +53,9 @@ remotes::install_cran(c(
   "simstudy",
   "tidybayes",
   "tidymodels",
-  "tidyverse"
-))
+  "tidyverse",
 
-# packages for datascience-notebook
-remotes::install_cran(c(
+  # datascience-notebook
   "brms",
   "ggstatsplot",
   "rstanarm"

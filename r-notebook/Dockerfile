@@ -101,12 +101,9 @@ RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
     "r-tidybayes" \
     "r-tidymodels" \
     "r-tidyverse" \
-  # install all other R packages
-  && \
-    GITHUB_PAT=$(cat /run/secrets/github_token) \
-    R_REMOTES_UPGRADE="never" \
-    Rscript /tmp/requirements.r  \
-  # this doesn't install correctly from conda for arm64
+  # install all R packages (skips those already installed)
+  && GITHUB_PAT=$(cat /run/secrets/github_token) R_REMOTES_UPGRADE="never" Rscript /tmp/requirements.r \
+  # fix V8 install for arm64
   && Rscript -e 'remotes::install_cran("V8", force = TRUE)'
 
 # install Python packages from wheels
@@ -114,5 +111,4 @@ ARG PIP_CACHE_DIR PIP_WHEEL_DIR PY_REQUIREMENTS
 RUN --mount=type=bind,source="${PY_REQUIREMENTS}",target=/tmp/requirements.txt \
   --mount=type=cache,target="${PIP_CACHE_DIR}",uid="${NB_UID}" \
   --mount=type=cache,from=py-builder,source="${PIP_WHEEL_DIR}",target="${PIP_WHEEL_DIR}" \
-  pip3 install --disable-pip-version-check --cache-dir="${PIP_CACHE_DIR}" --find-links="${PIP_WHEEL_DIR}" \
-  -r /tmp/requirements.txt
+  pip3 install --disable-pip-version-check --cache-dir="${PIP_CACHE_DIR}" --find-links="${PIP_WHEEL_DIR}" -r /tmp/requirements.txt
