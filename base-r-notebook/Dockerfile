@@ -54,7 +54,9 @@ RUN --mount=type=cache,target="${APT_CACHE_DIR}",sharing=locked \
   gfortran \
   r-cran-rodbc \
   unixodbc \
-  unixodbc-dev
+  unixodbc-dev \
+  # for DeepNote
+  python-is-python3
 USER ${NB_UID}
 
 # install R, Jupyter kernel, and package manager(s)
