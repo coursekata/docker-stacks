@@ -20,7 +20,7 @@ ARG APT_LIB_DIR=/var/lib/apt
 
 # py-builder
 # -------------------------------------
-FROM ${PARENT_IMAGE} as py-builder
+FROM ${PARENT_IMAGE} AS py-builder
 
 # make wheels for the Python packages
 ARG PIP_CACHE_DIR PIP_WHEEL_DIR PY_REQUIREMENTS
@@ -32,7 +32,7 @@ RUN --mount=type=bind,source="${PY_REQUIREMENTS}",target=/tmp/requirements.txt \
 
 # final
 # -------------------------------------
-FROM ${PARENT_IMAGE} as final
+FROM ${PARENT_IMAGE} AS final
 LABEL maintainer="CourseKata <tech@coursekata.org>"
 
 ARG R_REQUIREMENTS

@@ -20,7 +20,7 @@ ARG APT_LIB_DIR=/var/lib/apt
 # final
 # -------------------------------------
 ARG PARENT_IMAGE=jupyter/minimal-notebook:python-${PYTHON_VERSION}
-FROM ${PARENT_IMAGE} as final
+FROM ${PARENT_IMAGE} AS final
 LABEL maintainer="CourseKata <tech@coursekata.org>"
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive

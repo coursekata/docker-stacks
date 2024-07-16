@@ -20,7 +20,7 @@ ARG APT_LIB_DIR=/var/lib/apt
 
 # py-builder
 # -------------------------------------
-FROM ${PARENT_IMAGE} as py-builder
+FROM ${PARENT_IMAGE} AS py-builder
 
 RUN --mount=type=cache,target=${CONDA_DIR}/pkgs,uid=${NB_UID},sharing=locked \
   mamba install --yes "gdal" "gxx"
@@ -35,7 +35,7 @@ RUN --mount=type=bind,source="${PY_REQUIREMENTS}",target=/tmp/requirements.txt \
 
 # final
 # -------------------------------------
-FROM ${PARENT_IMAGE} as base
+FROM ${PARENT_IMAGE} AS base
 LABEL maintainer="CourseKata <tech@coursekata.org>"
 
 ARG R_REQUIREMENTS
