@@ -3,9 +3,10 @@
 set -e
 
 r_packages=(
-  # base
-  remotes
+  # base-r
   IRkernel
+  remotes
+
   # essentials
   coursekata
   gridExtra
@@ -15,13 +16,13 @@ r_packages=(
   ggpubr
   lme4
   minqa
-  pak
   plotly
   statmod
 )
 
 py_packages=(
-  # base
+  # base-r
+
   # essentials
   pythonwhat
 )

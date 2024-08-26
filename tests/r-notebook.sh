@@ -3,9 +3,10 @@
 set -e
 
 r_packages=(
-  # base
-  remotes
+  # base-r
   IRkernel
+  remotes
+
   # essentials
   coursekata
   gridExtra
@@ -17,7 +18,8 @@ r_packages=(
   minqa
   plotly
   statmod
-  # r-notebook
+
+  # r
   av
   bayesplot
   car
@@ -55,10 +57,12 @@ r_packages=(
 )
 
 py_packages=(
-  # base
+  # base-r
+
   # essentials
   pythonwhat
-  # r-notebook
+
+  # r
 )
 
 "$(dirname "$0")/test-r-packages.sh" "${r_packages[@]}" & r_pid=$!

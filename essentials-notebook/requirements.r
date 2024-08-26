@@ -1,4 +1,13 @@
-options(Ncpus = max(1L, parallel::detectCores() - 1), warn = 2)
+options(warn = 2)
+
+install_if_missing <- function(pkgs, ...) {
+  require_silent <- function(pkg) {
+    suppressPackageStartupMessages(require(pkg, character.only = TRUE, quietly = TRUE))
+  }
+
+  is_installed <- vapply(pkgs, require_silent, logical(1))
+  remotes::install_cran(pkgs[!is_installed], ...)
+}
 
 remotes::install_github(c(
   "coursekata/fivethirtyeightdata",
@@ -6,7 +15,7 @@ remotes::install_github(c(
   "coursekata/testwhat"
 ))
 
-remotes::install_cran(c(
+install_if_missing(c(
   "coursekata",
   "fivethirtyeight",
   "ggpubr",

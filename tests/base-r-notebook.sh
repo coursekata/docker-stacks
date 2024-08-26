@@ -3,13 +3,13 @@
 set -e
 
 r_packages=(
-  # base
-  remotes
+  # base-r
   IRkernel
+  remotes
 )
 
 py_packages=(
-  # base
+  # base-r
 )
 
 "$(dirname "$0")/test-r-packages.sh" "${r_packages[@]}" & r_pid=$!

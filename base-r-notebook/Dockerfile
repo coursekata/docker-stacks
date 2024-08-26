@@ -11,8 +11,6 @@ ARG R_VERSION=4.3
 ARG DEFAULT_KERNEL_NAME=ir
 
 # cache and build variables (no need to change these)
-ARG PIP_CACHE_DIR=/tmp/pip-cache
-ARG PIP_WHEEL_DIR=/tmp/pip-wheels
 ARG APT_CACHE_DIR=/var/cache/apt
 ARG APT_LIB_DIR=/var/lib/apt
 
@@ -57,15 +55,13 @@ ENV TZ=Etc/UTC
 ENV _R_SHLIB_STRIP_=true
 ENV R_HOME="${CONDA_DIR}/lib/R"
 
-# R, Jupyter kernel, and package manager(s)
+# R, Jupyter kernel and R package manager
 RUN --mount=type=cache,target="${CONDA_DIR}/pkgs",uid=${NB_UID},sharing=locked \
   mamba install --yes \
     "r-base~=${R_VERSION}" \
     "r-irkernel"  \
+    "r-remotes" \
     'unixodbc' \
-  && Rscript \
-    -e 'repos = sprintf("https://r-lib.github.io/p/pak/stable/%s/%s/%s", .Platform$pkgType, R.Version()$os, R.Version()$arch)' \
-    -e 'install.packages("pak", repos = repos)'  \
   && fix-permissions "${CONDA_DIR}" \
   && fix-permissions "/home/${NB_USER}"
 

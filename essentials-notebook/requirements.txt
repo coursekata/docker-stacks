@@ -1,1 +1,0 @@
-pythonwhat @ git+https://github.com/coursekata/pythonwhat@master

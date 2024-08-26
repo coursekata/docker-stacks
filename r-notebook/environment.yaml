@@ -1,0 +1,87 @@
+name: r-notebook
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  # essentials-notebook
+  - pip
+  - r-coursekata
+  - r-fivethirtyeight
+  - r-ggpubr
+  - r-gridextra
+  - r-lme4
+  - r-plotly
+  - r-statmod
+  ## for r-testwhat, not on conda
+  - r-evaluate
+  - r-magrittr
+  - r-markdown
+  - r-praise
+  - r-r6
+  - r-stringdist
+  - r-xfun
+
+  # r-notebook
+  - ocl-icd-system
+  - r-av
+  - r-bayesplot
+  - r-broom.mixed
+  - r-car
+  - r-dagitty
+  - r-datapasta
+  - r-devtools
+  - r-dharma
+  - r-easystats
+  - r-emmeans
+  - r-fs
+  - r-gganimate
+  - r-ggdag
+  - r-ggeffects
+  - r-gifski
+  - r-gt
+  - r-gtsummary
+  - r-here
+  - r-janitor
+  - r-kknn
+  - r-lmertest
+  - r-loo
+  - r-mapdata
+  - r-mapproj
+  - r-marginaleffects
+  - r-modelsummary
+  - r-neuralnet
+  - r-posterior
+  - r-profvis
+  - r-psych
+  - r-purrr
+  - r-rcpptoml
+  - r-readxl
+  - r-reticulate
+  - r-tidybayes
+  - r-tidymodels
+  - r-tidyverse
+  ## for r-mobilizr, not on conda
+  - r-wordcloud
+  - r-rpart.plot
+  - r-log4r
+  - r-xml
+  ## for r-ocsdata, not on conda
+  - r-credentials
+  - r-gert
+  - r-gh
+  - r-gitcreds
+  - r-httr2
+  - r-ini
+  - r-zip
+  - r-usethis
+  - r-whisker
+  # for r-simstudy, not on conda
+  - r-bh
+  - r-bigmemory
+  - r-bigmemory.sri
+  - r-fastglm
+  - r-mvnfast
+  # "r-pbv
+
+  - pip:
+      - pythonwhat @ git+https://github.com/coursekata/pythonwhat@master

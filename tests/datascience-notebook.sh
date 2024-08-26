@@ -3,9 +3,10 @@
 set -e
 
 r_packages=(
-  # base
-  remotes
+  # base-r
   IRkernel
+  remotes
+
   # essentials
   coursekata
   gridExtra
@@ -17,7 +18,8 @@ r_packages=(
   minqa
   plotly
   statmod
-  # r-notebook
+
+  # r
   av
   bayesplot
   car
@@ -53,7 +55,8 @@ r_packages=(
   loo
   tidybayes
   datapasta
-  # datascience-notebook
+
+  # datascience
   brms
   cmdstanr
   ggstatsplot
@@ -62,11 +65,14 @@ r_packages=(
 )
 
 py_packages=(
-  # base
+  # base-r
+
   # essentials
   pythonwhat
-  # r-notebook
-  # datascience-notebook
+
+  # r
+
+  # datascience
   ipywidgets
   matplotlib
   nltk
