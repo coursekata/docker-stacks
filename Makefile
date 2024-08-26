@@ -160,6 +160,10 @@ cont-rm-all: ## remove all containers
 	@echo "Removing all containers ..."
 	-docker rm --force $(shell docker ps --all --quiet) 2> /dev/null
 
+cache-clean: ## clean cache mounts
+	@echo "Cleaning cache mounts ..."
+	-docker builder prune --filter type=exec.cachemount --builder $(DS_BUILDER_NAME)
+
 img-clean: img-rm-dang img-rm ## clean built and dangling images
 img-list: ## list images
 	@echo "Listing $(DS_OWNER) images ..."
