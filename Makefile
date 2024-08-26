@@ -124,8 +124,8 @@ define test_image
 	@printf '$(info)Testing $(notdir $(2)) ($(1))$(sgr0)\n'
 	@docker run $(DS_RUN_ARGS) --rm \
 		--platform="$(1)" \
-		--mount=type=bind,source="./tests/test-r-packages.sh",target=/tmp/test-r-packages.sh \
-		--mount=type=bind,source="./tests/test-python-packages.sh",target=/tmp/test-python-packages.sh \
+		--mount=type=bind,source="./tests/test-packages.sh",target=/tmp/test-packages.sh \
+		--mount=type=bind,source="./tests/packages.txt",target=/tmp/packages.txt \
 		--mount=type=bind,source="./tests/$(notdir $(2)).sh",target=/tmp/test.sh \
 		"$(3)/$(DS_OWNER)/$(notdir $(2))" $(SHELL) /tmp/test.sh
 endef
