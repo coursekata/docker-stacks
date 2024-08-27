@@ -56,12 +56,12 @@ ENV _R_SHLIB_STRIP_=true
 ENV R_HOME="${CONDA_DIR}/lib/R"
 
 # R, Jupyter kernel and R package manager
-RUN --mount=type=cache,target="${CONDA_DIR}/pkgs",uid=${NB_UID},sharing=locked \
-  mamba install --yes \
+RUN mamba install --yes \
     "r-base~=${R_VERSION}" \
     "r-irkernel"  \
     "r-remotes" \
     'unixodbc' \
+  && mamba clean --all -f -y \
   && fix-permissions "${CONDA_DIR}" \
   && fix-permissions "/home/${NB_USER}"
 

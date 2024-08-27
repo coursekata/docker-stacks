@@ -77,13 +77,13 @@ dependencies:
   - r-zip
   - r-usethis
   - r-whisker
-  # for r-simstudy, not on conda
+  ## for r-simstudy, not on conda
   - r-bh
   - r-bigmemory
   - r-bigmemory.sri
   - r-fastglm
   - r-mvnfast
-  # "r-pbv
+  # - r-pbv # not on conda
 
   - pip:
       - pythonwhat @ git+https://github.com/coursekata/pythonwhat@master

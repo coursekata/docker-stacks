@@ -20,11 +20,11 @@ USER ${NB_UID}
 
 # install Python packages and any R packages on conda
 ARG CONDA_ENVIRONMENT
-RUN --mount=type=cache,target="${CONDA_DIR}/pkgs",uid=${NB_UID},sharing=locked \
-  --mount=type=bind,source="${CONDA_ENVIRONMENT}",target=/tmp/environment.yaml \
+RUN --mount=type=bind,source="${CONDA_ENVIRONMENT}",target=/tmp/environment.yaml \
   mamba env update --name=base --file=/tmp/environment.yaml \
   # fix V8 install for arm64
   && Rscript -e 'options(warn = 2); remotes::install_cran("V8", force = TRUE)' \
+  && mamba clean --all -f -y \
   && fix-permissions "${CONDA_DIR}" \
   && fix-permissions "/home/${NB_USER}"
 
