@@ -10,4 +10,5 @@
     "r-notebook",
     "datascience-notebook"
   ],
+  "makefile.configureOnOpen": false
 }
