@@ -32,3 +32,6 @@ RUN --mount=type=bind,source="${R_REQUIREMENTS}",target=/tmp/requirements.r \
   --mount=type=secret,id=github_token,uid=${NB_UID} \
   GITHUB_PAT=$(cat /run/secrets/github_token) R_REMOTES_UPGRADE="never" \
   Rscript /tmp/requirements.r
+
+# prevent cmdstanr from checking for new versions
+ENV cmdstanr_no_ver_check=TRUE
