@@ -3,8 +3,9 @@ channels:
   - defaults
   - conda-forge
 dependencies:
-  # essentials-notebook
   - pip
+
+  # essentials-notebook
   - r-coursekata
   - r-fivethirtyeight
   - r-ggpubr
