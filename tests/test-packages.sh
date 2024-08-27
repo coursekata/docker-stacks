@@ -79,7 +79,19 @@ test_r_packages() {
   return 0
 }
 
+# Write a header in yellow text.
+header() {
+  echo -e "\n\033[33m$1\033[0m"
+}
+
+# Write a success message in green text.
+success() {
+  echo -e "\033[32m$1\033[0m"
+}
+
+
 # Main script
+# ----------------------------
 if [ "$#" -lt 2 ]; then
   echo "Usage: $0 <filename> <section1> <section2> ... <sectionN>"
   exit 1
@@ -91,7 +103,7 @@ shift  # remove the filename from the arguments
 r_sections=()
 py_sections=()
 
-# separate the sections into Python and R
+# separate section arguments into Python and R
 for section in "$@"; do
   if [[ $section == python/* ]]; then
     py_sections+=("$section")
@@ -102,36 +114,49 @@ for section in "$@"; do
   fi
 done
 
-# get the list of packages for each language
+header "Checking JupyterLab installation"
+jupyter_error=$(jupyter lab -h 2>&1 > /dev/null)
+if [ $? -ne 0 ]; then
+  echo "An error occurred while running 'jupyter lab -h':"
+  echo "$jupyter_error"
+fi
+success "JupyterLab is installed correctly!"
+
+header "Gathering packages to test"
 py_packages=($(get_packages "$filename" "${py_sections[@]}"))
+if [ ${#py_packages[@]} -ne 0 ]; then
+  echo "Python packages to be tested:"
+  echo "${py_packages[@]}"
+else
+  echo "No Python packages to test."
+fi
+
+echo ""
+
 r_packages=($(get_packages "$filename" "${r_sections[@]}"))
+if [ ${#r_packages[@]} -ne 0 ]; then
+  echo "R packages to be tested:"
+  echo "${r_packages[@]}"
+else
+  echo "No R packages to test."
+fi
 
-echo ""
-echo "Python packages to be tested:"
-echo "${py_packages[@]}"
-echo ""
-echo "R packages to be tested:"
-echo "${r_packages[@]}"
-echo ""
-
-# Run the tests in parallel, capturing their exit statuses
+header "Starting package tests..."
 test_r_packages "${r_packages[@]}" &
 r_pid=$!
-
 test_python_packages "${py_packages[@]}" &
 py_pid=$!
 
-# Wait for both jobs to complete and capture their exit statuses
+# wait for both jobs to complete and capture their exit statuses
 wait $r_pid
 r_test_result=$?
-
 wait $py_pid
 py_test_result=$?
 
-# Check if either of the tests failed
+# check if either of the tests failed
 if [ $r_test_result -ne 0 ] || [ $py_test_result -ne 0 ]; then
   exit 1
 else
-  echo -e "\033[32mAll tests passed!\033[0m"
+  success "All tests passed!"
   exit 0
 fi
