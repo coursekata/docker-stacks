@@ -60,6 +60,7 @@ install_if_missing(c(
   "RcppTOML",
   "reticulate",
   "simstudy",
+  "sjPlot",
   "tidybayes",
   "tidymodels",
   "tidyverse"

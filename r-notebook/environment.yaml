@@ -59,6 +59,7 @@ dependencies:
   - r-rcpptoml
   - r-readxl
   - r-reticulate
+  - r-sjplot
   - r-tidybayes
   - r-tidymodels
   - r-tidyverse

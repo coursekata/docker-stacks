@@ -38,6 +38,7 @@ psych
 RcppTOML
 reticulate
 simstudy
+sjPlot
 tidymodels
 tidyverse
 gt
