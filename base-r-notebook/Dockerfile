@@ -57,7 +57,7 @@ ENV R_HOME="${CONDA_DIR}/lib/R"
 
 # R, Jupyter kernel and R package manager
 RUN mamba install --yes \
-    "r-base~=${R_VERSION}" \
+    "r-base=${R_VERSION}.*" \
     "r-irkernel"  \
     "r-remotes" \
     'unixodbc' \
