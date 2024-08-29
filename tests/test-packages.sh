@@ -60,6 +60,8 @@ test_r_packages() {
   r_packages_str="c(${r_packages_str:2})"
 
   Rscript -e "
+    options(warn = 2)
+
     loader <- function(x) {
       tryCatch({
         suppressPackageStartupMessages(library(x, character.only = TRUE))
@@ -67,8 +69,9 @@ test_r_packages() {
         cat('Error: Failed to load package ', x, '\n', sep = '')
         stop(e)
       })
-    }; \
-    load_all <- function(x) invisible(lapply(x, loader)); \
+    }
+
+    load_all <- function(x) invisible(lapply(x, loader))
     load_all($r_packages_str)
   " || {
       echo "Error: One or more R packages failed to load."
