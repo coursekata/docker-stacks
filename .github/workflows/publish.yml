@@ -28,7 +28,19 @@ env:
   R_VERSION: 4.3
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      python_version: ${{ steps.set-env.outputs.python_version }}
+      r_version: ${{ steps.set-env.outputs.r_version }}
+    steps:
+      - id: set-env
+        run: |
+          echo "python_version=${{ env.PYTHON_VERSION }}" >> $GITHUB_OUTPUT
+          echo "r_version=${{ env.R_VERSION }}" >> $GITHUB_OUTPUT
+
   base-r:
+    needs: [setup]
     uses: ./.github/workflows/build-test-publish.yml
     secrets: inherit
     with:
@@ -38,15 +50,15 @@ jobs:
         org.opencontainers.image.title=Base R Notebook
         org.opencontainers.image.description=Jupyter Lab, Python, and R, and that's it.
       tags: |
-        type=raw,value=python-${{ env.PYTHON_VERSION }}
-        type=raw,value=r-${{ env.R_VERSION }}
+        type=raw,value=python-${{ needs.setup.outputs.python_version }}
+        type=raw,value=r-${{ needs.setup.outputs.r_version }}
       build-args: |
-        PYTHON_VERSION=${{ env.PYTHON_VERSION }}
-        R_VERSION=${{ env.R_VERSION }}
+        PYTHON_VERSION=${{ needs.setup.outputs.python_version }}
+        R_VERSION=${{ needs.setup.outputs.r_version }}
       publish: true
 
   essentials:
-    needs: [base-r]
+    needs: [setup, base-r]
     uses: ./.github/workflows/build-test-publish.yml
     secrets: inherit
     with:
@@ -56,15 +68,15 @@ jobs:
         org.opencontainers.image.title=Essentials Notebook
         org.opencontainers.image.description=CourseKata essentials: everything used in the books.
       tags: |
-        type=raw,value=python-${{ env.PYTHON_VERSION }}
-        type=raw,value=r-${{ env.R_VERSION }}
+        type=raw,value=python-${{ needs.setup.outputs.python_version }}
+        type=raw,value=r-${{ needs.setup.outputs.r_version }}
       build-args: |
         PARENT_NAME=${{ needs.base-r.outputs.image }}@${{ needs.base-r.outputs.digest}}
       publish: true
       free-disk-space: true
 
   r:
-    needs: [base-r, essentials]
+    needs: [setup, base-r, essentials]
     uses: ./.github/workflows/build-test-publish.yml
     secrets: inherit
     with:
@@ -74,15 +86,15 @@ jobs:
         org.opencontainers.image.title=R Notebook
         org.opencontainers.image.description=CourseKata essentials and other R packages for teaching and learning data science.
       tags: |
-        type=raw,value=python-${{ env.PYTHON_VERSION }}
-        type=raw,value=r-${{ env.R_VERSION }}
+        type=raw,value=python-${{ needs.setup.outputs.python_version }}
+        type=raw,value=r-${{ needs.setup.outputs.r_version }}
       build-args: |
         PARENT_NAME=${{ needs.essentials.outputs.image }}@${{ needs.essentials.outputs.digest}}
       publish: true
       free-disk-space: true
 
   datascience:
-    needs: [base-r, r]
+    needs: [setup, base-r, r]
     uses: ./.github/workflows/build-test-publish.yml
     secrets: inherit
     with:
@@ -92,8 +104,8 @@ jobs:
         org.opencontainers.image.title=Data Science Notebook
         org.opencontainers.image.description=R and Python packages for teaching and learning data science.
       tags: |
-        type=raw,value=python-${{ env.PYTHON_VERSION }}
-        type=raw,value=r-${{ env.R_VERSION }}
+        type=raw,value=python-${{ needs.setup.outputs.python_version }}
+        type=raw,value=r-${{ needs.setup.outputs.r_version }}
       build-args: |
         PARENT_NAME=${{ needs.r.outputs.image }}@${{ needs.r.outputs.digest}}
       publish: true
