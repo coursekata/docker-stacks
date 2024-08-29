@@ -62,10 +62,23 @@ dependencies:
   - r-tidymodels
   - r-tidyverse
   ## for r-mobilizr, not on conda
-  - r-wordcloud
-  - r-rpart.plot
+  - r-curl
+  - r-dplyr
+  - r-latticeextra
+  - r-leaflet
   - r-log4r
+  - r-mosaic
+  - r-plyr
+  - r-rcolorbrewer
+  - r-readr
+  - r-rpart
+  - r-rpart.plot
+  - r-rstudioapi
+  - r-rvest
+  - r-stringr
+  - r-wordcloud
   - r-xml
+  - r-xml2
   ## for r-ocsdata, not on conda
   - r-credentials
   - r-gert
