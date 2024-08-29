@@ -117,6 +117,15 @@ for section in "$@"; do
   fi
 done
 
+header "Checking Bash installation"
+bash --version
+
+header "Checking R installation"
+R --version
+
+header "Checking Python installation"
+python --version
+
 header "Checking JupyterLab installation"
 jupyter_error=$(jupyter lab -h 2>&1 > /dev/null)
 if [ $? -ne 0 ]; then
