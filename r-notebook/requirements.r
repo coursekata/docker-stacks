@@ -61,6 +61,7 @@ install_if_missing(c(
   "reticulate",
   "simstudy",
   "sjPlot",
+  "Stat2Data",
   "tidybayes",
   "tidymodels",
   "tidyverse"

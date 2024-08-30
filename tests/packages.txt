@@ -39,6 +39,7 @@ RcppTOML
 reticulate
 simstudy
 sjPlot
+Stat2Data
 tidymodels
 tidyverse
 gt
