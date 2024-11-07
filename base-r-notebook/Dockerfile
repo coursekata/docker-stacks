@@ -6,7 +6,7 @@ ARG REGISTRY=ghcr.io
 ARG OWNER=coursekata
 
 # env args baked into image
-ARG PYTHON_VERSION=3.11
+ARG PYTHON_VERSION=3.12
 ARG R_VERSION=4.3
 ARG DEFAULT_KERNEL_NAME=ir
 
