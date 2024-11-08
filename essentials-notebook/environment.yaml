@@ -1,4 +1,3 @@
-name: essentials-notebook
 channels:
   - defaults
   - conda-forge
@@ -6,7 +5,7 @@ dependencies:
   - pip
 
   # essentials-notebook
-  - r-coursekata
+  - r-coursekata >= 0.18
   - r-fivethirtyeight
   - r-ggpubr
   - r-gridextra
