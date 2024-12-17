@@ -41,8 +41,9 @@ jobs:
       build-args: |
         PIXI_ENV=default
       publish: true
+      skip-tests: true
 
-  docker:
+  images:
     needs: [foundation]
     uses: ./.github/workflows/build-test-publish.yml
     with:
