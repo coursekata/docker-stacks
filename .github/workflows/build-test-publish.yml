@@ -48,6 +48,11 @@ on:
         description: Docker images that might be able to contribute cached layers
         type: string
         required: false
+      registry-port:
+        description: The port to use for the local registry
+        type: number
+        required: false
+        default: 5003
 
     outputs:
       image:
@@ -87,7 +92,7 @@ jobs:
       # Start Docker Registry Manually
       - name: Start Local Docker Registry
         run: |
-          docker run -d --name actions-registry -p 5003:5000 registry:2
+          docker run -d --name actions-registry -p ${{ inputs.registry-port }}:5000 registry:2
 
       # https://github.com/prefix-dev/setup-pixi
       - uses: prefix-dev/setup-pixi@v0.8.1
@@ -131,7 +136,7 @@ jobs:
           secrets: "github_token=${{ secrets.GITHUB_TOKEN }}"
           tags: localhost:5000/${{ github.repository_owner }}/${{ inputs.image }}:arm64
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}
-          cache-to: type=registry,ref=localhost:5000/${{ github.repository_owner }}/${{ inputs.image }}:buildcache-arm64,mode=max
+          cache-to: type=registry,ref=localhost:${{ inputs.registry-port }}/${{ github.repository_owner }}/${{ inputs.image }}:buildcache-arm64,mode=max
           no-cache: ${{ inputs.no-cache }}
           push: true
 
@@ -156,7 +161,7 @@ jobs:
           secrets: "github_token=${{ secrets.GITHUB_TOKEN }}"
           tags: localhost:5000/${{ github.repository_owner }}/${{ inputs.image }}:amd64
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}
-          cache-to: type=registry,ref=localhost:5000/${{ github.repository_owner }}/${{ inputs.image }}:buildcache-amd64,mode=max
+          cache-to: type=registry,ref=localhost:${{ inputs.registry-port }}/${{ github.repository_owner }}/${{ inputs.image }}:buildcache-amd64,mode=max
           no-cache: ${{ inputs.no-cache }}
           push: true
 
@@ -202,7 +207,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: |
-            type=registry,ref=localhost:5000/${{ github.repository_owner }}/${{ inputs.image }}:buildcache-amd64
-            type=registry,ref=localhost:5000/${{ github.repository_owner }}/${{ inputs.image }}:buildcache-arm64
+            type=registry,ref=localhost:${{ inputs.registry-port }}/${{ github.repository_owner }}/${{ inputs.image }}:buildcache-amd64
+            type=registry,ref=localhost:${{ inputs.registry-port }}/${{ github.repository_owner }}/${{ inputs.image }}:buildcache-arm64
           cache-to: type=inline
           push: true
