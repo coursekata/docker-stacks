@@ -80,11 +80,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # https://github.com/docker/setup-qemu-action
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Start Docker
         if: runner.os == 'macOS' && runner.arch == 'ARM64'
         run: |
           brew install colima docker
-          colima start
+          colima start --vm-type=qemu
           echo "DOCKER_HOST=$(colima docker-env | grep DOCKER_HOST | cut -d= -f2)" >> $GITHUB_ENV
 
       # Start Docker Registry Manually
@@ -103,10 +107,6 @@ jobs:
       - name: Update Conda packages
         shell: bash
         run: pixi update
-
-      # https://github.com/docker/setup-qemu-action
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
 
       # https://github.com/docker/setup-buildx-action
       - name: Set up Docker Buildx
