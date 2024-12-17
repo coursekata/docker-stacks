@@ -1,18 +1,20 @@
 ---
-name: Publish images
+name: Build, Test, and Publish Images
 
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, test/*]
     paths:
+      # ci/cd
       - .github/workflows/publish.yml
-      - .github/workflows/build-test-publish.yml
+      # build
+      - pixi.lock
+      - Dockerfile
+      - requirements.r
+      - Rprofile.site
+      # test
       - tests/**
-      - base-r-notebook/**
-      - essentials-notebook/**
-      - r-notebook/**
-      - datascience-notebook/**
   schedule:
     # Weekly, at 03:00 on Monday UTC time (see https://crontab.guru)
     - cron: "0 3 * * 1"
@@ -23,91 +25,153 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  PYTHON_VERSION: 3.12
-  R_VERSION: 4.3
-
 jobs:
-  setup:
+  docker:
     runs-on: ubuntu-latest
-    outputs:
-      python_version: ${{ steps.set-env.outputs.python_version }}
-      r_version: ${{ steps.set-env.outputs.r_version }}
+    strategy:
+      matrix:
+        include:
+          - image: base-r-notebook
+            pixi_env: base-r
+            title: Base R Notebook
+            description: Jupyter Lab, Python, and R, and that's it.
+            free_disk_space: false
+            free_more_disk_space: false
+
+          - image: essentials-notebook
+            pixi_env: essentials
+            title: Essentials Notebook
+            description: CourseKata essentials - everything used in the books.
+            free_disk_space: true
+            free_more_disk_space: false
+
+          - image: r-notebook
+            pixi_env: r
+            title: R Notebook
+            description: CourseKata essentials and other R packages for teaching and learning data science.
+            free_disk_space: true
+            free_more_disk_space: false
+
+          - image: datascience-notebook
+            pixi_env: datascience
+            title: Data Science Notebook
+            description: R and Python packages for teaching and learning data science.
+            free_disk_space: true
+            free_more_disk_space: true
+
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
+
     steps:
-      - id: set-env
+      - name: Free Disk Space (Ubuntu)
+        if: matrix.free_disk_space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          dotnet: ${{ matrix.free_more_disk_space }}
+          haskell: false
+          large-packages: ${{ matrix.free_more_disk_space }}
+          swap-storage: ${{ matrix.free_more_disk_space }}
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: network=host
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Login to Docker Registry
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Build for linux/arm64
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.image }}
+          platforms: linux/arm64
+          build-args: PIXI_ENV=${{ matrix.pixi_env }}
+          secrets: "github_token=${{ secrets.GITHUB_TOKEN }}"
+          tags: localhost:5000/${{ github.repository_owner }}/${{ matrix.image }}:arm64
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}
+          cache-to: type=registry,ref=localhost:5000/${{ github.repository_owner }}/${{ matrix.image }}:buildcache-arm64,mode=max
+          no-cache: ${{ github.event_name == 'schedule' }}
+          push: true
+
+      - name: Test for linux/arm64
+        shell: bash
         run: |
-          echo "python_version=${{ env.PYTHON_VERSION }}" >> $GITHUB_OUTPUT
-          echo "r_version=${{ env.R_VERSION }}" >> $GITHUB_OUTPUT
+          docker run --rm --platform=linux/arm64 \
+            --mount=type=bind,source="./tests/test-packages.sh",target=/tmp/test-packages.sh \
+            --mount=type=bind,source="./tests/packages.txt",target=/tmp/packages.txt \
+            --mount=type=bind,source="./tests/${{ matrix.image }}.sh",target=/tmp/test.sh \
+            localhost:5000/${{ github.repository_owner }}/${{ matrix.image }}:arm64 \
+            bash /tmp/test.sh
 
-  base-r:
-    needs: [setup]
-    uses: ./.github/workflows/build-test-publish.yml
-    secrets: inherit
-    with:
-      image: base-r-notebook
-      no-cache: ${{ github.event_name == 'schedule' }}
-      labels: |
-        org.opencontainers.image.title=Base R Notebook
-        org.opencontainers.image.description=Jupyter Lab, Python, and R, and that's it.
-      tags: |
-        type=raw,value=python-${{ needs.setup.outputs.python_version }}
-        type=raw,value=r-${{ needs.setup.outputs.r_version }}
-      build-args: |
-        PYTHON_VERSION=${{ needs.setup.outputs.python_version }}
-        R_VERSION=${{ needs.setup.outputs.r_version }}
-      publish: true
+      - name: Build for linux/amd64
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.image }}
+          platforms: linux/amd64
+          build-args: PIXI_ENV=${{ matrix.pixi_env }}
+          secrets: "github_token=${{ secrets.GITHUB_TOKEN }}"
+          tags: localhost:5000/${{ github.repository_owner }}/${{ matrix.image }}:amd64
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}
+          cache-to: type=registry,ref=localhost:5000/${{ github.repository_owner }}/${{ matrix.image }}:buildcache-amd64,mode=max
+          no-cache: ${{ github.event_name == 'schedule' }}
+          push: true
 
-  essentials:
-    needs: [setup, base-r]
-    uses: ./.github/workflows/build-test-publish.yml
-    secrets: inherit
-    with:
-      image: essentials-notebook
-      no-cache: ${{ github.event_name == 'schedule' }}
-      labels: |
-        org.opencontainers.image.title=Essentials Notebook
-        org.opencontainers.image.description=CourseKata essentials: everything used in the books.
-      tags: |
-        type=raw,value=python-${{ needs.setup.outputs.python_version }}
-        type=raw,value=r-${{ needs.setup.outputs.r_version }}
-      build-args: |
-        PARENT_NAME=${{ needs.base-r.outputs.image }}@${{ needs.base-r.outputs.digest}}
-      publish: true
-      free-disk-space: true
+      - name: Test for linux/amd64
+        shell: bash
+        run: |
+          docker run --rm --platform=linux/amd64 \
+            --mount=type=bind,source="./tests/test-packages.sh",target=/tmp/test-packages.sh \
+            --mount=type=bind,source="./tests/packages.txt",target=/tmp/packages.txt \
+            --mount=type=bind,source="./tests/${{ matrix.image }}.sh",target=/tmp/test.sh \
+            localhost:5000/${{ github.repository_owner }}/${{ matrix.image }}:amd64 \
+            bash /tmp/test.sh
 
-  r:
-    needs: [setup, base-r, essentials]
-    uses: ./.github/workflows/build-test-publish.yml
-    secrets: inherit
-    with:
-      image: r-notebook
-      no-cache: ${{ github.event_name == 'schedule' }}
-      labels: |
-        org.opencontainers.image.title=R Notebook
-        org.opencontainers.image.description=CourseKata essentials and other R packages for teaching and learning data science.
-      tags: |
-        type=raw,value=python-${{ needs.setup.outputs.python_version }}
-        type=raw,value=r-${{ needs.setup.outputs.r_version }}
-      build-args: |
-        PARENT_NAME=${{ needs.essentials.outputs.image }}@${{ needs.essentials.outputs.digest}}
-      publish: true
-      free-disk-space: true
+      - name: Image Metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ github.repository_owner }}/${{ matrix.image }}
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=schedule,pattern={{date 'YYYY-MM-DD'}}
+            type=sha
+          labels: |
+            org.opencontainers.image.title=${{ matrix.title }}
+            org.opencontainers.image.description=${{ matrix.description }}
+            org.opencontainers.image.url=https://github.com/${{ github.repository_owner }}/docker-stacks/pkgs/container/${{ matrix.image }}
 
-  datascience:
-    needs: [setup, base-r, r]
-    uses: ./.github/workflows/build-test-publish.yml
-    secrets: inherit
-    with:
-      image: datascience-notebook
-      no-cache: ${{ github.event_name == 'schedule' }}
-      labels: |
-        org.opencontainers.image.title=Data Science Notebook
-        org.opencontainers.image.description=R and Python packages for teaching and learning data science.
-      tags: |
-        type=raw,value=python-${{ needs.setup.outputs.python_version }}
-        type=raw,value=r-${{ needs.setup.outputs.r_version }}
-      build-args: |
-        PARENT_NAME=${{ needs.r.outputs.image }}@${{ needs.r.outputs.digest}}
-      publish: true
-      free-disk-space: true
-      free-more-disk-space: true
+      - name: Build and push multi-arch
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.image }}
+          platforms: linux/amd64,linux/arm64
+          build-args: PIXI_ENV=${{ matrix.pixi_env }}
+          secrets: "github_token=${{ secrets.GITHUB_TOKEN }}"
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}-test:latest
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}-test:${{ steps.meta.outputs.tags }}
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:buildcache,mode=max
+          no-cache: ${{ github.event_name == 'schedule' }}
+          push: true
