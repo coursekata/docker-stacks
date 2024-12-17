@@ -83,7 +83,7 @@ jobs:
       - name: Install Docker CLI and Daemon
         if: runner.os == 'macOS' && runner.arch == 'ARM64'
         run: |
-          brew install docker
+          brew install --formula docker
           nohup dockerd > /tmp/dockerd.log 2>&1 &
           sleep 5
           echo "Docker daemon started"
