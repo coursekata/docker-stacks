@@ -80,20 +80,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Docker
+      - name: Install Docker CLI and Daemon
         if: runner.os == 'macOS' && runner.arch == 'ARM64'
         run: |
-          brew install colima docker
-          echo "DOCKER_HOST=$(colima docker-env | grep DOCKER_HOST | cut -d= -f2)" >> $GITHUB_ENV
+          brew install docker
+          nohup dockerd > /tmp/dockerd.log 2>&1 &
+          sleep 5
+          echo "Docker daemon started"
+
+      - name: Verify Docker
+        run: docker version
 
       # https://github.com/docker/setup-qemu-action
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
-
-      - name: Start Docker
-        if: runner.os == 'macOS' && runner.arch == 'ARM64'
-        run: |
-          colima start --vm-type=qemu
 
       # Start Docker Registry Manually
       - name: Start Local Docker Registry
