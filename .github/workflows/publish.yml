@@ -30,6 +30,7 @@ jobs:
     uses: ./.github/workflows/build-test-publish.yml
     secrets: inherit
     with:
+      runs-on: macos-latest
       image: foundation
       target: base
       no-cache: ${{ github.event_name == 'schedule' }}
