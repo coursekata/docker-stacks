@@ -92,6 +92,9 @@ jobs:
       # Start Docker Registry Manually
       - name: Start Local Docker Registry
         run: |
+          if [ "$(docker ps -aq -f name=actions-registry)" ]; then
+            docker rm -f actions-registry
+          fi
           docker run -d --name actions-registry -p ${{ inputs.registry-port }}:5000 registry:2
 
       # https://github.com/prefix-dev/setup-pixi
