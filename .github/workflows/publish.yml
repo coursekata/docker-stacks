@@ -102,7 +102,6 @@ jobs:
       - name: Build for linux/arm64
         uses: docker/build-push-action@v5
         with:
-          context: ${{ matrix.image }}
           platforms: linux/arm64
           build-args: PIXI_ENV=${{ matrix.pixi_env }}
           secrets: "github_token=${{ secrets.GITHUB_TOKEN }}"
@@ -125,7 +124,6 @@ jobs:
       - name: Build for linux/amd64
         uses: docker/build-push-action@v5
         with:
-          context: ${{ matrix.image }}
           platforms: linux/amd64
           build-args: PIXI_ENV=${{ matrix.pixi_env }}
           secrets: "github_token=${{ secrets.GITHUB_TOKEN }}"
@@ -164,7 +162,6 @@ jobs:
       - name: Build and push multi-arch
         uses: docker/build-push-action@v5
         with:
-          context: ${{ matrix.image }}
           platforms: linux/amd64,linux/arm64
           build-args: PIXI_ENV=${{ matrix.pixi_env }}
           secrets: "github_token=${{ secrets.GITHUB_TOKEN }}"
