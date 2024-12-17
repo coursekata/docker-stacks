@@ -8,6 +8,7 @@ on:
     paths:
       # ci/cd
       - .github/workflows/publish.yml
+      - .github/workflows/build-test-publish.yml
       # build
       - pixi.lock
       - Dockerfile
