@@ -80,17 +80,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Docker CLI and Daemon
-        if: runner.os == 'macOS' && runner.arch == 'ARM64'
-        run: |
-          brew install --formula docker
-          nohup dockerd > /tmp/dockerd.log 2>&1 &
-          sleep 5
-          echo "Docker daemon started"
-
-      - name: Verify Docker
-        run: docker version
-
       # https://github.com/docker/setup-qemu-action
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -98,12 +87,7 @@ jobs:
       # Start Docker Registry Manually
       - name: Start Local Docker Registry
         run: |
-          docker run -d --name registry -p 5000:5000 registry:2
-
-      # Verify Registry is Running
-      - name: Verify Local Registry
-        run: |
-          curl -v http://localhost:5000/v2/
+          docker run -d --name actions-registry -p 5003:5000 registry:2
 
       # https://github.com/prefix-dev/setup-pixi
       - uses: prefix-dev/setup-pixi@v0.8.1
