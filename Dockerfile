@@ -164,7 +164,7 @@ ARG PIXI_DIR PIXI_ENV
 WORKDIR ${PIXI_DIR}
 COPY pixi.toml pixi.lock ./
 RUN --mount=type=cache,target=/tmp/pixi-cache,sharing=locked,uid=${NB_UID} \
-    PIXI_CACHE_DIR=/tmp/pixi-cache pixi install -e "${PIXI_ENV}" --frozen
+    PIXI_CACHE_DIR=/tmp/pixi-cache pixi install --locked -e "${PIXI_ENV}"
 
 USER root
 

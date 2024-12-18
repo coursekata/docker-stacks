@@ -10,8 +10,8 @@ make_env <- function(depends = c(), github = c(), cran = c(), force_cran = c()) 
 }
 
 environments <- list(
-  "base-r" = make_env(),
-  "essentials" = make_env(
+  "base-r-notebook" = make_env(),
+  "essentials-notebook" = make_env(
     depends = c("base-r"),
     force_cran = c("coursekata"),
     github = c(
@@ -29,7 +29,7 @@ environments <- list(
       "statmod"
     )
   ),
-  "r" = make_env(
+  "r-notebook" = make_env(
     depends = c("essentials"),
     force_cran = c("V8"),
     github = c("mobilizingcs/mobilizr"),
@@ -71,7 +71,7 @@ environments <- list(
       "tidyverse"
     )
   ),
-  "datascience" = make_env(
+  "datascience-notebook" = make_env(
     depends = c("r"),
     cran = c(
       "brms",
@@ -144,7 +144,7 @@ for (dep in deps) install_env(dep)
 
 # Extra packages that need a different repository
 # Don't want to just add the repository, because we only want this specific package from it
-if (opt$environment == "datascience") {
+if (opt$environment == "datascience-notebook") {
   install_if_missing(repos = "https://mc-stan.org/r-packages/", "cmdstanr")
   remotes::install_github("rmcelreath/rethinking")
 }
