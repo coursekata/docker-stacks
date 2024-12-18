@@ -66,6 +66,12 @@ on:
       digest:
         description: The image digest
         value: ${{ jobs.docker.outputs.digest }}
+      tags:
+        description: The image tags
+        value: ${{ jobs.docker.outputs.tags }}
+      cache-from:
+        description: cache-from entries that can be used in subsequent builds
+        value: ${{ jobs.docker.outputs.cache-from }}
 
 jobs:
   docker:
@@ -74,6 +80,8 @@ jobs:
     outputs:
       image: ${{ inputs.image }}
       digest: ${{ steps.build.outputs.digest }}
+      tags: ${{ steps.meta.outputs.tags }}
+      cache-from: ${{ steps.generate-cache-from.outputs.cache_from }}
 
     steps:
       # https://github.com/jlumbroso/free-disk-space
@@ -207,6 +215,13 @@ jobs:
             org.opencontainers.image.title=${{ inputs.image }}
             org.opencontainers.image.url=https://github.com/${{ github.repository_owner }}/docker-stacks/pkgs/container/${{ inputs.image }}
             ${{ inputs.labels }}
+
+      - name: Generate cache-from entries
+        if: inputs.publish
+        id: generate-cache-from
+        shell: bash
+        run: |
+          echo "cache_from=$(echo '${{ steps.meta.outputs.tags }}' | sed 's/^/type=registry,ref=/g')" >> $GITHUB_OUTPUT
 
       # https://github.com/docker/build-push-action
       - name: Build and push multi-arch
