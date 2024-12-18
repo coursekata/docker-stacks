@@ -49,25 +49,25 @@ jobs:
     strategy:
       matrix:
         include:
-          - image: base-r-notebook-test
+          - image: base-r-notebook
             pixi_env: base-r
             title: Base R Notebook
             description: Jupyter Lab, Python, and R, and that's it.
             free_disk_space: false
 
-          - image: essentials-notebook-test
+          - image: essentials-notebook
             pixi_env: essentials
             title: Essentials Notebook
             description: CourseKata essentials - everything used in the books.
             free_disk_space: true
 
-          - image: r-notebook-test
+          - image: r-notebook
             pixi_env: r
             title: R Notebook
             description: CourseKata essentials and other R packages for teaching and learning data science.
             free_disk_space: true
 
-          - image: datascience-notebook-test
+          - image: datascience-notebook
             pixi_env: datascience
             title: Data Science Notebook
             description: R and Python packages for teaching and learning data science.
