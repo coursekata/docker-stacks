@@ -108,7 +108,8 @@ jobs:
           target: ${{ inputs.target }}
           platforms: linux/arm64
           build-args: ${{ inputs.build-args }}
-          secrets: "github_token=${{ secrets.GITHUB_TOKEN }}"
+          secrets: |
+            github_token=${{ secrets.GITHUB_TOKEN }}
           tags: |
             ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}:arm64
           cache-to: |
@@ -127,7 +128,7 @@ jobs:
             --mount=type=bind,source="./tests/test-packages.sh",target=/tmp/test-packages.sh \
             --mount=type=bind,source="./tests/packages.txt",target=/tmp/packages.txt \
             --mount=type=bind,source="./tests/${{ inputs.image }}.sh",target=/tmp/test.sh \
-            ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}:arm64 \
+            ${{ fromJson(steps.build-arm64.outputs.metadata)['image.name'] }} \
             bash /tmp/test.sh
 
       - name: Build for linux/amd64
@@ -137,7 +138,8 @@ jobs:
           target: ${{ inputs.target }}
           platforms: linux/amd64
           build-args: ${{ inputs.build-args }}
-          secrets: "github_token=${{ secrets.GITHUB_TOKEN }}"
+          secrets: |
+            github_token=${{ secrets.GITHUB_TOKEN }}
           tags: |
             ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}:amd64
           cache-to: |
@@ -156,7 +158,7 @@ jobs:
             --mount=type=bind,source="./tests/test-packages.sh",target=/tmp/test-packages.sh \
             --mount=type=bind,source="./tests/packages.txt",target=/tmp/packages.txt \
             --mount=type=bind,source="./tests/${{ inputs.image }}.sh",target=/tmp/test.sh \
-            ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}:amd64 \
+            ${{ fromJson(steps.build-amd64.outputs.metadata)['image.name'] }} \
             bash /tmp/test.sh
 
       - name: Image Metadata
@@ -182,8 +184,8 @@ jobs:
         run: |
           {
             echo 'cache_from<<EOF'
-            echo "type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}:amd64"
-            echo "type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}:arm64"
+            echo "type=registry,ref=${{ fromJson(steps.build-amd64.outputs.metadata)['image.name'] }}"
+            echo "type=registry,ref=${{ fromJson(steps.build-arm64.outputs.metadata)['image.name'] }}"
           } >> "$GITHUB_OUTPUT"
 
       # https://github.com/docker/build-push-action
@@ -194,7 +196,8 @@ jobs:
           target: ${{ inputs.target }}
           platforms: linux/amd64,linux/arm64
           build-args: ${{ inputs.build-args }}
-          secrets: "github_token=${{ secrets.GITHUB_TOKEN }}"
+          secrets: |
+            github_token=${{ secrets.GITHUB_TOKEN }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           annotations: ${{ steps.meta.outputs.annotations }}
