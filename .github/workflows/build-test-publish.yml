@@ -84,9 +84,14 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
-      - uses: prefix-dev/setup-pixi@v0.8.1
+      - name: Setup Pixi
+        if: inputs.target != 'base'
+        uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          run-install: false
 
       - name: Update Conda packages
+        if: inputs.target != 'base'
         shell: bash
         run: pixi update
 
