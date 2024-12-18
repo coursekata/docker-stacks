@@ -48,7 +48,6 @@ jobs:
     uses: ./.github/workflows/build-test-publish.yml
     secrets: inherit
     with:
-      runs-on: macos-arm64
       image: ${{ matrix.image }}
       no-cache: ${{ github.event_name == 'schedule' }}
       labels: |
