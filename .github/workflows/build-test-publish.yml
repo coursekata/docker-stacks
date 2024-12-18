@@ -117,12 +117,11 @@ jobs:
       - name: Test for linux/arm64
         shell: bash
         run: |
-          IMAGE_NAME=$(echo ${{ steps.build-arm64.outputs.metadata }} | jq -r '.["image.name"]')
           docker run --rm --platform=linux/arm64 \
             --mount=type=bind,source="./tests/test-packages.sh",target=/tmp/test-packages.sh \
             --mount=type=bind,source="./tests/packages.txt",target=/tmp/packages.txt \
             --mount=type=bind,source="./tests/${{ inputs.image }}.sh",target=/tmp/test.sh \
-            ${IMAGE_NAME} \
+            ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}:arm64 \
             bash /tmp/test.sh
 
       - name: Build for linux/amd64
@@ -146,12 +145,11 @@ jobs:
       - name: Test for linux/amd64
         shell: bash
         run: |
-          IMAGE_NAME=$(echo ${{ steps.build-amd64.outputs.metadata }} | jq -r '.["image.name"]')
           docker run --rm --platform=linux/amd64 \
             --mount=type=bind,source="./tests/test-packages.sh",target=/tmp/test-packages.sh \
             --mount=type=bind,source="./tests/packages.txt",target=/tmp/packages.txt \
             --mount=type=bind,source="./tests/${{ inputs.image }}.sh",target=/tmp/test.sh \
-            ${IMAGE_NAME} \
+            ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}:amd64 \
             bash /tmp/test.sh
 
       - name: Image Metadata
