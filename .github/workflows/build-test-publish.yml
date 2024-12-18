@@ -152,7 +152,7 @@ jobs:
           secrets: "github_token=${{ secrets.GITHUB_TOKEN }}"
           tags: localhost:${{ inputs.registry-port }}/${{ github.repository_owner }}/${{ inputs.image }}:arm64
           cache-from: |
-            type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}-test
+            type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}
             ${{ inputs.cache-from }}
           cache-to: type=registry,ref=localhost:${{ inputs.registry-port }}/${{ github.repository_owner }}/${{ inputs.image }}:buildcache-arm64,mode=max
           no-cache: ${{ inputs.no-cache }}
@@ -180,7 +180,7 @@ jobs:
           secrets: "github_token=${{ secrets.GITHUB_TOKEN }}"
           tags: localhost:${{ inputs.registry-port }}/${{ github.repository_owner }}/${{ inputs.image }}:amd64
           cache-from: |
-            type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}-test
+            type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}
             ${{ inputs.cache-from }}
           cache-to: type=registry,ref=localhost:${{ inputs.registry-port }}/${{ github.repository_owner }}/${{ inputs.image }}:buildcache-amd64,mode=max
           no-cache: ${{ inputs.no-cache }}
@@ -204,8 +204,8 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ${{ github.repository_owner }}/${{ inputs.image }}-test
-            ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}-test
+            ${{ github.repository_owner }}/${{ inputs.image }}
+            ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=schedule,pattern={{date 'YYYY-MM-DD'}}
