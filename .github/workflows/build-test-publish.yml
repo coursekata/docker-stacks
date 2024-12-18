@@ -221,7 +221,11 @@ jobs:
         id: generate-cache-from
         shell: bash
         run: |
-          echo "cache_from=$(echo '${{ steps.meta.outputs.tags }}' | sed 's/^/type=registry,ref=/g')" >> $GITHUB_OUTPUT
+          {
+            echo 'cache_from<<EOF'
+            echo "$(echo '${{ steps.meta.outputs.tags }}' | sed 's/^/type=registry,ref=/g')"
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
 
       # https://github.com/docker/build-push-action
       - name: Build and push multi-arch
