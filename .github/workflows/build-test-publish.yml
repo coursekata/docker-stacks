@@ -176,7 +176,7 @@ jobs:
           {
             echo 'cache_from<<EOF'
             echo "type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}:amd64"
-            echo "type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}:amd64"
+            echo "type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}:arm64"
           } >> "$GITHUB_OUTPUT"
 
       # https://github.com/docker/build-push-action
