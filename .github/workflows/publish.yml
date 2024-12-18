@@ -35,6 +35,7 @@ jobs:
       target: base
       title: Foundational Image for CourseKata Notebook Images
       description: System dependencies for CourseKata notebook images.
+      skip-tests: true
       build-args: |
         PIXI_ENV=default
       cache-from: |

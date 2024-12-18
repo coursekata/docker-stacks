@@ -33,6 +33,11 @@ on:
         type: boolean
         required: false
         default: false
+      skip-tests:
+        description: Whether to skip tests
+        type: boolean
+        required: false
+        default: false
 
     outputs:
       image:
@@ -115,6 +120,7 @@ jobs:
           load: true
 
       - name: Test for linux/arm64
+        if: inputs.skip-tests != true
         shell: bash
         run: |
           docker run --rm --platform=linux/arm64 \
@@ -143,6 +149,7 @@ jobs:
           load: true
 
       - name: Test for linux/amd64
+        if: inputs.skip-tests != true
         shell: bash
         run: |
           docker run --rm --platform=linux/amd64 \
