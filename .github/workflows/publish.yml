@@ -4,7 +4,7 @@ name: Publish Images
 on:
   workflow_dispatch:
   push:
-    branches: [main, test/*]
+    branches: [main]
     paths:
       # ci/cd
       - .github/workflows/publish.yml
