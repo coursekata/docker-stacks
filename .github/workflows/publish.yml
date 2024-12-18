@@ -55,23 +55,23 @@ jobs:
             description: Jupyter Lab, Python, and R, and that's it.
             free_disk_space: false
 
-          # - image: essentials-notebook-test
-          #   pixi_env: essentials
-          #   title: Essentials Notebook
-          #   description: CourseKata essentials - everything used in the books.
-          #   free_disk_space: true
+          - image: essentials-notebook-test
+            pixi_env: essentials
+            title: Essentials Notebook
+            description: CourseKata essentials - everything used in the books.
+            free_disk_space: true
 
-          # - image: r-notebook-test
-          #   pixi_env: r
-          #   title: R Notebook
-          #   description: CourseKata essentials and other R packages for teaching and learning data science.
-          #   free_disk_space: true
+          - image: r-notebook-test
+            pixi_env: r
+            title: R Notebook
+            description: CourseKata essentials and other R packages for teaching and learning data science.
+            free_disk_space: true
 
-          # - image: datascience-notebook-test
-          #   pixi_env: datascience
-          #   title: Data Science Notebook
-          #   description: R and Python packages for teaching and learning data science.
-          #   free_disk_space: true
+          - image: datascience-notebook-test
+            pixi_env: datascience
+            title: Data Science Notebook
+            description: R and Python packages for teaching and learning data science.
+            free_disk_space: true
 
     uses: ./.github/workflows/build-test-publish.yml
     secrets: inherit
