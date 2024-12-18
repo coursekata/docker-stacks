@@ -1,5 +1,5 @@
 ---
-name: Build, Test, and Publish Images
+name: Publish Images
 
 on:
   workflow_dispatch:
@@ -33,14 +33,10 @@ jobs:
     with:
       image: foundation
       target: base
-      no-cache: ${{ github.event_name == 'schedule' }}
-      labels: |
-        org.opencontainers.image.title=Foundational Image for CourseKata Notebook Images
-        org.opencontainers.image.description=System dependencies for CourseKata notebook images.
+      title: Foundational Image for CourseKata Notebook Images
+      description: System dependencies for CourseKata notebook images.
       build-args: |
         PIXI_ENV=default
-      publish: true
-      skip-tests: true
 
   images:
     needs: [foundation]
@@ -75,12 +71,9 @@ jobs:
     secrets: inherit
     with:
       image: ${{ matrix.image }}
-      no-cache: ${{ github.event_name == 'schedule' }}
-      labels: |
-        org.opencontainers.image.title=${{ matrix.title }}
-        org.opencontainers.image.description=${{ matrix.description }}
-      build-args: |
-        PIXI_ENV=${{ matrix.pixi_env }}
-      publish: true
+      title: ${{ matrix.title }}
+      description: ${{ matrix.description }}
       free-disk-space: ${{ matrix.free_disk_space }}
       cache-from: ${{ needs.foundation.outputs.cache-from }}
+      build-args: |
+        PIXI_ENV=${{ matrix.pixi_env }}

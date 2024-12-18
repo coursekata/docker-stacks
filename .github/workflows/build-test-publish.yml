@@ -4,18 +4,16 @@ name: Build, Test, and Publish an Image
 on:
   workflow_call:
     inputs:
-      runs-on:
-        description: The platform to run the action on
+      title:
+        description: The title of the image
         type: string
-        required: false
-        default: ubuntu-latest
-      free-disk-space:
-        description: Whether to free disk space before building
-        type: boolean
-        required: false
-        default: false
+        required: true
+      description:
+        description: The description of the image
+        type: string
+        required: true
       image:
-        description: The image to build
+        description: The name image to build (also corresponds to a Pixi environment)
         type: string
         required: true
       target:
@@ -26,35 +24,12 @@ on:
         description: Build arguments to pass to the image
         type: string
         required: false
-      publish:
-        description: Whether to publish the image to remote registries
-        type: boolean
-        required: false
-        default: false
-      tags:
-        description: Tags to add to the image
-        type: string
-        required: false
-      labels:
-        description: Labels to add to the image
-        type: string
-        required: false
-      no-cache:
-        description: Whether to disable the build cache
-        type: boolean
-        required: false
-        default: false
       cache-from:
         description: Docker images that might be able to contribute cached layers
         type: string
         required: false
-      registry-port:
-        description: The port to use for the local registry
-        type: number
-        required: false
-        default: 5003
-      skip-tests:
-        description: Whether to skip the test steps
+      free-disk-space:
+        description: Whether to free disk space before building
         type: boolean
         required: false
         default: false
@@ -75,7 +50,7 @@ on:
 
 jobs:
   docker:
-    runs-on: ${{ inputs.runs-on }}
+    runs-on: ubuntu-latest
 
     outputs:
       image: ${{ inputs.image }}
@@ -84,7 +59,6 @@ jobs:
       cache-from: ${{ steps.generate-cache-from.outputs.cache_from }}
 
     steps:
-      # https://github.com/jlumbroso/free-disk-space
       - name: Free Disk Space (Ubuntu)
         if: inputs.free-disk-space
         uses: jlumbroso/free-disk-space@main
@@ -94,113 +68,94 @@ jobs:
           large-packages: ${{ inputs.free-disk-space }}
           swap-storage: ${{ inputs.free-disk-space }}
 
-      # https://github.com/actions/checkout
       - name: Checkout
         uses: actions/checkout@v4
 
-      # https://github.com/docker/setup-qemu-action
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
-      # Start Docker Registry Manually
-      - name: Start Local Docker Registry
-        run: |
-          if [ "$(docker ps -aq -f name=actions-registry)" ]; then
-            docker rm -f actions-registry
-          fi
-          docker run -d --name actions-registry -p ${{ inputs.registry-port }}:5000 registry:2
-
-      # https://github.com/prefix-dev/setup-pixi
       - uses: prefix-dev/setup-pixi@v0.8.1
 
       - name: Update Conda packages
         shell: bash
         run: pixi update
 
-      # https://github.com/docker/setup-buildx-action
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-        with:
-          # network=host driver-opt needed to push to local registry
-          driver-opts: network=host
 
-      # https://github.com/docker/login-action
       - name: Login to GitHub Container Registry
-        if: inputs.publish
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # https://github.com/docker/login-action
       - name: Login to Docker Registry
-        if: inputs.publish
         uses: docker/login-action@v3
         with:
           username: ${{ vars.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
 
-      # https://github.com/docker/build-push-action
       - name: Build for linux/arm64
         id: build-arm64
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           target: ${{ inputs.target }}
           platforms: linux/arm64
           build-args: ${{ inputs.build-args }}
           secrets: "github_token=${{ secrets.GITHUB_TOKEN }}"
-          tags: localhost:${{ inputs.registry-port }}/${{ github.repository_owner }}/${{ inputs.image }}:arm64
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}:arm64
+          cache-to: |
+            type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}:arm64,mode=max
           cache-from: |
             type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}
+            type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}:arm64
             ${{ inputs.cache-from }}
-          cache-to: type=registry,ref=localhost:${{ inputs.registry-port }}/${{ github.repository_owner }}/${{ inputs.image }}:buildcache-arm64,mode=max
-          no-cache: ${{ inputs.no-cache }}
-          push: true
+          load: true
 
       - name: Test for linux/arm64
-        if: inputs.skip-tests == false
         shell: bash
         run: |
+          IMAGE_NAME=$(echo ${{ steps.build-arm64.outputs.metadata }} | jq -r '.["image.name"]')
           docker run --rm --platform=linux/arm64 \
             --mount=type=bind,source="./tests/test-packages.sh",target=/tmp/test-packages.sh \
             --mount=type=bind,source="./tests/packages.txt",target=/tmp/packages.txt \
             --mount=type=bind,source="./tests/${{ inputs.image }}.sh",target=/tmp/test.sh \
-            localhost:${{ inputs.registry-port }}/${{ github.repository_owner }}/${{ inputs.image }}:arm64 \
+            ${IMAGE_NAME} \
             bash /tmp/test.sh
 
-      # https://github.com/docker/build-push-action
       - name: Build for linux/amd64
         id: build-amd64
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           target: ${{ inputs.target }}
           platforms: linux/amd64
           build-args: ${{ inputs.build-args }}
           secrets: "github_token=${{ secrets.GITHUB_TOKEN }}"
-          tags: localhost:${{ inputs.registry-port }}/${{ github.repository_owner }}/${{ inputs.image }}:amd64
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}:amd64
+          cache-to: |
+            type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}:amd64,mode=max
           cache-from: |
             type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}
+            type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}:amd64
             ${{ inputs.cache-from }}
-          cache-to: type=registry,ref=localhost:${{ inputs.registry-port }}/${{ github.repository_owner }}/${{ inputs.image }}:buildcache-amd64,mode=max
-          no-cache: ${{ inputs.no-cache }}
-          push: true
+          load: true
 
       - name: Test for linux/amd64
-        if: inputs.skip-tests == false
         shell: bash
         run: |
+          IMAGE_NAME=$(echo ${{ steps.build-amd64.outputs.metadata }} | jq -r '.["image.name"]')
           docker run --rm --platform=linux/amd64 \
             --mount=type=bind,source="./tests/test-packages.sh",target=/tmp/test-packages.sh \
             --mount=type=bind,source="./tests/packages.txt",target=/tmp/packages.txt \
             --mount=type=bind,source="./tests/${{ inputs.image }}.sh",target=/tmp/test.sh \
-            localhost:${{ inputs.registry-port }}/${{ github.repository_owner }}/${{ inputs.image }}:amd64 \
+            ${IMAGE_NAME} \
             bash /tmp/test.sh
 
-      # https://github.com/docker/metadata-action
       - name: Image Metadata
         id: meta
-        if: inputs.publish
         uses: docker/metadata-action@v5
         with:
           images: |
@@ -210,27 +165,25 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
             type=schedule,pattern={{date 'YYYY-MM-DD'}}
             type=sha
-            ${{ inputs.tags }}
           labels: |
-            org.opencontainers.image.title=${{ inputs.image }}
-            org.opencontainers.image.url=https://github.com/${{ github.repository_owner }}/docker-stacks/pkgs/container/${{ inputs.image }}
-            ${{ inputs.labels }}
+            org.opencontainers.image.title=${{ inputs.title }}
+            org.opencontainers.image.description=${{ inputs.description }}
+          annotations: |
+            org.opencontainers.image.description=${{ inputs.description }}
 
       - name: Generate cache-from entries
-        if: inputs.publish
         id: generate-cache-from
         shell: bash
         run: |
           {
             echo 'cache_from<<EOF'
-            echo "$(echo '${{ steps.meta.outputs.tags }}' | sed 's/^/type=registry,ref=/g')"
-            echo EOF
+            echo "type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}:amd64"
+            echo "type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}:amd64"
           } >> "$GITHUB_OUTPUT"
 
       # https://github.com/docker/build-push-action
       - name: Build and push multi-arch
         id: build
-        if: inputs.publish
         uses: docker/build-push-action@v6
         with:
           target: ${{ inputs.target }}
@@ -239,8 +192,6 @@ jobs:
           secrets: "github_token=${{ secrets.GITHUB_TOKEN }}"
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: |
-            type=registry,ref=localhost:${{ inputs.registry-port }}/${{ github.repository_owner }}/${{ inputs.image }}:buildcache-amd64
-            type=registry,ref=localhost:${{ inputs.registry-port }}/${{ github.repository_owner }}/${{ inputs.image }}:buildcache-arm64
-          cache-to: type=inline
+          annotations: ${{ steps.meta.outputs.annotations }}
+          cache-from: ${{ steps.generate-cache-from.outputs.cache_from }}
           push: true
