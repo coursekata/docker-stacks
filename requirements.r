@@ -30,7 +30,7 @@ environments <- list(
     )
   ),
   "r-notebook" = make_env(
-    depends = c("essentials"),
+    depends = c("essentials-notebook"),
     force_cran = c("V8"),
     github = c("mobilizingcs/mobilizr"),
     cran = c(
@@ -72,7 +72,7 @@ environments <- list(
     )
   ),
   "datascience-notebook" = make_env(
-    depends = c("r"),
+    depends = c("r-notebook"),
     cran = c(
       "brms",
       "ggstatsplot",
@@ -92,6 +92,7 @@ install_if_missing <- function(pkgs, ...) {
   }
 
   is_installed <- vapply(pkgs, require_silent, logical(1))
+  cat("Skipping installed packages:", paste(pkgs[is_installed], collapse = ", "), "\n")
   remotes::install_cran(pkgs[!is_installed], ...)
 }
 
