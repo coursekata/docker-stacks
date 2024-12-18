@@ -42,6 +42,7 @@ jobs:
         PIXI_ENV=default
       publish: true
       skip-tests: true
+      cache-from: ghcr.io/${{ github.repository_owner }}/foundation:sha-a01afa6
 
   images:
     needs: [foundation]
