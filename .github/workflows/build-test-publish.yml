@@ -186,6 +186,7 @@ jobs:
             echo 'cache_from<<EOF'
             echo "type=registry,ref=${{ fromJson(steps.build-amd64.outputs.metadata)['image.name'] }}"
             echo "type=registry,ref=${{ fromJson(steps.build-arm64.outputs.metadata)['image.name'] }}"
+            echo EOF
           } >> "$GITHUB_OUTPUT"
 
       # https://github.com/docker/build-push-action
