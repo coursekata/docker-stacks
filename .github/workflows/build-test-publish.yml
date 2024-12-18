@@ -28,6 +28,11 @@ on:
         description: Docker images that might be able to contribute cached layers
         type: string
         required: false
+      runs-on:
+        description: The runner to use
+        type: string
+        required: false
+        default: ubuntu-latest
       free-disk-space:
         description: Whether to free disk space before building
         type: boolean
@@ -55,7 +60,7 @@ on:
 
 jobs:
   docker:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs-on }}
 
     outputs:
       image: ${{ inputs.image }}
