@@ -40,7 +40,7 @@ define build_image
 	  --build-arg=PIXI_ENV="$(1)" \
 	  --secret=id=github_token,env=GITHUB_TOKEN \
 		--cache-to=type=registry,ref=$(DS_OWNER)/$(1)$(3) \
-		--cache-from=type=registry,ref=$(DS_OWNER)/$(1):aarch64 \
+		--cache-from=type=registry,ref=$(DS_OWNER)/$(1):arm64 \
 		--cache-from=type=registry,ref=$(DS_OWNER)/$(1):amd64 \
 		--load .
 	@printf "Docker image $(DS_OWNER)/$(1) built successfully for $(1).\n"
@@ -90,43 +90,43 @@ build/%: ## Build for default architecture
 	$(call build_image,$*,$(CURRENT_PLATFORM),)
 build-amd64/%: ## Build for amd64 architecture
 	$(call build_image,$*,linux/amd64,:amd64)
-build-aarch64/%: ## Build for aarch64 architecture
-	$(call build_image,$*,linux/aarch64,:aarch64)
+build-arm64/%: ## Build for arm64 architecture
+	$(call build_image,$*,linux/arm64,:arm64)
 build-multiarch/%: ## Build for all architectures simultaneously
-	$(call build_image,$*,linux/amd64$(comma)linux/aarch64,:latest)
+	$(call build_image,$*,linux/amd64$(comma)linux/arm64,:latest)
 
 build-all: $(foreach I, $(VALID_ENVS), build/$(I)) ## Build all images for default architecture
 build-all-amd64: $(foreach I, $(VALID_ENVS), build-amd64/$(I)) ## Build all images for amd64 architecture
-build-all-aarch64: $(foreach I, $(VALID_ENVS), build-aarch64/$(I)) ## Build all images for aarch64 architecture
-build-all-multiarch: $(foreach I, $(VALID_ENVS), build-amd64/$(I) build-aarch64/$(I)) ## Build all images for all architectures
+build-all-arm64: $(foreach I, $(VALID_ENVS), build-arm64/$(I)) ## Build all images for arm64 architecture
+build-all-multiarch: $(foreach I, $(VALID_ENVS), build-amd64/$(I) build-arm64/$(I)) ## Build all images for all architectures
 
 test/%: build/% ## Test image for default architecture
 	$(call test_image,$*,$(CURRENT_PLATFORM),)
 test-amd64/%: build-amd64/% ## Test image for amd64 architecture
 	$(call test_image,$*,linux/amd64,:amd64)
-test-aarch64/%: build-aarch64/% ## Test image for aarch64 architecture
-	$(call test_image,$*,linux/aarch64,:aarch64)
-test-multiarch/%: test-amd64/% test-aarch64/% ## Test image for all architectures
+test-arm64/%: build-arm64/% ## Test image for arm64 architecture
+	$(call test_image,$*,linux/arm64,:arm64)
+test-multiarch/%: test-amd64/% test-arm64/% ## Test image for all architectures
 	@
 
 test-all: $(foreach I, $(VALID_ENVS), test/$(I)) ## Test all images for default architecture
 test-all-amd64: $(foreach I, $(VALID_ENVS), test-amd64/$(I)) ## Test all images for amd64 architecture
-test-all-aarch64: $(foreach I, $(VALID_ENVS), test-aarch64/$(I)) ## Test all images for aarch64 architecture
-test-all-multiarch: $(foreach I, $(VALID_ENVS), test-amd64/$(I) test-aarch64/$(I)) ## Test all images for all architectures
+test-all-arm64: $(foreach I, $(VALID_ENVS), test-arm64/$(I)) ## Test all images for arm64 architecture
+test-all-multiarch: $(foreach I, $(VALID_ENVS), test-amd64/$(I) test-arm64/$(I)) ## Test all images for all architectures
 
 shell/%: ## Run container and open bash shell for default architecture
 	$(call run_shell,$*,$(CURRENT_PLATFORM),)
 shell-amd64/%: ## Run container and open bash shell for amd64 architecture
 	$(call run_shell,$*,linux/amd64,:amd64)
-shell-aarch64/%: ## Run container and open bash shell for aarch64 architecture
-	$(call run_shell,$*,linux/aarch64,:aarch64)
+shell-arm64/%: ## Run container and open bash shell for arm64 architecture
+	$(call run_shell,$*,linux/arm64,:arm64)
 
 run/%: ## Run container for default architecture
 	$(call run_image,$*,$(CURRENT_PLATFORM),)
 run-amd64/%: ## Run container for amd64 architecture
 	$(call run_image,$*,linux/amd64,:amd64)
-run-aarch64/%: ## Run container for aarch64 architecture
-	$(call run_image,$*,linux/aarch64,:aarch64)
+run-arm64/%: ## Run container for arm64 architecture
+	$(call run_image,$*,linux/arm64,:arm64)
 
 img-clean: img-rm-dang img-rm ## clean built and dangling images
 img-list: ## list images
