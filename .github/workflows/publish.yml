@@ -63,6 +63,7 @@ jobs:
   images:
     needs: [foundation]
     strategy:
+      fail-fast: false
       matrix:
         include:
           - image: base-r-notebook
