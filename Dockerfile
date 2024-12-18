@@ -215,7 +215,6 @@ RUN --mount=type=bind,source="requirements.r",target=/tmp/requirements.r \
     --mount=type=secret,id=github_token,uid=${NB_UID} \
     export GITHUB_PAT=$(cat /run/secrets/github_token) && \
     export R_REMOTES_UPGRADE="never" && \
-    Rscript -e 'install.packages("pak", repos = sprintf("https://r-lib.github.io/p/pak/stable/%s/%s/%s", .Platform$pkgType, R.Version()$os, R.Version()$arch))' && \
     Rscript /tmp/requirements.r -e "${PIXI_ENV}"
 
 ARG DEFAULT_KERNEL
