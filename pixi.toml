@@ -6,8 +6,52 @@ name = "coursekata"
 platforms = ["linux-aarch64", "linux-64", "osx-64"]
 version = "0.1.0"
 
-[tasks]
+# -----------------------------------------------------------------------------
+# Environment definitions
+# -----------------------------------------------------------------------------
+[environments.base-r]
+solve-group = "main"
+features = ["modern-notebook", "base-r"]
 
+[environments.essentials]
+solve-group = "main"
+features = ["modern-notebook", "base-r", "essentials"]
+
+[environments.r]
+solve-group = "main"
+features = ["modern-notebook", "base-r", "essentials", "r"]
+
+[environments.datascience]
+solve-group = "main"
+features = ["modern-notebook", "base-r", "essentials", "r", "r-datascience", "datascience"]
+
+[environments.ckcode]
+solve-group = "ckcode"
+features = ["modern-notebook", "ckcode", "base-r", "essentials"]
+
+[environments.ckhub]
+solve-group = "ckhub"
+features = ["ckhub", "base-r", "essentials", "r", "datascience"]
+
+[environments.deepnote-base-r]
+solve-group = "deepnote"
+features = ["deepnote", "base-r"]
+
+[environments.deepnote-essentials]
+solve-group = "deepnote"
+features = ["deepnote", "base-r", "essentials"]
+
+[environments.deepnote-r]
+solve-group = "deepnote"
+features = ["deepnote", "base-r", "essentials", "r"]
+
+[environments.deepnote-datascience]
+solve-group = "deepnote"
+features = ["deepnote", "base-r", "essentials", "r", "r-datascience"]
+
+# -----------------------------------------------------------------------------
+# Feature definitions
+# -----------------------------------------------------------------------------
 [dependencies]
 python = ">=3.11"
 pip = ">=24.3.1,<25"
@@ -151,14 +195,6 @@ vega_datasets = ">=0.9.0,<0.10"
 wordcloud = ">=1.9.4,<2"
 yellowbrick = ">=1.4,<2"
 # instructor 2
-cmdstan = ">=2.36.0,<3"
-r-brms = ">=2.20.1,<3"
-r-cmdstanr = ">=0.8.1,<0.9"
-r-ggstatsplot = ">=0.13.0,<0.14"
-r-rstanarm = ">=2.32.1,<3"
-r-coda = ">=0.19_4.1,<0.20"
-r-digest = ">=0.6.37,<0.7"
-# instructor 3
 chromadb = ">=0.5.23"
 langchain = ">=0.3.13"
 openai = ">=1.58.1,<2"
@@ -167,6 +203,17 @@ openai = ">=1.58.1,<2"
 altair-latimes = ">=0.0.2, <0.0.3"
 dash-cytoscape = ">=1.0.2, <2"
 yahoo-fin = ">=0.8.9.1, <0.9"
+
+
+[feature.r-datascience.dependencies]
+# instructor 2
+cmdstan = ">=2.36.0,<3"
+r-brms = ">=2.20.1,<3"
+r-cmdstanr = ">=0.8.1,<0.9"
+r-ggstatsplot = ">=0.13.0,<0.14"
+r-rstanarm = ">=2.32.1,<3"
+r-coda = ">=0.19_4.1,<0.20"
+r-digest = ">=0.6.37,<0.7"
 
 
 [feature.modern-notebook.dependencies]
@@ -216,8 +263,13 @@ dependency-injector = ">=4.43.0"
 jupyterhub-ltiauthenticator = ">=1.6.2"
 
 
+[feature.deepnote.host-dependencies]
+bash = "*"
+curl = "*"
+
 [feature.deepnote.target.linux-64.dependencies]
 python = ">=3.11,<3.12"
+pip = ">=24.3.1,<25"
 
 [feature.deepnote.target.linux-64.pypi-dependencies]
 markupsafe = ">=2.0"
@@ -329,18 +381,3 @@ traitlets = ">=5.4.0"
 trino = ">=0.327.0, <=0.330.0"
 typing-extensions = ">=4"
 urllib3 = ">=1.26.11"
-
-
-[environments]
-base-r = {features = ["modern-notebook", "base-r"], solve-group = "main"}
-essentials = {features = ["modern-notebook", "base-r", "essentials"], solve-group = "main"}
-r = {features = ["modern-notebook", "base-r", "essentials", "r"], solve-group = "main"}
-datascience = {features = ["modern-notebook", "base-r", "essentials", "r", "datascience"], solve-group = "main"}
-
-ckcode = {features = ["modern-notebook", "ckcode", "base-r", "essentials"], solve-group = "ckcode"}
-
-ckhub = {features = ["ckhub", "base-r", "essentials", "r", "datascience"], solve-group = "ckhub"}
-
-deepnote-base-r = {features = ["deepnote", "base-r"], solve-group = "deepnote"}
-deepnote-essentials = {features = ["deepnote", "base-r", "essentials"], solve-group = "deepnote"}
-deepnote-r = {features = ["deepnote", "base-r", "essentials", "r"], solve-group = "deepnote"}
