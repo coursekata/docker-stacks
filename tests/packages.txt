@@ -14,7 +14,7 @@ minqa
 plotly
 statmod
 
-[python/essentials]
+[python/ckcode]
 pythonwhat
 
 [r/r]
