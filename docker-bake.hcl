@@ -66,13 +66,18 @@ target "multiarch" {
   cache-to = ["type=inline"]
 }
 
+
 # ------------------------------------------------------------------------------
 # Base Images
 # ------------------------------------------------------------------------------
 target "foundation--base" {
-  inherits = ["default"]
+  inherits = ["default", "labels--foundation"]
   dockerfile = "dockerfiles/base.Dockerfile"
   target = "foundation"
+  labels = {
+    "org.opencontainers.image.title": "CourseKata Foundation",
+    "org.opencontainers.image.description": "A minimal set of common tools and libraries that all CourseKata images depend on",
+  }
 }
 
 target "foundation-amd64" {
@@ -95,9 +100,14 @@ target "foundation" {
   cache-from = concat(cache-from("foundation", "-amd64"), cache-from("foundation", "-arm64"))
 }
 
+
 target "base--base" {
-  inherits = ["foundation--base"]
+  inherits = ["foundation--base", "labels--base"]
   target = "final"
+  labels = {
+    "org.opencontainers.image.title": "CourseKata Base",
+    "org.opencontainers.image.description": "The set of common tools and libraries that most CourseKata images depend on",
+  }
 }
 
 target "base-amd64" {
@@ -145,8 +155,15 @@ target "main--base-multiarch" {
   args = { PARENT = "parent-target" }
 }
 
+target "labels--base-r" {
+  labels = {
+    "org.opencontainers.image.title": "CourseKata Base R",
+    "org.opencontainers.image.description": "The set of common tools and libraries that most CourseKata R images depend on",
+  }
+}
+
 target "base-r-amd64" {
-  inherits = ["main--base-amd64"]
+  inherits = ["main--base-amd64", "labels--base-r"]
   args = { PIXI_ENV = "base-r" }
   tags = tags("base-r", "-amd64")
   cache-to = cache-to("base-r", "-amd64")
@@ -154,7 +171,7 @@ target "base-r-amd64" {
 }
 
 target "base-r-arm64" {
-  inherits = ["main--base-arm64"]
+  inherits = ["main--base-arm64", "labels--base-r"]
   args = { PIXI_ENV = "base-r" }
   tags = tags("base-r", "-arm64")
   cache-to = cache-to("base-r", "-arm64")
@@ -162,15 +179,22 @@ target "base-r-arm64" {
 }
 
 target "base-r" {
-  inherits = ["main--base-multiarch"]
+  inherits = ["main--base-multiarch", "labels--base-r"]
   args = { PIXI_ENV = "base-r" }
   tags = tags("base-r", "")
   cache-to = cache-to("base-r", "")
   cache-from = concat(cache-from("base-r", "-amd64"), cache-from("base-r", "-arm64"))
 }
 
+target "labels--essentials" {
+  labels = {
+    "org.opencontainers.image.title": "CourseKata Essentials",
+    "org.opencontainers.image.description": "The libraries essential for working through CourseKata textbooks",
+  }
+}
+
 target "essentials-amd64" {
-  inherits = ["main--base-amd64"]
+  inherits = ["main--base-amd64", "labels--essentials"]
   args = { PIXI_ENV = "essentials" }
   tags = tags("essentials", "-amd64")
   cache-to = cache-to("essentials", "-amd64")
@@ -178,7 +202,7 @@ target "essentials-amd64" {
 }
 
 target "essentials-arm64" {
-  inherits = ["main--base-arm64"]
+  inherits = ["main--base-arm64", "labels--essentials"]
   args = { PIXI_ENV = "essentials" }
   tags = tags("essentials", "-arm64")
   cache-to = cache-to("essentials", "-arm64")
@@ -186,15 +210,22 @@ target "essentials-arm64" {
 }
 
 target "essentials" {
-  inherits = ["main--base-multiarch"]
+  inherits = ["main--base-multiarch", "labels--essentials"]
   args = { PIXI_ENV = "essentials" }
   tags = tags("essentials", "")
   cache-to = cache-to("essentials", "")
   cache-from = concat(cache-from("essentials", "-amd64"), cache-from("essentials", "-arm64"))
 }
 
+target "labels--r" {
+  labels = {
+    "org.opencontainers.image.title": "CourseKata R",
+    "org.opencontainers.image.description": "A full-featured R environment for working through CourseKata lessons",
+  }
+}
+
 target "r-amd64" {
-  inherits = ["main--base-amd64"]
+  inherits = ["main--base-amd64", "labels--r"]
   args = { PIXI_ENV = "r" }
   tags = tags("r", "-amd64")
   cache-to = cache-to("r", "-amd64")
@@ -202,7 +233,7 @@ target "r-amd64" {
 }
 
 target "r-arm64" {
-  inherits = ["main--base-arm64"]
+  inherits = ["main--base-arm64", "labels--r"]
   args = { PIXI_ENV = "r" }
   tags = tags("r", "-arm64")
   cache-to = cache-to("r", "-arm64")
@@ -210,15 +241,22 @@ target "r-arm64" {
 }
 
 target "r" {
-  inherits = ["main--base-multiarch"]
+  inherits = ["main--base-multiarch", "labels--r"]
   args = { PIXI_ENV = "r" }
   tags = tags("r", "")
   cache-to = cache-to("r", "")
   cache-from = concat(cache-from("r", "-amd64"), cache-from("r", "-arm64"))
 }
 
+target "labels--datascience" {
+  labels = {
+    "org.opencontainers.image.title": "CourseKata Data Science",
+    "org.opencontainers.image.description": "A full-featured data science environment (R + Python) for working through CourseKata lessons",
+  }
+}
+
 target "datascience-amd64" {
-  inherits = ["main--base-amd64"]
+  inherits = ["main--base-amd64", "labels--datascience"]
   args = { PIXI_ENV = "datascience" }
   tags = tags("datascience", "-amd64")
   cache-to = cache-to("datascience", "-amd64")
@@ -226,7 +264,7 @@ target "datascience-amd64" {
 }
 
 target "datascience-arm64" {
-  inherits = ["main--base-arm64"]
+  inherits = ["main--base-arm64", "labels--datascience"]
   args = { PIXI_ENV = "datascience" }
   tags = tags("datascience", "-arm64")
   cache-to = cache-to("datascience", "-arm64")
@@ -234,15 +272,22 @@ target "datascience-arm64" {
 }
 
 target "datascience" {
-  inherits = ["main--base-multiarch"]
+  inherits = ["main--base-multiarch", "labels--datascience"]
   args = { PIXI_ENV = "datascience" }
   tags = tags("datascience", "")
   cache-to = cache-to("datascience", "")
   cache-from = concat(cache-from("datascience", "-amd64"), cache-from("datascience", "-arm64"))
 }
 
+target "labels--ckhub" {
+  labels = {
+    "org.opencontainers.image.title": "CourseKata CKHub",
+    "org.opencontainers.image.description": "The standard CKHub environment (the data science environment with CKHub extensions)",
+  }
+}
+
 target "ckhub-amd64" {
-  inherits = ["main--base-amd64"]
+  inherits = ["main--base-amd64", "labels--ckhub"]
   args = { PIXI_ENV = "ckhub" }
   tags = tags("ckhub", "-amd64")
   cache-to = cache-to("ckhub", "-amd64")
@@ -250,7 +295,7 @@ target "ckhub-amd64" {
 }
 
 target "ckhub-arm64" {
-  inherits = ["main--base-arm64"]
+  inherits = ["main--base-arm64", "labels--ckhub"]
   args = { PIXI_ENV = "ckhub" }
   tags = tags("ckhub", "-arm64")
   cache-to = cache-to("ckhub", "-arm64")
@@ -258,7 +303,7 @@ target "ckhub-arm64" {
 }
 
 target "ckhub" {
-  inherits = ["main--base-multiarch"]
+  inherits = ["main--base-multiarch", "labels--ckhub"]
   args = { PIXI_ENV = "ckhub" }
   tags = tags("ckhub", "")
   cache-to = cache-to("ckhub", "")
@@ -283,6 +328,10 @@ target "ckcode" {
   inherits = ["minimal--base"]
   args = { PIXI_ENV = "ckcode" }
   tags = tags("ckcode", "")
+  labels = {
+    "org.opencontainers.image.title": "CourseKata CKCode",
+    "org.opencontainers.image.description": "A minimal environment for running CourseKata code execution engines",
+  }
   cache-to = cache-to("ckcode", "")
   cache-from = cache-from("ckcode", "")
 }
@@ -291,6 +340,10 @@ target "deepnote-base-r" {
   inherits = ["minimal--base"]
   args = { PIXI_ENV = "deepnote-base-r" }
   tags = tags("deepnote-base-r", "")
+  labels = {
+    "org.opencontainers.image.title": "CourseKata Deepnote Base R",
+    "org.opencontainers.image.description": "A Deepnote-compatible version of the CourseKata Base R image",
+  }
   cache-to = cache-to("deepnote-base-r", "")
   cache-from = cache-from("deepnote-base-r", "")
 }
@@ -299,6 +352,10 @@ target "deepnote-essentials" {
   inherits = ["minimal--base"]
   args = { PIXI_ENV = "deepnote-essentials" }
   tags = tags("deepnote-essentials", "")
+  labels = {
+    "org.opencontainers.image.title": "CourseKata Deepnote Essentials",
+    "org.opencontainers.image.description": "A Deepnote-compatible version of the CourseKata Essentials image",
+  }
   cache-to = cache-to("deepnote-essentials", "")
   cache-from = cache-from("deepnote-essentials", "")
 }
@@ -307,6 +364,10 @@ target "deepnote-r" {
   inherits = ["minimal--base"]
   args = { PIXI_ENV = "deepnote-r" }
   tags = tags("deepnote-r", "")
+  labels = {
+    "org.opencontainers.image.title": "CourseKata Deepnote R",
+    "org.opencontainers.image.description": "A Deepnote-compatible version of the CourseKata R image",
+  }
   cache-to = cache-to("deepnote-r", "")
   cache-from = cache-from("deepnote-r", "")
 }
@@ -315,6 +376,10 @@ target "deepnote-datascience" {
   inherits = ["minimal--base"]
   args = { PIXI_ENV = "deepnote-datascience" }
   tags = tags("deepnote-datascience", "")
+  labels = {
+    "org.opencontainers.image.title": "CourseKata Deepnote Data Science",
+    "org.opencontainers.image.description": "A Deepnote-compatible version of the CourseKata Data Science image",
+  }
   cache-to = cache-to("deepnote-datascience", "")
   cache-from = cache-from("deepnote-datascience", "")
 }
