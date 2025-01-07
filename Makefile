@@ -61,9 +61,12 @@ endef
 # Environment validation
 # ------------------------------------------------------------------------------
 pixi_envs := $(shell pixi info --json | jq -r '.environments_info[] | .name')
-main_envs := foundation base base-r essentials r datascience
-multiarch_envs := $(main_envs) ckhub
+
+base_envs := foundation base
+main_envs := base-r essentials r datascience
 deepnote_envs := $(foreach env,$(main_envs),deepnote-$(env))
+
+multiarch_envs := $(base_envs) $(main_envs) ckhub
 amd64_envs := $(deepnote_envs) ckcode
 
 define validate-env
@@ -136,31 +139,14 @@ build-amd64/%: ## Build a Docker image for AMD64 architecture
 	$(call validate-amd64-env,$(*))
 	$(eval recipe := $(if $(filter $(*),$(multiarch_envs)),$(*)-amd64,$(*)))
 	$(call build-image,$(recipe),--load)
-
-define test-image
-	$(call print-info,\nTesting $(1) ($(2)))
-	@docker run --rm \
-		--platform=linux/$(3) \
-		--mount=type=bind,source="./tests/test-packages.sh",target=/tmp/test-packages.sh \
-		--mount=type=bind,source="./tests/packages.txt",target=/tmp/packages.txt \
-		--mount=type=bind,source="./tests/test.sh",target=/tmp/test.sh \
-		-e PIXI_ENV=$(1) \
-		$(2) $(shell) /tmp/test.sh
-endef
-
-test-arm64/%: build-arm64/% ## Build and then test a Docker image for ARM64 architecture
-	$(eval tag := $(if $(filter $(*),$(multiarch_envs)),$(TAG)-arm64,$(TAG)))
-	$(call test-image,$(*),$(REGISTRY)/$(*):$(tag),arm64)
-test-amd64/%: build-amd64/% ## Build and then test a Docker image for AMD64 architecture
-	$(eval tag := $(if $(filter $(*),$(multiarch_envs)),$(TAG)-amd64,$(TAG)))
-	$(call test-image,$(*),$(REGISTRY)/$(*):$(tag),amd64)
-test-all-multiarch: $(foreach env,$(multiarch_envs),test-amd64/$(env) test-arm64/$(env)) ## Test all multiarch images
-test-all-amd64: $(foreach env,$(amd64_envs),test-amd64/$(env))  ## Test all AMD64-specific images
-test-all: test-all-multiarch test-all-amd64 ## Test all images
+build-all-arm64: $(addprefix build-arm64/,$(multiarch_envs)) ## Build all Docker images for ARM64 architecture
+build-all-amd64: $(addprefix build-amd64/,$(multiarch_envs)) $(addprefix build-amd64/,$(amd64_envs)) ## Build all Docker images for AMD64 architecture
+build-all: build-all-arm64 build-all-amd64 ## Build all Docker images for ARM64 and AMD64 architectures
 
 shell-amd64/%: ## Run container and open bash shell for amd64 architecture
 	$(call validate-amd64-env,$(*))
-	docker run -it --rm --platform=linux/amd64 $(REGISTRY)/$(*):$(TAG) $(shell)
+	$(eval suffix := $(if $(filter $(*),$(multiarch_envs)),-amd64,))
+	docker run -it --rm --platform=linux/amd64 $(REGISTRY)/$(*):$(TAG)$(suffix) $(shell)
 shell-arm64/%: ## Run container and open bash shell for arm64 architecture
 	$(call validate-arm64-env,$(*))
 	$(eval suffix := $(if $(filter $(*),$(multiarch_envs)),-arm64,))

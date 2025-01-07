@@ -2,6 +2,11 @@
 
 set -euo pipefail
 
+# Write a header in yellow text.
+header() {
+  echo -e "\n\033[33m$1\033[0m"
+}
+
 function get_test_params() {
   local env="$1"
   case "$env" in
@@ -46,4 +51,5 @@ if [ "$env_name" == "base" ] || [ "$env_name" == "foundation" ]; then
 fi
 
 # Run the test-packages.sh script with the test parameters
+header "Running tests for environment '$env_name'"
 $(dirname "$0")/test-packages.sh "$(dirname "$0")/packages.txt" $(get_test_params "$env_name")

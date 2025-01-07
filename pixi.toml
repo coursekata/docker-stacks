@@ -31,7 +31,7 @@ features = ["modern-notebook", "ckcode", "base-r", "essentials"]
 
 [environments.ckhub]
 solve-group = "ckhub"
-features = ["ckhub", "base-r", "essentials", "r", "datascience"]
+features = ["ckhub", "base-r", "essentials", "r", "r-datascience", "datascience"]
 
 [environments.deepnote-base-r]
 solve-group = "deepnote"
@@ -55,6 +55,8 @@ features = ["deepnote", "base-r", "essentials", "r", "r-datascience"]
 [dependencies]
 python = ">=3.11"
 pip = ">=24.3.1,<25"
+pydantic = ">=2.10.4,<3"
+ruyaml = ">=0.91.0,<0.92"
 
 
 [feature.base-r.dependencies]
@@ -62,13 +64,11 @@ pip = ">=24.3.1,<25"
 unixodbc = ">=2.3.12,<3"
 r-base = ">=4"
 r-irkernel = ">=1.3.2,<2"
-r-optparse = ">=1.7.5,<2"
 r-remotes = ">=2.5.0,<3"
-r-rlang = ">=1.1.4,<2"
 
 
 [feature.essentials.dependencies]
-r-coursekata = ">=0.18.0,<0.19"
+r-coursekata = ">=0.18.0"
 r-ggpubr = ">=0.6.0,<0.7"
 r-gridextra = ">=2.3,<3"
 r-lme4 = ">=1.1_35.5,<2"
@@ -166,6 +166,77 @@ ocl-icd-system = ">=1.0.0,<2"
 ocl-icd-system = ">=1.0.0,<2"
 
 
+[feature.r-datascience.dependencies]
+# instructor 2
+# start cmdstan
+cmdstan = ">=2.36.0,<3"
+clangxx = ">=18.1.8,<20"
+r-cmdstanr = ">=0.8.1,<0.9"
+r-rstanarm = ">=2.32.1,<3"
+# end cmdstan
+r-brms = ">=2.20.1,<3"
+r-ggstatsplot = ">=0.13.0,<0.14"
+r-coda = ">=0.19_4.1,<0.20"
+r-digest = ">=0.6.37,<0.7"
+r-modelsummary = ">=2.2.0,<3"
+r-pwr = ">=1.3_0,<2"
+# r-pwrss = "*"
+r-skimr = ">=2.1.5,<3"
+r-mgcv = ">=1.9_1,<2"
+# r-extradistr = "*"
+# for r-flexplot, not on conda
+r-cowplot = ">=1.1.3,<2"
+r-dplyr = ">=1.1.4,<2"
+r-forcats = ">=1.0.0,<2"
+r-ggplot2 = ">=3.5.1,<4"
+r-ggsci = ">=3.2.0,<4"
+r-lme4 = ">=1.1_35.5,<2"
+r-magrittr = ">=2.0.3,<3"
+r-mass = ">=7.3_60.0.1,<8"
+r-plyr = ">=1.8.9,<2"
+r-r6 = ">=2.5.1,<3"
+r-tibble = ">=3.2.1,<4"
+r-withr = ">=3.0.2,<4"
+r-jmvcore = ">=2.6.3,<3"
+# end r-flexplot
+# for r-mlpwr, not on conda
+r-dicekriging = ">=1.6.0,<2"
+r-rlist = ">=0.4.6.2,<0.5"
+# end r-mlpwr
+# r-dlookr = "*"
+  # r-websocket = "*"
+  # r-party = "*"
+  # r-partykit = "*"
+# end r-dlookr
+# r-tidyplots = "*"
+  # r-beeswarm = "*"
+  # r-ggbeeswarm = "*"
+  # r-ggrastr = "*"
+r-vipor = ">=0.4.7,<0.5"
+r-foreign = ">=0.8_87,<0.9"
+r-htmltable = ">=2.4.3,<3"
+r-hmisc = ">=5.2_1,<6"
+r-rttf2pt1 = ">=1.3.12,<2"
+r-pan = ">=1.9,<2"
+r-jomo = ">=2.7_6,<3"
+r-svglite = ">=2.1.3,<3"
+r-glmnet = ">=4.1_8,<5"
+r-sysfonts = ">=0.8.9,<0.9"
+r-gdtools = ">=0.4.0,<0.5"
+r-mice = ">=3.17.0,<4"
+r-showtext = ">=0.9_7,<0.10"
+r-extrafontdb = ">=1.0,<2"
+r-extrafont = ">=0.19,<0.20"
+r-asioheaders = ">=1.22.1_2,<2"
+r-bookdown = ">=0.41,<0.42"
+r-servr = ">=0.32,<0.33"
+r-hrbrthemes = ">=0.8.7,<0.9"
+r-kableextra = ">=1.4.0,<2"
+r-cairo = ">=1.6_2,<2"
+cairo = ">=1.18.0,<2"
+# end r-tidyplots
+
+
 [feature.datascience.dependencies]
 ipywidgets = ">=8.1.5,<9"
 matplotlib = ">=3.9.4,<4"
@@ -203,77 +274,6 @@ openai = ">=1.58.1,<2"
 altair-latimes = ">=0.0.2, <0.0.3"
 dash-cytoscape = ">=1.0.2, <2"
 yahoo-fin = ">=0.8.9.1, <0.9"
-
-
-[feature.r-datascience.dependencies]
-# instructor 2
-# start cmdstan
-cmdstan = ">=2.36.0,<3"
-clangxx = ">=18.1.8,<20"
-r-cmdstanr = ">=0.8.1,<0.9"
-r-rstanarm = ">=2.32.1,<3"
-# end cmdstan
-r-brms = ">=2.20.1,<3"
-r-ggstatsplot = ">=0.13.0,<0.14"
-r-coda = ">=0.19_4.1,<0.20"
-r-digest = ">=0.6.37,<0.7"
-r-modelsummary = ">=2.2.0,<3"
-r-pwr = ">=1.3_0,<2"
-# r-pwrss = "*"
-r-skimr = ">=2.1.5,<3"
-r-mgcv = ">=1.9_1,<2"
-# r-extradistr = "*"
-# for r-flexplot, not on conda
-r-cowplot = ">=1.1.3,<2"
-r-dplyr = ">=1.1.4,<2"
-r-forcats = ">=1.0.0,<2"
-r-ggplot2 = ">=3.5.1,<4"
-r-ggsci = ">=3.2.0,<4"
-r-lme4 = ">=1.1_35.5,<2"
-r-magrittr = ">=2.0.3,<3"
-r-mass = ">=7.3_60.0.1,<8"
-r-plyr = ">=1.8.9,<2"
-r-r6 = ">=2.5.1,<3"
-r-tibble = ">=3.2.1,<4"
-r-withr = ">=3.0.2,<4"
-# end r-flexplot
-# for r-mlpwr, not on conda
-r-dicekriging = ">=1.6.0,<2"
-r-rlist = ">=0.4.6.2,<0.5"
-# end r-mlpwr
-# r-dlookr = "*"
-  # r-websocket = "*"
-  # r-party = "*"
-  # r-partykit = "*"
-# end r-dlookr
-# r-tidyplots = "*"
-  # r-beeswarm = "*"
-  # r-cairo = "*"
-  # r-ggbeeswarm = "*"
-  # r-ggrastr = "*"
-r-vipor = ">=0.4.7,<0.5"
-r-foreign = ">=0.8_87,<0.9"
-r-htmltable = ">=2.4.3,<3"
-r-hmisc = ">=5.2_1,<6"
-r-rttf2pt1 = ">=1.3.12,<2"
-r-pan = ">=1.9,<2"
-r-jomo = ">=2.7_6,<3"
-r-svglite = ">=2.1.3,<3"
-r-glmnet = ">=4.1_8,<5"
-r-sysfonts = ">=0.8.9,<0.9"
-r-gdtools = ">=0.4.0,<0.5"
-r-mice = ">=3.17.0,<4"
-r-showtext = ">=0.9_7,<0.10"
-r-extrafontdb = ">=1.0,<2"
-r-extrafont = ">=0.19,<0.20"
-r-asioheaders = ">=1.22.1_2,<2"
-r-bookdown = ">=0.41,<0.42"
-r-servr = ">=0.32,<0.33"
-r-hrbrthemes = ">=0.8.7,<0.9"
-r-kableextra = ">=1.4.0,<2"
-r-cairo = ">=1.6_2,<2"
-cairo = ">=1.18.0,<2"
-# end r-tidyplots
 
 
 [feature.modern-notebook.dependencies]

@@ -46,7 +46,6 @@ FROM base AS final
 ARG PIXI_DIR PIXI_ENV
 ENV CONDA_DIR="${PIXI_DIR}/.pixi/envs/${PIXI_ENV}"
 ENV R_HOME="${CONDA_DIR}/lib/R"
-ENV _R_SHLIB_STRIP_=true
 
 # copy and setup the packages installed in the build stage
 COPY --from=build "${CONDA_DIR}" "${CONDA_DIR}"
@@ -58,18 +57,28 @@ SHELL ["/usr/local/bin/wrapper.sh", "/bin/bash", "-o", "pipefail", "-c"]
 ENV CXX="clang++"
 ENV TBB_CXX_TYPE="clang"
 
-# configure R and Jupyter
+# configure R
+ENV _R_SHLIB_STRIP_=true
+ENV R_REMOTES_UPGRADE=never
 ENV PPM="https://p3m.dev/cran/__linux__/${ROOT_CODENAME}/latest"
 COPY --chown=${NB_UID}:${NB_GID} assets/Rprofile.site "${R_HOME}/etc/"
-RUN --mount=type=bind,source="scripts/install-packages.r",target=/tmp/requirements.r \
+
+# ensure all R packages are installed
+RUN --mount=type=bind,source="scripts/install-packages.py",target=/tmp/packages.py \
+    --mount=type=bind,source="packages.yaml",target=/tmp/packages.yaml \
     --mount=type=secret,id=GITHUB_TOKEN,env=GITHUB_PAT \
-    # ensure all R packages are installed
-    R_REMOTES_UPGRADE="never" Rscript /tmp/requirements.r -e "${PIXI_ENV}" && \
-    # configure Jupyter
-    jupyter server --generate-config && \
-    jupyter lab clean && \
-    rm -rf "${HOME}/.cache/yarn" && \
+    /tmp/packages.py -f /tmp/packages.yaml "${PIXI_ENV}" && \
     fix-permissions "${HOME}"
 
+# configure Jupyter
 ARG DEFAULT_KERNEL
 ENV DEFAULT_KERNEL="${DEFAULT_KERNEL}"
+RUN --mount=type=bind,source="scripts/setup-jupyter.sh",target=/tmp/setup-jupyter.sh \
+    /tmp/setup-jupyter.sh
+
+# test the installation
+# before you combine this with the above step, or refactor a common package list, remember that the
+# build cache is invalidated if the tests or the package list change, so whatever you do, keep a
+# clean separation of concerns between the installation and the testing
+RUN --mount=type=bind,source="scripts/test-packages.sh",target=/tmp/test-packages.sh \
+    PIXI_ENV=${PIXI_ENV} /tmp/test-packages.sh

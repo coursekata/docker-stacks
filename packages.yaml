@@ -1,0 +1,185 @@
+environments:
+  base-r:
+    name: base-r
+    aliases: [deepnote-base-r]
+    r:
+      - IRkernel
+      - remotes
+
+  essentials:
+    name: essentials
+    aliases: [deepnote-essentials]
+    depends: [base-r]
+    r:
+      - ref: coursekata/fivethirtyeightdata
+        name: fivethirtyeightdata
+        type: github
+      - ref: coursekata/testwhat
+        name: testwhat
+        type: github
+      - ref: coursekata/Lock5withR
+        name: Lock5withR
+        type: github
+      - ref: coursekata
+        force: true
+      - fivethirtyeight
+      - gridExtra
+      - ggpubr
+      - lme4
+      - minqa
+      - plotly
+      - statmod
+
+  ckcode:
+    name: ckcode
+    depends: [essentials]
+    python:
+      - ref: datacamp/pythonwhat
+        name: pythonwhat
+        type: github
+
+  r:
+    name: r
+    aliases: [deepnote-r]
+    depends: [essentials]
+    r:
+      - ref: mobilizingcs/mobilizr
+        name: mobilizr
+        type: github
+      - ref: V8
+        force: true
+      - gganimate
+      - ref: av
+        skip-install: true
+      - ref: gifski
+        skip-install: true
+      - bayesplot
+      - broom.mixed
+      - car
+      - dagitty
+      - DHARMa
+      - easystats
+      - emmeans
+      - ggdag
+      - ggeffects
+      - gt
+      - gtsummary
+      - here
+      - janitor
+      - lmerTest
+      - loo
+      - mapdata
+      - mapproj
+      - marginaleffects
+      - neuralnet
+      - OCSdata
+      - posterior
+      - profvis
+      - psych
+      - RcppTOML
+      - reticulate
+      - simstudy
+      - sjPlot
+      - Stat2Data
+      - tidybayes
+      - tidymodels
+      - tidyverse
+
+  datascience-base:
+    name: datascience-base
+    depends: [r]
+    hidden: true
+    r:
+      - ref: cmdstanr
+        repos: ["https://stan-dev.r-universe.dev"]
+        post-install: >-
+          cmdstanr::install_cmdstan()
+
+  r-datascience:
+    name: r-datascience
+    aliases: [deepnote-datascience]
+    depends: [datascience-base]
+    r:
+      - ref: rmcelreath/rethinking
+        name: rethinking
+        type: github
+      - ref: dustinfife/flexplot
+        name: flexplot
+        type: github
+      - jmvcore
+      - ref: flxzimmer/mlpwr
+        name: mlpwr
+        type: github
+      - brms
+      - dlookr
+      - extraDistr
+      - ggstatsplot
+      - modelsummary
+      - pwr
+      - pwrss
+      - rstanarm
+      - skimr
+      - tidyplots
+
+  datascience:
+    name: datascience
+    depends: [r-datascience]
+    python:
+      - ref: ipywidgets
+        skip-test: true
+      - matplotlib
+      - nltk
+      - numpy
+      - openpyxl
+      - pandas
+      - plotly
+      - ref: scikit-learn
+        name: sklearn
+      - seaborn
+      - statsmodels
+      - cmdstanpy
+      - altair
+      - ref: altair-latimes
+        name: altair_latimes
+      - ref: beautifulsoup4
+        name: bs4
+      - bokeh
+      - contextily
+      - dash
+      - ref: dash-cytoscape
+        name: dash_cytoscape
+      - folium
+      - gensim
+      - geopandas
+      - dtreeviz
+      - mapclassify
+      - networkx
+      - researchpy
+      - scipy
+      - spotipy
+      - vega_datasets
+      - wordcloud
+      - ref: yahoo-fin
+        name: yahoo_fin
+      - yellowbrick
+
+  ckhub:
+    name: ckhub
+    depends: [datascience]
+    python:
+      - cryptography
+      - jupyter_core
+      - jupyterhub
+      - ref: jupyterhub-singleuser
+        skip-test: true
+      - ref: jupyterhub-kubespawner
+        name: kubespawner
+      - lxml
+      - nbconvert
+      - notebook
+      - portalocker
+      - pydantic
+      - ref: pydantic-settings
+        name: pydantic_settings
+      - pytz
+      - nbgitpuller

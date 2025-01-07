@@ -145,6 +145,7 @@ RUN apt-get update --yes && \
     # Common useful utilities
     nano-tiny \
     vim-tiny \
+    pkg-config \
     # git-over-ssh
     openssh-client \
     # Enable clipboard on Linux host systems

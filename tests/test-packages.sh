@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
 # Extract packages for given sections from a specified file.
 get_packages() {
@@ -134,7 +134,7 @@ if [ $? -ne 0 ]; then
 fi
 success "JupyterLab is installed correctly!"
 
-header "Gathering packages to test"
+header "Gathering packages for "
 py_packages=($(get_packages "$filename" "${py_sections[@]}"))
 if [ ${#py_packages[@]} -ne 0 ]; then
   echo "Python packages to be tested:"
