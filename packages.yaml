@@ -2,6 +2,15 @@ environments:
   base-r:
     name: base-r
     aliases: [deepnote-base-r]
+    binaries:
+      - name: R
+        cmd: R --version
+      - name: Python
+        cmd: python --version
+      - name: Bash
+        cmd: bash --version
+      - name: Git
+        cmd: git --version
     r:
       - IRkernel
       - remotes
@@ -89,6 +98,9 @@ environments:
     name: datascience-base
     depends: [r]
     hidden: true
+    binaries:
+      - name: C++ compiler
+        cmd: clang++ --version
     r:
       - ref: cmdstanr
         repos: ["https://stan-dev.r-universe.dev"]
@@ -106,7 +118,6 @@ environments:
       - ref: dustinfife/flexplot
         name: flexplot
         type: github
-      - jmvcore
       - ref: flxzimmer/mlpwr
         name: mlpwr
         type: github
@@ -125,29 +136,24 @@ environments:
     name: datascience
     depends: [r-datascience]
     python:
-      - ref: ipywidgets
-        skip-test: true
+      - ipywidgets
       - matplotlib
       - nltk
       - numpy
       - openpyxl
       - pandas
       - plotly
-      - ref: scikit-learn
-        name: sklearn
+      - scikit-learn
       - seaborn
       - statsmodels
       - cmdstanpy
       - altair
-      - ref: altair-latimes
-        name: altair_latimes
-      - ref: beautifulsoup4
-        name: bs4
+      - altair-latimes
+      - beautifulsoup4
       - bokeh
       - contextily
       - dash
-      - ref: dash-cytoscape
-        name: dash_cytoscape
+      - dash-cytoscape
       - folium
       - gensim
       - geopandas
@@ -159,27 +165,26 @@ environments:
       - spotipy
       - vega_datasets
       - wordcloud
-      - ref: yahoo-fin
-        name: yahoo_fin
+      - yahoo-fin
       - yellowbrick
 
   ckhub:
     name: ckhub
     depends: [datascience]
+    binaries:
+      - name: Pandoc
+        cmd: pandoc --version
     python:
       - cryptography
       - jupyter_core
       - jupyterhub
-      - ref: jupyterhub-singleuser
-        skip-test: true
-      - ref: jupyterhub-kubespawner
-        name: kubespawner
+      - jupyterhub-singleuser
+      - jupyterhub-kubespawner
       - lxml
       - nbconvert
       - notebook
       - portalocker
       - pydantic
-      - ref: pydantic-settings
-        name: pydantic_settings
+      - pydantic-settings
       - pytz
       - nbgitpuller

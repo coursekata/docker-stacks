@@ -64,10 +64,10 @@ ENV PPM="https://p3m.dev/cran/__linux__/${ROOT_CODENAME}/latest"
 COPY --chown=${NB_UID}:${NB_GID} assets/Rprofile.site "${R_HOME}/etc/"
 
 # ensure all R packages are installed
-RUN --mount=type=bind,source="scripts/install-packages.py",target=/tmp/packages.py \
+RUN --mount=type=bind,source="scripts/check-packages.py",target=/tmp/packages.py \
     --mount=type=bind,source="packages.yaml",target=/tmp/packages.yaml \
     --mount=type=secret,id=GITHUB_TOKEN,env=GITHUB_PAT \
-    /tmp/packages.py -f /tmp/packages.yaml "${PIXI_ENV}" && \
+    /tmp/packages.py -f /tmp/packages.yaml -i "${PIXI_ENV}" && \
     fix-permissions "${HOME}"
 
 # configure Jupyter
@@ -77,8 +77,6 @@ RUN --mount=type=bind,source="scripts/setup-jupyter.sh",target=/tmp/setup-jupyte
     /tmp/setup-jupyter.sh
 
 # test the installation
-# before you combine this with the above step, or refactor a common package list, remember that the
-# build cache is invalidated if the tests or the package list change, so whatever you do, keep a
-# clean separation of concerns between the installation and the testing
-RUN --mount=type=bind,source="scripts/test-packages.sh",target=/tmp/test-packages.sh \
-    PIXI_ENV=${PIXI_ENV} /tmp/test-packages.sh
+RUN --mount=type=bind,source="scripts/check-packages.py",target=/tmp/packages.py \
+    --mount=type=bind,source="packages.yaml",target=/tmp/packages.yaml \
+    /tmp/packages.py -f /tmp/packages.yaml "${PIXI_ENV}"
