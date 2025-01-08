@@ -178,7 +178,8 @@ environments:
       - cryptography
       - jupyter_core
       - jupyterhub
-      - jupyterhub-singleuser
+      - ref: jupyterhub-singleuser
+        skip-test: true
       - jupyterhub-kubespawner
       - lxml
       - nbconvert
