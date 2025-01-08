@@ -79,7 +79,6 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
             type=schedule,pattern={{date 'YYYY-MM-DD'}}
             type=sha
-            type=raw,value=r-4.3.3
 
       - name: Test Bake
         run: |
@@ -87,10 +86,10 @@ jobs:
             -f docker-bake.hcl \
             -f ${{ steps.meta.outputs.bake-file-labels }} \
             --print \
-            default
+            ${{ inputs.target }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG_LIST: ${{ steps.meta.outputs.tags }}
+          TAGS: ${{ steps.meta.outputs.tags }}
 
       # - name: Build and push
       #   uses: docker/bake-action@v5

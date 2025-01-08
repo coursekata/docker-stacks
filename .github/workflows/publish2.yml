@@ -25,14 +25,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  foundation:
-    uses: ./.github/workflows/bake.yml
-    secrets: inherit
-    with:
-      target: foundation
-
   base:
-    needs: [foundation]
     uses: ./.github/workflows/bake.yml
     secrets: inherit
     with:
