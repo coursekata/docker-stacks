@@ -10,6 +10,10 @@ variable "TAG" {
   default = "test"
 }
 
+variable "TAG_LIST" {
+  default = "test"
+}
+
 function "tags" {
   params = [name, suffix]
   result = ["${REGISTRY}/${name}:${TAG}${suffix}"]
@@ -41,7 +45,10 @@ function "cache-to" {
   ]
 }
 
+target "docker-metadata-action" {}
+
 target "default" {
+  inherits = ["docker-metadata-action"]
   context = "."
   secret = ["type=env,id=GITHUB_TOKEN"]
   labels = {
@@ -51,6 +58,7 @@ target "default" {
     "org.opencontainers.image.vendor": "CourseKata",
     "org.opencontainers.image.authors": "Adam Blake <adam@coursekata.org>"
   }
+  tags = [ for t in split(",", "${TAG_LIST}") : "myimage:${t}" ]
 }
 
 target "amd64" {
