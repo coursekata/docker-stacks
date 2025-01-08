@@ -281,7 +281,7 @@ class RExecutor:
     def exec_r(self, *scripts: str) -> None:
         cmd = ["Rscript", "-e", "options(warn = 2)"]
         for script in scripts:
-            cmd.extend(["-e", script])
+            cmd.extend(["-e", script.strip()])
         subprocess.run(cmd, check=True, text=True)
 
 
@@ -361,51 +361,52 @@ class Installer(RExecutor):
         for pkg in pkgs:
             if pkg.pre_install:
                 self.term.inform(f"Running pre-install scripts for '{pkg.name}'")
-                self.exec_r(pkg.pre_install.strip())
+                self.exec_r(pkg.pre_install)
 
         organized = self.organize_pkgs(*pkgs)
 
-        if organized["force"]:
+        if organized.force:
             self.term.inform("Installing CRAN packages that should always be updated")
-            pkg_refs = [pkg.name for pkg in organized["force"]]
+            pkg_refs = [pkg.name for pkg in organized.force]
             self.exec_install_cran(*pkg_refs, upgrade=True)
 
-        if organized["custom_repos"]:
+        if organized.custom_repos:
             self.term.inform("Installing CRAN packages from custom repositories")
-            for pkg in organized["custom_repos"]:
+            for pkg in organized.custom_repos:
                 self.exec_install_cran(pkg.name, repos=pkg.repos, upgrade=True)
 
-        if organized["cran"]:
+        if organized.standard:
             self.term.inform("Installing CRAN packages")
-            pkg_refs = [pkg.name for pkg in organized["cran"]]
+            pkg_refs = [pkg.name for pkg in organized.standard]
             self.exec_install_cran(*pkg_refs)
 
-        if organized["github"]:
+        if organized.github:
             self.term.inform("Installing GitHub packages")
-            pkg_refs = [pkg.ref for pkg in organized["github"]]
+            pkg_refs = [pkg.ref for pkg in organized.github]
             self.exec_install_cran(*pkg_refs, type="github")
 
         for pkg in pkgs:
             if pkg.post_install:
                 self.term.inform("Running post-install scripts for '{pkg.name}'")
-                self.exec_r(pkg.post_install.strip())
+                self.exec_r(pkg.post_install)
 
-    def organize_pkgs(self, *pkgs: RPackage) -> dict[str, list[RPackage]]:
-        organized: dict[str, list[RPackage]] = {
-            "force": [],
-            "custom_repos": [],
-            "cran": [],
-            "github": [],
-        }
+    class OrganizedRPackages(BaseModel):
+        standard: list[RPackage] = []
+        force: list[RPackage] = []
+        custom_repos: list[RPackage] = []
+        github: list[RPackage] = []
+
+    def organize_pkgs(self, *pkgs: RPackage) -> OrganizedRPackages:
+        organized = self.OrganizedRPackages()
         for pkg in pkgs:
             if pkg.type == "cran" and pkg.repos and not pkg.skip_install:
-                organized["force"].append(pkg)
+                organized.custom_repos.append(pkg)
             elif pkg.type == "cran" and pkg.force:
-                organized["custom_repos"].append(pkg)
+                organized.force.append(pkg)
             elif pkg.type == "cran" and not pkg.skip_install:
-                organized["cran"].append(pkg)
+                organized.standard.append(pkg)
             elif pkg.type == "github" and not pkg.skip_install:
-                organized["github"].append(pkg)
+                organized.github.append(pkg)
         return organized
 
 
