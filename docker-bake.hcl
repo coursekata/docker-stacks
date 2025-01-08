@@ -365,50 +365,26 @@ target "ckcode" {
   cache-from = cache-from("ckcode", "")
 }
 
-target "deepnote-base-r" {
+target "deepnote-ckcode-r" {
   inherits = ["_minimal"]
   labels = {
-    "org.opencontainers.image.title": "CourseKata Deepnote Base R",
-    "org.opencontainers.image.description": "A Deepnote-compatible version of the CourseKata Base R image",
+    "org.opencontainers.image.title": "CourseKata Deepnote CKCode",
+    "org.opencontainers.image.description": "A Deepnote-compatible version of the CKCode image",
   }
-  args = { PIXI_ENV = "deepnote-base-r" }
-  tags = tags("deepnote-base-r", "")
-  cache-to = cache-to("deepnote-base-r", "")
-  cache-from = cache-from("deepnote-base-r", "")
+  args = { PIXI_ENV = "deepnote-ckcode" }
+  tags = tags("deepnote-ckcode", "")
+  cache-to = cache-to("deepnote-ckcode", "")
+  cache-from = cache-from("deepnote-ckcode", "")
 }
 
-target "deepnote-essentials" {
+target "deepnote-datascience-r" {
   inherits = ["_minimal"]
   labels = {
-    "org.opencontainers.image.title": "CourseKata Deepnote Essentials",
-    "org.opencontainers.image.description": "A Deepnote-compatible version of the CourseKata Essentials image",
+    "org.opencontainers.image.title": "CourseKata Deepnote Data Science: R",
+    "org.opencontainers.image.description": "A Deepnote-compatible version of the the R components of the Data Science image",
   }
-  args = { PIXI_ENV = "deepnote-essentials" }
-  tags = tags("deepnote-essentials", "")
-  cache-to = cache-to("deepnote-essentials", "")
-  cache-from = cache-from("deepnote-essentials", "")
-}
-
-target "deepnote-r" {
-  inherits = ["_minimal"]
-  labels = {
-    "org.opencontainers.image.title": "CourseKata Deepnote R",
-    "org.opencontainers.image.description": "A Deepnote-compatible version of the CourseKata R image",
-  }
-  args = { PIXI_ENV = "deepnote-r" }
-  tags = tags("deepnote-r", "")
-  cache-to = cache-to("deepnote-r", "")
-  cache-from = cache-from("deepnote-r", "")
-}
-
-target "deepnote-datascience" {
-  inherits = ["_minimal"]
-  labels = {
-    "org.opencontainers.image.title": "CourseKata Deepnote Data Science",
-    "org.opencontainers.image.description": "A Deepnote-compatible version of the CourseKata Data Science image",
-  }
-  args = { PIXI_ENV = "deepnote-datascience" }
-  tags = tags("deepnote-datascience", "")
-  cache-to = cache-to("deepnote-datascience", "")
-  cache-from = cache-from("deepnote-datascience", "")
+  args = { PIXI_ENV = "deepnote-datascience-r", DEFAULT_KERNEL = "ir" }
+  tags = tags("deepnote-datascience-r", "")
+  cache-to = cache-to("deepnote-datascience-r", "")
+  cache-from = cache-from("deepnote-datascience-r", "")
 }

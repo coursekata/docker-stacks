@@ -17,7 +17,7 @@ environments:
 
   essentials:
     name: essentials
-    aliases: [deepnote-essentials]
+    aliases: [deepnote-ckcode-r]
     depends: [base-r]
     r:
       - ref: coursekata/fivethirtyeightdata
@@ -107,9 +107,9 @@ environments:
         post-install: >-
           cmdstanr::install_cmdstan()
 
-  r-datascience:
-    name: r-datascience
-    aliases: [deepnote-datascience]
+  datascience-r:
+    name: datascience-r
+    aliases: [deepnote-datascience-r]
     depends: [datascience-base]
     r:
       - ref: rmcelreath/rethinking
@@ -134,7 +134,7 @@ environments:
 
   datascience:
     name: datascience
-    depends: [r-datascience]
+    depends: [datascience-r]
     python:
       - ipywidgets
       - matplotlib
