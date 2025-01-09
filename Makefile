@@ -1,15 +1,18 @@
 shell := bash
-current_platform := $(shell docker version --format '{{.Server.Os}}/{{.Server.Arch}}')
-git_ref := $(shell git rev-parse --short=7 HEAD)$(shell git diff --quiet || echo "-dirty")
 
 # User variables
-export TAG ?= test
+export TAGS ?= test
 export REGISTRY ?= ghcr.io/coursekata
 export CACHE_REGISTRY ?= ghcr.io/coursekata/cache
 BAKE_ARGS ?=
-export GITHUB_TOKEN ?= $(shell gh auth token)
+
+# Build variables
 export DOCKER_BUILDKIT=1
 export DOCKER_CLI_EXPERIMENTAL=enabled
+export GITHUB_TOKEN ?= $(shell gh auth token)
+export REVISION ?= $(shell git rev-parse HEAD)
+export VERSION ?= sha-$(shell git rev-parse --short HEAD)
+export TIMESTAMP ?= $(shell python3 -c "from datetime import datetime, UTC; print(datetime.now(UTC).isoformat(timespec='milliseconds').replace('+00:00', 'Z'))")
 
 # ------------------------------------------------------------------------------
 # Utilities
@@ -58,42 +61,6 @@ define exit-error
 endef
 
 # ------------------------------------------------------------------------------
-# Environment validation
-# ------------------------------------------------------------------------------
-pixi_envs := $(shell pixi info --json | jq -r '.environments_info[] | .name')
-
-base_envs := foundation base
-main_envs := base-r essentials r datascience
-deepnote_envs := $(foreach env,$(main_envs),deepnote-$(env))
-
-multiarch_envs := $(base_envs) $(main_envs) ckhub
-amd64_envs := $(deepnote_envs) ckcode
-
-define validate-env
-	$(eval valid_envs := $(1))
-	$(eval error_str := Invalid $(2) environment)
-	$(eval info_str := Valid environments are: $(subst $(space),$(comma)$(space),$(valid_envs)))
-	$(if $(filter $(3),$(valid_envs)),,$(call exit-error,$(error_str),$(info_str)))
-endef
-
-define validate-pixi-env
-	$(call validate-env,$(pixi_envs),Pixi,$(1))
-endef
-
-define validate-multiarch-env
-	$(call validate-env,$(multiarch_envs),multiarch,$(1))
-endef
-
-define validate-amd64-env
-	$(call validate-env,$(multiarch_envs) $(amd64_envs),AMD64,$(1))
-endef
-
-define validate-arm64-env
-	$(call validate-env,$(multiarch_envs),ARM64,$(1))
-endef
-
-
-# ------------------------------------------------------------------------------
 # Targets
 # ------------------------------------------------------------------------------
 
@@ -102,7 +69,7 @@ endef
 help:
 	@echo "coursekata/docker-stacks"
 	@echo "====================="
-	@echo "Replace % with a Pixi environment name (e.g., make build/base-r)"
+	@echo "Replace % with a Bake target.
 	@echo
 	@grep -E '^[a-zA-Z0-9_%/-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		sort | \
@@ -120,42 +87,24 @@ img-rm-dang: ## Remove built dangling images (tagged None)
 img-clean: img-rm-dang img-rm ## Clean built and dangling images
 	@echo "Cleaned $(REGISTRY) images."
 
-git-sha: ## Get 7-digit git SHA (with '-dirty' if there are uncommitted changes)
-	@echo $(git_ref)
-
 
 define build-image
-	$(call print-info,\nBaking $(1) (TAG: $(TAG), REGISTRY: $(REGISTRY), CACHE_REGISTRY: $(CACHE_REGISTRY)))
+	$(call print-info,\nBaking $(1) (TAG: $(TAGS), REGISTRY: $(REGISTRY), CACHE_REGISTRY: $(CACHE_REGISTRY)))
 	@docker buildx bake $(1) $(2) $(BAKE_ARGS)
 endef
 
 build/%: ## Build a Docker image
-	$(call validate-multiarch-env,$(*))
 	$(call build-image,$(*))
-build-arm64/%: ## Build a Docker image for ARM64 architecture
-	$(call validate-arm64-env,$(*))
-	$(call build-image,$(*)-arm64,--load)
-build-amd64/%: ## Build a Docker image for AMD64 architecture
-	$(call validate-amd64-env,$(*))
-	$(eval recipe := $(if $(filter $(*),$(multiarch_envs)),$(*)-amd64,$(*)))
-	$(call build-image,$(recipe),--load)
-build-all-arm64: $(addprefix build-arm64/,$(multiarch_envs)) ## Build all Docker images for ARM64 architecture
-build-all-amd64: $(addprefix build-amd64/,$(multiarch_envs)) $(addprefix build-amd64/,$(amd64_envs)) ## Build all Docker images for AMD64 architecture
-build-all: build-all-arm64 build-all-amd64 ## Build all Docker images for ARM64 and AMD64 architectures
+build-all: build/main build/minimal ## Build all Docker images
+build-all-amd64: build/main-amd64 build/minimal ## Build all Docker images for amd64 architecture
+build-all-arm64: build/main-arm64 ## Build all Docker images for arm64 architecture
 
 shell-amd64/%: ## Run container and open bash shell for amd64 architecture
-	$(call validate-amd64-env,$(*))
-	$(eval suffix := $(if $(filter $(*),$(multiarch_envs)),-amd64,))
-	docker run -it --rm --platform=linux/amd64 $(REGISTRY)/$(*):$(TAG)$(suffix) $(shell)
+	docker run --pull=never -it --rm --platform=linux/amd64 $(REGISTRY)/$(*):$(TAGS)$(suffix) $(shell)
 shell-arm64/%: ## Run container and open bash shell for arm64 architecture
-	$(call validate-arm64-env,$(*))
-	$(eval suffix := $(if $(filter $(*),$(multiarch_envs)),-arm64,))
-	docker run -it --rm --platform=linux/arm64 $(REGISTRY)/$(*):$(TAG)$(suffix) $(shell)
+	docker run --pull=never -it --rm --platform=linux/arm64 $(REGISTRY)/$(*):$(TAGS)$(suffix) $(shell)
 
 run-amd64/%: ## Run container for amd64 architecture
-	$(call validate-amd64-env,$(*))
-	docker run -it --rm --platform=linux/amd64 -p=8888:8888 $(REGISTRY)/$(*):$(TAG)
+	docker run --pull=never -it --rm --platform=linux/amd64 -p=8888:8888 $(REGISTRY)/$(*):$(TAGS)
 run-arm64/%: ## Run container for arm64 architecture
-	$(call validate-arm64-env,$(*))
-	$(eval suffix := $(if $(filter $(*),$(multiarch_envs)),-arm64,))
-	docker run -it --rm --platform=linux/arm64 -p=8888:8888 $(REGISTRY)/$(*):$(TAG)$(suffix)
+	docker run --pull=never -it --rm --platform=linux/arm64 -p=8888:8888 $(REGISTRY)/$(*):$(TAGS)

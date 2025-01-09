@@ -315,9 +315,6 @@ dependency-injector = ">=4.43.0"
 jupyterhub-ltiauthenticator = ">=1.6.2"
 
 
-[feature.deepnote]
-platforms = ["linux-64", "osx-64"]
-
 [feature.deepnote.host-dependencies]
 bash = "*"
 curl = "*"

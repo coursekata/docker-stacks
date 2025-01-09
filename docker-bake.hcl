@@ -1,17 +1,15 @@
-variable "REGISTRY" {
-  default = "ghcr.io/coursekata"
-}
+# options
+variable "REGISTRY" { default = "ghcr.io/coursekata" }
+variable "CACHE_REGISTRY" { default = "${REGISTRY}/cache" }
+variable "TAGS" { default = "test" }
 
-variable "CACHE_REGISTRY" {
-  default = "${REGISTRY}/cache"
-}
+# build variables
+variable "TIMESTAMP" { default = "" }
+variable "REVISION" { default = "" }
+variable "VERSION" { default = "" }
 
-variable "TAGS" {
-  default = "test"
-}
-
+# Construct a list of tags for the given image name and tag suffix
 function "tags" {
-  # Construct a list of tags for the given image name and tag suffix
   params = [name, suffix]
   result = [
     for tag in split(",", replace("${TAGS}", "\n", ",")) :
@@ -19,8 +17,8 @@ function "tags" {
   ]
 }
 
+# Construct a list of cache-to strings for the given image name and tag suffix
 function "cache-to" {
-  # Construct a list of cache-to strings for the given image name and tag suffix
   params = [name, suffix]
   result = [
     for tag in split(",", replace("${TAGS}", "\n", ",")) :
@@ -28,8 +26,8 @@ function "cache-to" {
   ]
 }
 
+# Construct a list of cache-from strings for the given image name and tag suffix
 function "cache-from" {
-  # Construct a list of cache-from strings for the given image name and tag suffix
   params = [name, suffix]
   result = concat(
     flatten([for r in ["${REGISTRY}", "${CACHE_REGISTRY}"] :
@@ -52,13 +50,23 @@ function "cache-from" {
 # ------------------------------------------------------------------------------
 # Common partials
 # ------------------------------------------------------------------------------
-# dummy target that receives extra labels from the GitHub Action
-target "docker-metadata-action" {}
+# extra labels that will be added/overwritten by GitHub Actions
+target "docker-metadata-action" {
+  labels = {
+    "org.opencontainers.image.url": "https://github.com/coursekata/docker-stacks",
+    "org.opencontainers.image.created": "${TIMESTAMP}",
+    "org.opencontainers.image.revision": "${REVISION}",
+    "org.opencontainers.image.version": "${VERSION}",
+    # this is set by the ubuntu base image to "ubuntu". we should override it to be something like
+    # "datascience-notebook:sha-1234567", but we don't have that information here. we'll set it
+    # when building on GitHub Actions
+    "org.opencontainers.image.ref.name": "",
+  }
+}
 
 target "_common" {
   inherits = ["docker-metadata-action"]
   context = "."
-  platforms = ["linux/amd64", "linux/arm64"]
   secret = ["type=env,id=GITHUB_TOKEN"]
   labels = {
     "org.opencontainers.image.base.name": "docker.io/library/ubuntu:noble",
@@ -125,7 +133,10 @@ target "foundation-arm64" {
 target "foundation" {
   inherits = ["_foundation", "_multiarch"]
   tags = tags("foundation", "")
-  cache-from = concat(cache-from("foundation", "-amd64"), cache-from("foundation", "-arm64"))
+  cache-from = concat(
+    cache-from("foundation", "-amd64"),
+    cache-from("foundation", "-arm64")
+  )
 }
 
 target "_base" {
@@ -155,7 +166,10 @@ target "base-arm64" {
 target "base" {
   inherits = ["_base", "_multiarch"]
   tags = tags("base", "")
-  cache-from = concat(cache-from("base", "-amd64"), cache-from("base", "-arm64"))
+  cache-from = concat(
+    cache-from("base", "-amd64"),
+    cache-from("base", "-arm64")
+  )
 }
 
 
@@ -205,22 +219,25 @@ target "_base-r" {
 
 target "base-r-amd64" {
   inherits = ["_main-amd64", "_base-r"]
-  tags = tags("base-r", "-amd64")
-  cache-to = cache-to("base-r", "-amd64")
-  cache-from = cache-from("base-r", "-amd64")
+  tags = tags("base-r-notebook", "-amd64")
+  cache-to = cache-to("base-r-notebook", "-amd64")
+  cache-from = cache-from("base-r-notebook", "-amd64")
 }
 
 target "base-r-arm64" {
   inherits = ["_main-arm64", "_base-r"]
-  tags = tags("base-r", "-arm64")
-  cache-to = cache-to("base-r", "-arm64")
-  cache-from = cache-from("base-r", "-arm64")
+  tags = tags("base-r-notebook", "-arm64")
+  cache-to = cache-to("base-r-notebook", "-arm64")
+  cache-from = cache-from("base-r-notebook", "-arm64")
 }
 
 target "base-r" {
   inherits = ["_main-multiarch", "_base-r"]
-  tags = tags("base-r", "")
-  cache-from = concat(cache-from("base-r", "-amd64"), cache-from("base-r", "-arm64"))
+  tags = tags("base-r-notebook", "")
+  cache-from = concat(
+    cache-from("base-r-notebook", "-amd64"),
+    cache-from("base-r-notebook", "-arm64")
+  )
 }
 
 target "_essentials" {
@@ -233,22 +250,25 @@ target "_essentials" {
 
 target "essentials-amd64" {
   inherits = ["_main-amd64", "_essentials"]
-  tags = tags("essentials", "-amd64")
-  cache-to = cache-to("essentials", "-amd64")
-  cache-from = cache-from("essentials", "-amd64")
+  tags = tags("essentials-notebook", "-amd64")
+  cache-to = cache-to("essentials-notebook", "-amd64")
+  cache-from = cache-from("essentials-notebook", "-amd64")
 }
 
 target "essentials-arm64" {
   inherits = ["_main-arm64", "_essentials"]
-  tags = tags("essentials", "-arm64")
-  cache-to = cache-to("essentials", "-arm64")
-  cache-from = cache-from("essentials", "-arm64")
+  tags = tags("essentials-notebook", "-arm64")
+  cache-to = cache-to("essentials-notebook", "-arm64")
+  cache-from = cache-from("essentials-notebook", "-arm64")
 }
 
 target "essentials" {
   inherits = ["_main-multiarch", "_essentials"]
-  tags = tags("essentials", "")
-  cache-from = concat(cache-from("essentials", "-amd64"), cache-from("essentials", "-arm64"))
+  tags = tags("essentials-notebook", "")
+  cache-from = concat(
+    cache-from("essentials-notebook", "-amd64"),
+    cache-from("essentials-notebook", "-arm64")
+  )
 }
 
 target "_r" {
@@ -261,22 +281,25 @@ target "_r" {
 
 target "r-amd64" {
   inherits = ["_main-amd64", "_r"]
-  tags = tags("r", "-amd64")
-  cache-to = cache-to("r", "-amd64")
-  cache-from = cache-from("r", "-amd64")
+  tags = tags("r-notebook", "-amd64")
+  cache-to = cache-to("r-notebook", "-amd64")
+  cache-from = cache-from("r-notebook", "-amd64")
 }
 
 target "r-arm64" {
   inherits = ["_main-arm64", "_r"]
-  tags = tags("r", "-arm64")
-  cache-to = cache-to("r", "-arm64")
-  cache-from = cache-from("r", "-arm64")
+  tags = tags("r-notebook", "-arm64")
+  cache-to = cache-to("r-notebook", "-arm64")
+  cache-from = cache-from("r-notebook", "-arm64")
 }
 
 target "r" {
   inherits = ["_main-multiarch", "_r"]
-  tags = tags("r", "")
-  cache-from = concat(cache-from("r", "-amd64"), cache-from("r", "-arm64"))
+  tags = tags("r-notebook", "")
+  cache-from = concat(
+    cache-from("r-notebook", "-amd64"),
+    cache-from("r-notebook", "-arm64")
+  )
 }
 
 target "_datascience" {
@@ -289,22 +312,25 @@ target "_datascience" {
 
 target "datascience-amd64" {
   inherits = ["_main-amd64", "_datascience"]
-  tags = tags("datascience", "-amd64")
-  cache-to = cache-to("datascience", "-amd64")
-  cache-from = cache-from("datascience", "-amd64")
+  tags = tags("datascience-notebook", "-amd64")
+  cache-to = cache-to("datascience-notebook", "-amd64")
+  cache-from = cache-from("datascience-notebook", "-amd64")
 }
 
 target "datascience-arm64" {
   inherits = ["_main-arm64", "_datascience"]
-  tags = tags("datascience", "-arm64")
-  cache-to = cache-to("datascience", "-arm64")
-  cache-from = cache-from("datascience", "-arm64")
+  tags = tags("datascience-notebook", "-arm64")
+  cache-to = cache-to("datascience-notebook", "-arm64")
+  cache-from = cache-from("datascience-notebook", "-arm64")
 }
 
 target "datascience" {
   inherits = ["_main-multiarch", "_datascience"]
-  tags = tags("datascience", "")
-  cache-from = concat(cache-from("datascience", "-amd64"), cache-from("datascience", "-arm64"))
+  tags = tags("datascience-notebook", "")
+  cache-from = concat(
+    cache-from("datascience-notebook", "-amd64"),
+    cache-from("datascience-notebook", "-arm64")
+  )
 }
 
 target "_ckhub" {
@@ -343,7 +369,7 @@ target "ckhub" {
 # Additionally, they only need to run in the `amd64` architecture.
 # ------------------------------------------------------------------------------
 group "minimal" {
-  targets = ["ckcode", "deepnote-base-r", "deepnote-essentials", "deepnote-r", "deepnote-datascience"]
+  targets = ["ckcode", "deepnote-ckcode-r", "deepnote-datascience-r"]
 }
 
 target "_minimal" {
@@ -371,10 +397,10 @@ target "deepnote-ckcode-r" {
     "org.opencontainers.image.title": "CourseKata Deepnote CKCode",
     "org.opencontainers.image.description": "A Deepnote-compatible version of the CKCode image",
   }
-  args = { PIXI_ENV = "deepnote-ckcode" }
-  tags = tags("deepnote-ckcode", "")
-  cache-to = cache-to("deepnote-ckcode", "")
-  cache-from = cache-from("deepnote-ckcode", "")
+  args = { PIXI_ENV = "deepnote-ckcode-r" }
+  tags = tags("deepnote-ckcode-r", "")
+  cache-to = cache-to("deepnote-ckcode-r", "")
+  cache-from = cache-from("deepnote-ckcode-r", "")
 }
 
 target "deepnote-datascience-r" {
