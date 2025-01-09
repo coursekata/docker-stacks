@@ -45,8 +45,5 @@ jobs:
       matrix:
         target:
           - base-r
-          - essentials
-          - r
-          - datascience
           - ckcode
-          - deepnote-datascience-r
+          - deepnote-ckcode-r
