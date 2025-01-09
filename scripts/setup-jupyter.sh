@@ -11,6 +11,7 @@ fi
 if ! jupyter lab --version &> /dev/null; then
   echo "Warning: jupyter lab is not installed."
 else
+  jupyter lab build
   jupyter lab clean
 fi
 
