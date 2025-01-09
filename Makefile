@@ -14,56 +14,6 @@ export REVISION ?= $(shell git rev-parse HEAD)
 export VERSION ?= sha-$(shell git rev-parse --short HEAD)
 export TIMESTAMP ?= $(shell python3 -c "from datetime import datetime, UTC; print(datetime.now(UTC).isoformat(timespec='milliseconds').replace('+00:00', 'Z'))")
 
-# ------------------------------------------------------------------------------
-# Utilities
-# ------------------------------------------------------------------------------
-
-# ANSI colors
-blue := \033[0;34m
-cyan := \033[0;36m
-green := \033[0;32m
-red := \033[0;31m
-yellow := \033[0;33m
-reset := \033[0m
-
-# special characters
-comma := ,
-empty :=
-space := $(empty) $(empty)
-
-# functions to print colored text
-define print
-	@printf "$(1)$(2)$(reset)\n"
-endef
-
-define print-info
-	$(call print,$(cyan),$(1))
-endef
-
-define print-success
-	$(call print,$(green),$(1))
-endef
-
-define print-error
-	$(call print,$(red),$(1))
-endef
-
-define print-warning
-	$(call print,$(yellow),$(1))
-endef
-
-# print an error then exit
-define exit-error
-	$(call print-error,\n$(1))
-	$(if $(2),$(call print-error,  $(2)),)
-	@echo
-	@exit 1
-endef
-
-# ------------------------------------------------------------------------------
-# Targets
-# ------------------------------------------------------------------------------
-
 # https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 .PHONY: help
 help:
@@ -86,7 +36,6 @@ img-rm-dang: ## Remove built dangling images (tagged None)
 	-docker rmi --force $(shell docker images -f "dangling=true" --quiet) 2> /dev/null
 img-clean: img-rm-dang img-rm ## Clean built and dangling images
 	@echo "Cleaned $(REGISTRY) images."
-
 
 define build-image
 	$(call print-info,\nBaking $(1) (TAG: $(TAGS), REGISTRY: $(REGISTRY), CACHE_REGISTRY: $(CACHE_REGISTRY)))
