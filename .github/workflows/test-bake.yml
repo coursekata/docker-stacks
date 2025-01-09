@@ -1,5 +1,5 @@
 ---
-name: Bake Images
+name: Make Test Baked Images
 
 on:
   workflow_dispatch:
@@ -7,6 +7,7 @@ on:
     branches: [feature/*]
     paths:
       - .github/workflows/publish2.yml
+      - .github/workflows/bake.yml
       - docker-bake.hcl
       - pixi.lock
       - pixi.toml
@@ -30,3 +31,22 @@ jobs:
     secrets: inherit
     with:
       target: base
+
+  images:
+    needs: [base]
+    uses: ./.github/workflows/bake.yml
+    secrets: inherit
+    with:
+      target: ${{ matrix.target }}
+      free-disk-space: true
+      registry: ghcr.io/coursekata/test
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - base-r
+          - essentials
+          - r
+          - datascience
+          - ckcode
+          - deepnote-datascience-r

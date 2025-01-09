@@ -57,9 +57,7 @@ target "docker-metadata-action" {
     "org.opencontainers.image.created": "${TIMESTAMP}",
     "org.opencontainers.image.revision": "${REVISION}",
     "org.opencontainers.image.version": "${VERSION}",
-    # this is set by the ubuntu base image to "ubuntu". we should override it to be something like
-    # "datascience-notebook:sha-1234567", but we don't have that information here. we'll set it
-    # when building on GitHub Actions
+    # this is set by the ubuntu base image to "ubuntu": we can't unset it, so we clear it
     "org.opencontainers.image.ref.name": "",
   }
 }

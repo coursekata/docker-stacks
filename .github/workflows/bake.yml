@@ -18,11 +18,11 @@ on:
         type: boolean
         required: false
         default: false
-      update-conda:
-        description: Whether to update Conda packages
-        type: boolean
+      registry:
+        description: The registry to push to
+        type: string
         required: false
-        default: false
+        default: ghcr.io/coursekata
 
 jobs:
   docker:
@@ -48,23 +48,6 @@ jobs:
       #     username: ${{ github.actor }}
       #     password: ${{ secrets.GITHUB_TOKEN }}
 
-      # - name: Login to Docker Registry
-      #   uses: docker/login-action@v3
-      #   with:
-      #     username: ${{ vars.DOCKER_USERNAME }}
-      #     password: ${{ secrets.DOCKER_TOKEN }}
-
-      # - name: Setup Pixi
-      #   if: inputs.target != 'base' && inputs.update-conda
-      #   uses: prefix-dev/setup-pixi@v0.8.1
-      #   with:
-      #     run-install: false
-
-      # - name: Update Conda packages
-      #   if: inputs.target != 'base' && inputs.update-conda
-      #   shell: bash
-      #   run: pixi update
-
       # - name: Set up QEMU
       #   uses: docker/setup-qemu-action@v3
 
@@ -80,7 +63,18 @@ jobs:
             type=schedule,pattern={{date 'YYYY-MM-DD'}}
             type=sha
 
-      - name: Test Bake
+      # - name: Build and push
+      #   uses: docker/bake-action@v5
+      #   with:
+      #     files: docker-bake.hcl,${{ steps.meta.outputs.bake-file-labels }}
+      #     targets: ${{ inputs.target }}
+      #     push: true
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     TAGS: ${{ steps.meta.outputs.tags }}
+      #     REGISTRY: ${{ inputs.registry }}
+
+      - name: Test Bakefile
         run: |
           docker buildx bake \
             -f docker-bake.hcl \
@@ -88,11 +82,6 @@ jobs:
             --print \
             ${{ inputs.target }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAGS: ${{ steps.meta.outputs.tags }}
-
-      # - name: Build and push
-      #   uses: docker/bake-action@v5
-      #   with:
-      #     files: docker-bake.hcl,${{ steps.meta.outputs.bake-file }}
-      #     targets: ${{ inputs.target }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REGISTRY: ${{ inputs.registry }}
