@@ -1,6 +1,6 @@
 # options
 variable "REGISTRY" { default = "ghcr.io/coursekata" }
-variable "CACHE_REGISTRY" { default = "${REGISTRY}/cache" }
+variable "CACHE_REGISTRY" { default = "ghcr.io/coursekata/cache" }
 variable "TAGS" { default = "test" }
 
 # build variables
