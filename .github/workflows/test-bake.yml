@@ -4,7 +4,11 @@ name: Make Test Baked Images
 on:
   workflow_dispatch:
   push:
-    branches: [feature/*]
+    branches:
+      - test
+      - test/*
+      - feature/*
+      - hotfix/*
     paths:
       - .github/workflows/publish2.yml
       - .github/workflows/bake.yml
