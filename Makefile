@@ -5,6 +5,7 @@ export TAGS ?= test
 export REGISTRY ?= ghcr.io/coursekata
 export CACHE_REGISTRY ?= ghcr.io/coursekata/cache
 BAKE_ARGS ?=
+SKIP_CACHE_TO ?= false
 
 # Build variables
 export DOCKER_BUILDKIT=1
@@ -90,7 +91,7 @@ img-clean: img-rm-dang img-rm ## Clean built and dangling images
 
 define build-image
 	$(call print-info,\nBaking $(1) (TAG: $(TAGS), REGISTRY: $(REGISTRY), CACHE_REGISTRY: $(CACHE_REGISTRY)))
-	@docker buildx bake $(1) $(2) $(BAKE_ARGS)
+	docker buildx bake $(1) $(BAKE_ARGS)
 endef
 
 build/%: ## Build a Docker image

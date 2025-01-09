@@ -2,6 +2,7 @@
 variable "REGISTRY" { default = "ghcr.io/coursekata" }
 variable "CACHE_REGISTRY" { default = "ghcr.io/coursekata/cache" }
 variable "TAGS" { default = "test" }
+variable "SKIP_CACHE_TO" { default = "false" }
 
 # build variables
 variable "TIMESTAMP" { default = "" }
@@ -20,7 +21,7 @@ function "tags" {
 # Construct a list of cache-to strings for the given image name and tag suffix
 function "cache-to" {
   params = [name, suffix]
-  result = [
+  result = "${SKIP_CACHE_TO}" == "true" ? [] : [
     for tag in split(",", replace("${TAGS}", "\n", ",")) :
       "type=registry,ref=${CACHE_REGISTRY}/${name}:${tag}${suffix},mode=max"
   ]
