@@ -10,7 +10,7 @@ on:
       - feature/*
       - hotfix/*
     paths:
-      - .github/workflows/publish2.yml
+      - .github/workflows/test-bake.yml
       - .github/workflows/bake.yml
       - docker-bake.hcl
       - pixi.lock
