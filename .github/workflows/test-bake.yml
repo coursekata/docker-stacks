@@ -35,6 +35,7 @@ jobs:
     secrets: inherit
     with:
       target: base
+      registry: ghcr.io/coursekata/test
 
   images:
     needs: [base]
