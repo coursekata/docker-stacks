@@ -70,7 +70,7 @@ endef
 help:
 	@echo "coursekata/docker-stacks"
 	@echo "====================="
-	@echo "Replace % with a Bake target.
+	@echo "For builds, replace % with a Bake target. Otherwise, use the image name."
 	@echo
 	@grep -E '^[a-zA-Z0-9_%/-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		sort | \
