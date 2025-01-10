@@ -9,6 +9,46 @@ variable "TIMESTAMP" { default = "" }
 variable "REVISION" { default = "" }
 variable "VERSION" { default = "" }
 
+
+# ------------------------------------------------------------------------------
+# Groups
+# ------------------------------------------------------------------------------
+group "all" {
+  targets = ["main", "minimal"]
+}
+
+group "base" {
+  targets = ["foundation", "base"]
+}
+
+group "base-amd64" {
+  targets = ["foundation-amd64", "base-amd64"]
+}
+
+group "base-arm64" {
+  targets = ["foundation-arm64", "base-arm64"]
+}
+
+group "main" {
+  targets = ["base-r", "essentials", "r", "datascience", "ckhub"]
+}
+
+group "main-amd64" {
+  targets = ["base-r-amd64", "essentials-amd64", "r-amd64", "datascience-amd64", "ckhub-amd64"]
+}
+
+group "main-arm64" {
+  targets = ["base-r-arm64", "essentials-arm64", "r-arm64", "datascience-arm64", "ckhub-arm64"]
+}
+
+group "minimal" {
+  targets = ["ckcode", "deepnote-ckcode-r", "deepnote-datascience-r"]
+}
+
+
+# ------------------------------------------------------------------------------
+# Functions
+# ------------------------------------------------------------------------------
 # Construct a list of tags for the given image name and tag suffix
 function "tags" {
   params = [name, suffix]
@@ -45,41 +85,6 @@ function "cache-from" {
       ])
     ]),
   )
-}
-
-# ------------------------------------------------------------------------------
-# Groups
-# ------------------------------------------------------------------------------
-group "all" {
-  targets = ["main", "minimal"]
-}
-
-group "base" {
-  targets = ["foundation", "base"]
-}
-
-group "base-amd64" {
-  targets = ["foundation-amd64", "base-amd64"]
-}
-
-group "base-arm64" {
-  targets = ["foundation-arm64", "base-arm64"]
-}
-
-group "main" {
-  targets = ["base-r", "essentials", "r", "datascience", "ckhub"]
-}
-
-group "main-amd64" {
-  targets = ["base-r-amd64", "essentials-amd64", "r-amd64", "datascience-amd64", "ckhub-amd64"]
-}
-
-group "main-arm64" {
-  targets = ["base-r-arm64", "essentials-arm64", "r-arm64", "datascience-arm64", "ckhub-arm64"]
-}
-
-group "minimal" {
-  targets = ["ckcode", "deepnote-ckcode-r", "deepnote-datascience-r"]
 }
 
 
