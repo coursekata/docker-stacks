@@ -373,7 +373,7 @@ class Installer(RExecutor):
         if organized.custom_repos:
             self.term.inform("Installing CRAN packages from custom repositories")
             for pkg in organized.custom_repos:
-                self.exec_install_cran(pkg.name, repos=pkg.repos, upgrade=True)
+                self.exec_install_cran(pkg.name, repos=pkg.repos, upgrade=pkg.force)
 
         if organized.standard:
             self.term.inform("Installing CRAN packages")
