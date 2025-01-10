@@ -36,6 +36,7 @@ jobs:
     with:
       target: base
       registry: ghcr.io/coursekata/test
+      skip-cache-to: true
 
   images:
     needs: [base]
@@ -45,6 +46,7 @@ jobs:
       target: ${{ matrix.target }}
       free-disk-space: true
       registry: ghcr.io/coursekata/test
+      skip-cache-to: true
     strategy:
       fail-fast: false
       matrix:

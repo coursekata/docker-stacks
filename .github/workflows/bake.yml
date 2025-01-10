@@ -23,6 +23,11 @@ on:
         type: string
         required: false
         default: ghcr.io/coursekata
+      skip-cache-to:
+        description: Whether to skip caching to the registry
+        type: boolean
+        required: false
+        default: false
 
 jobs:
   docker:
@@ -73,3 +78,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAGS: ${{ steps.meta.outputs.tags }}
           REGISTRY: ${{ inputs.registry }}
+          SKIP_CACHE_TO: ${{ inputs.skip-cache-to }}
