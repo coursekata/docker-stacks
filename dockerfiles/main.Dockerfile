@@ -13,13 +13,13 @@ ARG ROOT_IMAGE=ubuntu:24.04
 ARG ROOT_CODENAME=noble
 
 # -----------------------------------------------------------------------------
-# Base image with common dependencies
+# Base stage: common dependencies and setup
 # -----------------------------------------------------------------------------
 FROM ${PARENT} AS base
 
 
 # -----------------------------------------------------------------------------
-# Build the dependencies
+# Build stage: build and install dependencies that need build tools
 # -----------------------------------------------------------------------------
 # https://ghcr.io/prefix-dev/pixi
 FROM ghcr.io/prefix-dev/pixi:${PIXI_VERSION}-${ROOT_CODENAME} AS pixi
@@ -42,9 +42,9 @@ USER ${NB_USER}
 
 
 # -----------------------------------------------------------------------------
-# Final image
+# Final setup stage: no additions after this stage
 # -----------------------------------------------------------------------------
-FROM base AS final
+FROM base AS last
 
 ARG PIXI_DIR PIXI_ENV
 ENV CONDA_DIR="${PIXI_DIR}/.pixi/envs/${PIXI_ENV}"
@@ -80,7 +80,19 @@ RUN --mount=type=bind,source="scripts/setup-jupyter.sh",target=/tmp/setup-jupyte
     /tmp/setup-jupyter.sh && \
     fix-permissions "${HOME}"
 
+
+# -----------------------------------------------------------------------------
+# Test stage: separate to ensure we can discard all side-effects
+# -----------------------------------------------------------------------------
+FROM base AS test
 # test the installation
 RUN --mount=type=bind,source="scripts/check-packages.py",target=/tmp/packages.py \
     --mount=type=bind,source="packages.yaml",target=/tmp/packages.yaml \
     /tmp/packages.py -f /tmp/packages.yaml "${PIXI_ENV}"
+
+
+# -----------------------------------------------------------------------------
+# Final stage: the final image, based on the last stage
+# This is a separate stage after test to ensure that test is always run
+# -----------------------------------------------------------------------------
+FROM last AS final
