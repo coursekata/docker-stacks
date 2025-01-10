@@ -4,6 +4,7 @@ shell := bash
 export TAGS ?= test
 export REGISTRY ?= ghcr.io/coursekata
 export CACHE_REGISTRY ?= ghcr.io/coursekata/cache
+export TEST_REGISTRY ?= ghcr.io/coursekata/test
 BAKE_ARGS ?=
 SKIP_CACHE_TO ?= false
 
@@ -90,22 +91,35 @@ img-clean: img-rm-dang img-rm ## Clean built and dangling images
 
 
 define build-image
-	$(call print-info,\nBaking $(1) (TAG: $(TAGS), REGISTRY: $(REGISTRY), CACHE_REGISTRY: $(CACHE_REGISTRY)))
+	$(call print-info,\nBaking $(1) (TAGS: $(TAGS), REGISTRY: $(REGISTRY), CACHE_REGISTRY: $(CACHE_REGISTRY)))
 	docker buildx bake $(1) $(BAKE_ARGS)
 endef
 
 build/%: ## Build a Docker image
 	$(call build-image,$(*))
-build-all: build/main build/minimal ## Build all Docker images
 build-all-amd64: build/main-amd64 build/minimal ## Build all Docker images for amd64 architecture
 build-all-arm64: build/main-arm64 ## Build all Docker images for arm64 architecture
 
+publish/%: ## Publish a Docker image
+	$(eval TAGS := latest,$(VERSION))
+	$(call print-info,\nPublishing $(REGISTRY)/$(*):$(TAGS))
+	$(eval BAKE_ARGS := $(BAKE_ARGS) --push)
+	$(call build-image,$(*))
+publish-test/%: ## Publish a Docker image to the test registry
+	$(eval TAGS := latest,$(VERSION))
+	$(eval REGISTRY := $(TEST_REGISTRY))
+	$(call print-info,\nPublishing $(REGISTRY)/$(*):$(TAGS))
+	$(eval BAKE_ARGS := $(BAKE_ARGS) --push)
+	$(call build-image,$(*))
+
 shell-amd64/%: ## Run container and open bash shell for amd64 architecture
-	docker run --pull=never -it --rm --platform=linux/amd64 $(REGISTRY)/$(*):$(TAGS)$(suffix) $(shell)
+	docker run --pull=never -it --rm --platform=linux/amd64 $(REGISTRY)/$(*):$(TAGS) $(shell)
 shell-arm64/%: ## Run container and open bash shell for arm64 architecture
-	docker run --pull=never -it --rm --platform=linux/arm64 $(REGISTRY)/$(*):$(TAGS)$(suffix) $(shell)
+	docker run --pull=never -it --rm --platform=linux/arm64 $(REGISTRY)/$(*):$(TAGS) $(shell)
 
 run-amd64/%: ## Run container for amd64 architecture
-	docker run --pull=never -it --rm --platform=linux/amd64 -p=8888:8888 $(REGISTRY)/$(*):$(TAGS)
+	$(eval TAG := $(shell echo $(TAGS) | cut -d, -f1))
+	docker run --pull=never -it --rm --platform=linux/amd64 -p=8888:8888 $(REGISTRY)/$(*):$(TAG)
 run-arm64/%: ## Run container for arm64 architecture
-	docker run --pull=never -it --rm --platform=linux/arm64 -p=8888:8888 $(REGISTRY)/$(*):$(TAGS)
+	$(eval TAG := $(shell echo $(TAGS) | cut -d, -f1))
+	docker run --pull=never -it --rm --platform=linux/arm64 -p=8888:8888 $(REGISTRY)/$(*):$(TAG)
