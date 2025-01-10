@@ -49,6 +49,7 @@ jobs:
       fail-fast: false
       matrix:
         target:
-          - base-r
           - ckcode
+          - datascience
           - deepnote-ckcode-r
+          - deepnote-datascience-r
