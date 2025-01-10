@@ -26,14 +26,17 @@ FROM ghcr.io/prefix-dev/pixi:${PIXI_VERSION}-${ROOT_CODENAME} AS pixi
 FROM base AS build
 COPY --from=pixi /usr/local/bin/pixi /usr/local/bin/pixi
 
-ARG PIXI_DIR PIXI_ENV
+ARG PIXI_DIR
 WORKDIR ${PIXI_DIR}
-COPY pixi.toml pixi.lock scripts/setup-env.sh ./
+COPY pixi.toml pixi.lock ./
+
+ARG PIXI_ENV
 RUN --mount=type=cache,target=/tmp/pixi-cache,sharing=locked,uid=${NB_UID} \
     PIXI_CACHE_DIR=/tmp/pixi-cache \
-    pixi install --frozen -e "${PIXI_ENV}"
+    pixi install --frozen --verbose -e ${PIXI_ENV}
 
 USER root
+COPY scripts/setup-env.sh ./
 RUN PIXI_ENV=${PIXI_ENV} ./setup-env.sh
 USER ${NB_USER}
 
