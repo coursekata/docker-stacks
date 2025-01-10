@@ -261,6 +261,7 @@ yellowbrick = ">=1.4,<2"
 chromadb = ">=0.5.23"
 langchain = ">=0.3.13"
 openai = ">=1.58.1,<2"
+nodejs = ">=22.6.0,<22.7"
 
 [feature.datascience.pypi-dependencies]
 altair-latimes = ">=0.0.2, <0.0.3"

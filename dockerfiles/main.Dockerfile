@@ -77,7 +77,8 @@ RUN --mount=type=bind,source="scripts/check-packages.py",target=/tmp/packages.py
 ARG DEFAULT_KERNEL
 ENV DEFAULT_KERNEL="${DEFAULT_KERNEL}"
 RUN --mount=type=bind,source="scripts/setup-jupyter.sh",target=/tmp/setup-jupyter.sh \
-    /tmp/setup-jupyter.sh
+    /tmp/setup-jupyter.sh && \
+    fix-permissions "${HOME}"
 
 # test the installation
 RUN --mount=type=bind,source="scripts/check-packages.py",target=/tmp/packages.py \
