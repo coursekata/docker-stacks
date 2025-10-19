@@ -115,18 +115,18 @@ jobs:
       - name: Create and push multi-arch manifest
         shell: bash
         run: |
-          # Build annotation flags from metadata-action output
-          ANNOTATION_FLAGS=""
+          # Build annotation flags array from metadata-action output
+          ANNOTATION_FLAGS=()
           while IFS= read -r annotation; do
             if [[ -n "$annotation" ]]; then
-              ANNOTATION_FLAGS="$ANNOTATION_FLAGS --annotation $annotation"
+              ANNOTATION_FLAGS+=(--annotation "$annotation")
             fi
           done <<< "${{ steps.meta.outputs.annotations }}"
 
           # Create manifest for each tag with annotations
           echo "${{ steps.meta.outputs.tags }}" | while IFS= read -r tag; do
             echo "Creating manifest for $tag"
-            docker buildx imagetools create $ANNOTATION_FLAGS -t "$tag" \
+            docker buildx imagetools create "${ANNOTATION_FLAGS[@]}" -t "$tag" \
               ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}@${{ needs.build-amd64.outputs.digest }} \
               ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}@${{ needs.build-arm64.outputs.digest }}
           done
