@@ -46,7 +46,7 @@ r-mass = ">=7.3_60.0.1,<8"
 r-matrix = ">=1.6_5,<2"
 
 [feature.essentials.pypi-dependencies]
-pythonwhat = { git = "https://github.com/datacamp/pythonwhat" }
+pythonwhat = ">=2.3.0,<3"
 
 [feature.r.dependencies]
 r-av = ">=0.9.3,<0.10"
@@ -170,8 +170,18 @@ altair-latimes = ">=0.0.2, <0.0.3"
 dash-cytoscape = ">=1.0.2, <2"
 yahoo-fin = ">=0.8.9.1, <0.9"
 
-[environments]
-base-r-notebook = {features = ["base-r"], solve-group = "main"}
-essentials-notebook = {features = ["base-r", "essentials"], solve-group = "main"}
-r-notebook = {features = ["base-r", "essentials", "r"], solve-group = "main"}
-datascience-notebook = { features = ["base-r", "essentials", "r", "datascience"], solve-group = "main"}
+[environments.base-r-notebook]
+features = ["base-r"]
+solve-group = "main"
+
+[environments.essentials-notebook]
+features = ["base-r", "essentials"]
+solve-group = "main"
+
+[environments.r-notebook]
+features = ["base-r", "essentials", "r"]
+solve-group = "main"
+
+[environments.datascience-notebook]
+features = ["base-r", "essentials", "r", "datascience"]
+solve-group = "main"
