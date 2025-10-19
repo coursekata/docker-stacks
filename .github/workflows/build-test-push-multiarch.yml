@@ -118,10 +118,16 @@ jobs:
         shell: bash
         run: |
           # Build annotation flags array from metadata-action output
+          # Docker requires: --annotation index:key="value" (quotes only around value)
           ANNOTATION_FLAGS=()
           while IFS= read -r annotation; do
             if [[ -n "$annotation" ]]; then
-              ANNOTATION_FLAGS+=(--annotation "$annotation")
+              # Split annotation at first = sign
+              key="${annotation%%=*}"
+              value="${annotation#*=}"
+              # Add as: --annotation index:key="value"
+              ANNOTATION_FLAGS+=(--annotation)
+              ANNOTATION_FLAGS+=("${key}=\"${value}\"")
             fi
           done <<< "${{ steps.meta.outputs.annotations }}"
 
