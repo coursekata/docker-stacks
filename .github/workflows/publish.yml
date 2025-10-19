@@ -52,25 +52,21 @@ jobs:
             pixi_env: base-r-notebook
             title: Base R Notebook
             description: Jupyter Lab, Python, and R, and that's it.
-            free_disk_space: false
 
           - image: essentials-notebook
             pixi_env: essentials-notebook
             title: Essentials Notebook
             description: CourseKata essentials - everything used in the books.
-            free_disk_space: true
 
           - image: r-notebook
             pixi_env: r-notebook
             title: R Notebook
             description: CourseKata essentials and other R packages for teaching and learning data science.
-            free_disk_space: true
 
           - image: datascience-notebook
             pixi_env: datascience-notebook
             title: Data Science Notebook
             description: R and Python packages for teaching and learning data science.
-            free_disk_space: true
 
     uses: ./.github/workflows/build-test-push-multiarch.yml
     secrets: inherit
@@ -78,7 +74,6 @@ jobs:
       image: ${{ matrix.image }}
       title: ${{ matrix.title }}
       description: ${{ matrix.description }}
-      free-disk-space: ${{ matrix.free_disk_space }}
       build-args: |
         PIXI_ENV=${{ matrix.pixi_env }}
       cache-from: ${{ needs.foundation.outputs.cache-from }}
