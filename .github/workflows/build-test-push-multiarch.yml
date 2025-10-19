@@ -46,6 +46,7 @@ on:
 
 jobs:
   build-amd64:
+    name: Build (AMD64)
     uses: ./.github/workflows/build-test-push.yml
     secrets: inherit
     with:
@@ -60,6 +61,7 @@ jobs:
       skip-tests: ${{ inputs.skip-tests }}
 
   build-arm64:
+    name: Build (ARM64)
     uses: ./.github/workflows/build-test-push.yml
     secrets: inherit
     with:
@@ -74,6 +76,7 @@ jobs:
       skip-tests: ${{ inputs.skip-tests }}
 
   manifest:
+    name: Create Multi-Arch Manifest
     needs: [build-amd64, build-arm64]
     runs-on: ubuntu-latest
     outputs:
