@@ -67,6 +67,7 @@ jobs:
             pixi_env: datascience-notebook
             title: Data Science Notebook
             description: R and Python packages for teaching and learning data science.
+            free_disk_space: true
 
     uses: ./.github/workflows/build-test-push-multiarch.yml
     secrets: inherit
