@@ -8,7 +8,8 @@ on:
     paths:
       # ci/cd
       - .github/workflows/publish.yml
-      - .github/workflows/build-test-publish.yml
+      - .github/workflows/build-test-push-multiarch.yml
+      - .github/workflows/build-test-push.yml
       # build
       - pixi.lock
       - Dockerfile
@@ -27,8 +28,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Build foundation base layer for both architectures
   foundation:
-    uses: ./.github/workflows/build-test-publish.yml
+    uses: ./.github/workflows/build-test-push-multiarch.yml
     secrets: inherit
     with:
       image: foundation
@@ -38,28 +40,8 @@ jobs:
       skip-tests: true
       build-args: |
         PIXI_ENV=default
-      cache-from: |
-        type=registry,ref=ghcr.io/${{ github.repository_owner }}/foundation
-        type=registry,ref=ghcr.io/${{ github.repository_owner }}/foundation:amd64
-        type=registry,ref=ghcr.io/${{ github.repository_owner }}/foundation:arm64
-        type=registry,ref=ghcr.io/${{ github.repository_owner }}/foundation:aarch64
-        type=registry,ref=ghcr.io/${{ github.repository_owner }}/base-r-notebook
-        type=registry,ref=ghcr.io/${{ github.repository_owner }}/base-r-notebook:amd64
-        type=registry,ref=ghcr.io/${{ github.repository_owner }}/base-r-notebook:arm64
-        type=registry,ref=ghcr.io/${{ github.repository_owner }}/base-r-notebook:aarch64
-        type=registry,ref=ghcr.io/${{ github.repository_owner }}/essentials-notebook
-        type=registry,ref=ghcr.io/${{ github.repository_owner }}/essentials-notebook:amd64
-        type=registry,ref=ghcr.io/${{ github.repository_owner }}/essentials-notebook:arm64
-        type=registry,ref=ghcr.io/${{ github.repository_owner }}/essentials-notebook:aarch64
-        type=registry,ref=ghcr.io/${{ github.repository_owner }}/r-notebook
-        type=registry,ref=ghcr.io/${{ github.repository_owner }}/r-notebook:amd64
-        type=registry,ref=ghcr.io/${{ github.repository_owner }}/r-notebook:arm64
-        type=registry,ref=ghcr.io/${{ github.repository_owner }}/r-notebook:aarch64
-        type=registry,ref=ghcr.io/${{ github.repository_owner }}/datascience-notebook
-        type=registry,ref=ghcr.io/${{ github.repository_owner }}/datascience-notebook:amd64
-        type=registry,ref=ghcr.io/${{ github.repository_owner }}/datascience-notebook:arm64
-        type=registry,ref=ghcr.io/${{ github.repository_owner }}/datascience-notebook:aarch64
 
+  # Build all notebook images (each builds both architectures internally)
   images:
     needs: [foundation]
     strategy:
@@ -90,13 +72,13 @@ jobs:
             description: R and Python packages for teaching and learning data science.
             free_disk_space: true
 
-    uses: ./.github/workflows/build-test-publish.yml
+    uses: ./.github/workflows/build-test-push-multiarch.yml
     secrets: inherit
     with:
       image: ${{ matrix.image }}
       title: ${{ matrix.title }}
       description: ${{ matrix.description }}
       free-disk-space: ${{ matrix.free_disk_space }}
-      cache-from: ${{ needs.foundation.outputs.cache-from }}
       build-args: |
         PIXI_ENV=${{ matrix.pixi_env }}
+      cache-from: ${{ needs.foundation.outputs.cache-from }}

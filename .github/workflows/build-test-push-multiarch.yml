@@ -1,0 +1,142 @@
+---
+name: Build, Test, and Push Multi-Architecture Image
+
+on:
+  workflow_call:
+    inputs:
+      title:
+        description: The title of the image
+        type: string
+        required: true
+      description:
+        description: The description of the image
+        type: string
+        required: true
+      image:
+        description: The name image to build (also corresponds to a Pixi environment)
+        type: string
+        required: true
+      target:
+        description: The target layer to build
+        type: string
+        required: false
+      build-args:
+        description: Build arguments to pass to the image
+        type: string
+        required: false
+      cache-from:
+        description: Docker images that might be able to contribute cached layers
+        type: string
+        required: false
+      free-disk-space:
+        description: Whether to free disk space before building
+        type: boolean
+        required: false
+        default: false
+      skip-tests:
+        description: Whether to skip tests
+        type: boolean
+        required: false
+        default: false
+
+    outputs:
+      cache-from:
+        description: Cache references for this image (formatted for use in downstream cache-from)
+        value: ${{ jobs.manifest.outputs.cache-from }}
+
+jobs:
+  build-amd64:
+    uses: ./.github/workflows/build-test-push.yml
+    secrets: inherit
+    with:
+      image: ${{ inputs.image }}
+      platform: linux/amd64
+      target: ${{ inputs.target }}
+      title: ${{ inputs.title }}
+      description: ${{ inputs.description }}
+      build-args: ${{ inputs.build-args }}
+      extra-cache-from: ${{ inputs.cache-from }}
+      free-disk-space: ${{ inputs.free-disk-space }}
+      skip-tests: ${{ inputs.skip-tests }}
+
+  build-arm64:
+    uses: ./.github/workflows/build-test-push.yml
+    secrets: inherit
+    with:
+      image: ${{ inputs.image }}
+      platform: linux/arm64
+      target: ${{ inputs.target }}
+      title: ${{ inputs.title }}
+      description: ${{ inputs.description }}
+      build-args: ${{ inputs.build-args }}
+      extra-cache-from: ${{ inputs.cache-from }}
+      free-disk-space: ${{ inputs.free-disk-space }}
+      skip-tests: ${{ inputs.skip-tests }}
+
+  manifest:
+    needs: [build-amd64, build-arm64]
+    runs-on: ubuntu-latest
+    outputs:
+      cache-from: ${{ steps.set-cache-output.outputs.cache-from }}
+
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Login to Docker Registry
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Generate metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ github.repository_owner }}/${{ inputs.image }}
+            ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=schedule,pattern={{date 'YYYY-MM-DD'}}
+            type=sha
+          labels: |
+            org.opencontainers.image.title=${{ inputs.title }}
+            org.opencontainers.image.description=${{ inputs.description }}
+
+      - name: Create and push multi-arch manifest
+        shell: bash
+        run: |
+          # Create manifest for each tag
+          for tag in ${{ steps.meta.outputs.tags }}; do
+            echo "Creating manifest for $tag"
+            docker buildx imagetools create -t "$tag" \
+              ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}@${{ needs.build-amd64.outputs.digest }} \
+              ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}@${{ needs.build-arm64.outputs.digest }}
+          done
+
+      - name: Inspect manifest
+        shell: bash
+        run: |
+          # Inspect the first tag to verify multi-arch
+          FIRST_TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n1)
+          echo "Inspecting $FIRST_TAG"
+          docker buildx imagetools inspect "$FIRST_TAG"
+
+      - name: Set cache output
+        id: set-cache-output
+        shell: bash
+        run: |
+          {
+            echo 'cache-from<<EOF'
+            echo "type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}:${{ needs.build-amd64.outputs.platform-tag }}"
+            echo "type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}:${{ needs.build-arm64.outputs.platform-tag }}"
+            echo EOF
+          } >> "$GITHUB_OUTPUT"

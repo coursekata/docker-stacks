@@ -1,0 +1,181 @@
+---
+name: Build, Test, and Push Single Architecture Image
+
+on:
+  workflow_call:
+    inputs:
+      title:
+        description: The title of the image
+        type: string
+        required: true
+      description:
+        description: The description of the image
+        type: string
+        required: true
+      image:
+        description: The name image to build (also corresponds to a Pixi environment)
+        type: string
+        required: true
+      platform:
+        description: The platform to build for (linux/amd64 or linux/arm64)
+        type: string
+        required: true
+      target:
+        description: The target layer to build
+        type: string
+        required: false
+      build-args:
+        description: Build arguments to pass to the image
+        type: string
+        required: false
+      extra-cache-from:
+        description: Additional Docker images that might be able to contribute cached layers (beyond the automatic cache sources)
+        type: string
+        required: false
+      free-disk-space:
+        description: Whether to free disk space before building
+        type: boolean
+        required: false
+        default: false
+      skip-tests:
+        description: Whether to skip tests
+        type: boolean
+        required: false
+        default: false
+
+    outputs:
+      image:
+        description: The image name
+        value: ${{ jobs.build.outputs.image }}
+      platform:
+        description: The platform built
+        value: ${{ jobs.build.outputs.platform }}
+      digest:
+        description: The image digest
+        value: ${{ jobs.build.outputs.digest }}
+      tag:
+        description: The image tag (with platform suffix)
+        value: ${{ jobs.build.outputs.tag }}
+      platform-tag:
+        description: The platform tag (amd64, arm64, etc.)
+        value: ${{ jobs.build.outputs.platform-tag }}
+
+jobs:
+  build:
+    runs-on: ${{ inputs.platform == 'linux/arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+
+    outputs:
+      image: ${{ inputs.image }}
+      platform: ${{ inputs.platform }}
+      digest: ${{ steps.build.outputs.digest }}
+      tag: ${{ steps.build.outputs.metadata }}
+      platform-tag: ${{ steps.context.outputs.platform-tag }}
+
+    steps:
+      - name: Setup build context
+        id: context
+        shell: bash
+        run: |
+          # Validate platform
+          if [[ "${{ inputs.platform }}" != "linux/amd64" && "${{ inputs.platform }}" != "linux/arm64" ]]; then
+            echo "::error title=Unsupported Platform::Platform '${{ inputs.platform }}' is not supported. Only linux/amd64 and linux/arm64 are supported."
+            exit 1
+          fi
+          echo "::notice::Platform: ${{ inputs.platform }}"
+
+          # Determine platform tag
+          if [[ "${{ inputs.platform }}" == "linux/amd64" ]]; then
+            PLATFORM_TAG="amd64"
+          else
+            PLATFORM_TAG="arm64"
+          fi
+          echo "platform-tag=$PLATFORM_TAG" >> "$GITHUB_OUTPUT"
+          echo "::notice::Platform tag: $PLATFORM_TAG"
+
+          # Construct cache-from list
+          {
+            echo 'cache-from<<EOF'
+            echo "type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}"
+            echo "type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}:$PLATFORM_TAG"
+            if [[ -n "${{ inputs.extra-cache-from }}" ]]; then
+              echo "${{ inputs.extra-cache-from }}"
+            fi
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
+          echo "::notice::Cache sources configured"
+
+      - name: Free Disk Space (Ubuntu)
+        if: inputs.free-disk-space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+          tool-cache: true
+
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Pixi
+        if: inputs.target != 'base'
+        uses: prefix-dev/setup-pixi@v0.9.2
+        with:
+          run-install: false
+
+      - name: Update Conda packages
+        if: inputs.target != 'base'
+        shell: bash
+        run: pixi update
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Login to Docker Registry
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Build and push
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          target: ${{ inputs.target }}
+          platforms: ${{ inputs.platform }}
+          build-args: ${{ inputs.build-args }}
+          secrets: |
+            github_token=${{ secrets.GITHUB_TOKEN }}
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}:${{ steps.context.outputs.platform-tag }}
+          cache-to: |
+            type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}:${{ steps.context.outputs.platform-tag }},mode=max
+          cache-from: ${{ steps.context.outputs.cache-from }}
+          push: true
+          provenance: false
+          outputs: type=image,name=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }},push-by-digest=true,name-canonical=true,push=true
+
+      - name: Pull image for testing
+        if: inputs.skip-tests != true
+        shell: bash
+        run: |
+          docker pull ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}@${{ steps.build.outputs.digest }}
+          docker tag ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}@${{ steps.build.outputs.digest }} test-image:local
+
+      - name: Test
+        if: inputs.skip-tests != true
+        shell: bash
+        run: |
+          docker run --rm --platform=${{ inputs.platform }} \
+            --mount=type=bind,source="./tests/test-packages.sh",target=/tmp/test-packages.sh \
+            --mount=type=bind,source="./tests/packages.txt",target=/tmp/packages.txt \
+            --mount=type=bind,source="./tests/${{ inputs.image }}.sh",target=/tmp/test.sh \
+            test-image:local \
+            bash /tmp/test.sh
