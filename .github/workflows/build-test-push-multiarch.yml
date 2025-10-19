@@ -136,7 +136,8 @@ jobs:
         run: |
           {
             echo 'cache-from<<EOF'
-            echo "type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}:${{ needs.build-amd64.outputs.platform-tag }}"
-            echo "type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}:${{ needs.build-arm64.outputs.platform-tag }}"
+            echo "type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}:latest"
+            echo "type=registry,ref=${{ needs.build-amd64.outputs.cache-tag }}"
+            echo "type=registry,ref=${{ needs.build-arm64.outputs.cache-tag }}"
             echo EOF
           } >> "$GITHUB_OUTPUT"

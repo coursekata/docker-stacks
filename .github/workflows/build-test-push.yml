@@ -56,9 +56,9 @@ on:
       tag:
         description: The image tag (with platform suffix)
         value: ${{ jobs.build.outputs.tag }}
-      platform-tag:
-        description: The platform tag (amd64, arm64, etc.)
-        value: ${{ jobs.build.outputs.platform-tag }}
+      cache-tag:
+        description: The complete cache tag reference (e.g., ghcr.io/owner/image:cache-amd64)
+        value: ${{ jobs.build.outputs.cache-tag }}
 
 jobs:
   build:
@@ -69,7 +69,7 @@ jobs:
       platform: ${{ inputs.platform }}
       digest: ${{ steps.build.outputs.digest }}
       tag: ${{ steps.build.outputs.metadata }}
-      platform-tag: ${{ steps.context.outputs.platform-tag }}
+      cache-tag: ${{ steps.context.outputs.cache-tag }}
 
     steps:
       - name: Setup build context
@@ -83,20 +83,21 @@ jobs:
           fi
           echo "::notice::Platform: ${{ inputs.platform }}"
 
-          # Determine platform tag
+          # Determine platform tag and construct cache tag
           if [[ "${{ inputs.platform }}" == "linux/amd64" ]]; then
             PLATFORM_TAG="amd64"
           else
             PLATFORM_TAG="arm64"
           fi
-          echo "platform-tag=$PLATFORM_TAG" >> "$GITHUB_OUTPUT"
-          echo "::notice::Platform tag: $PLATFORM_TAG"
+          CACHE_TAG="ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}:cache-$PLATFORM_TAG"
+          echo "cache-tag=$CACHE_TAG" >> "$GITHUB_OUTPUT"
+          echo "::notice::Cache tag: $CACHE_TAG"
 
           # Construct cache-from list
           {
             echo 'cache-from<<EOF'
-            echo "type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}"
-            echo "type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}:$PLATFORM_TAG"
+            echo "type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}:latest"
+            echo "type=registry,ref=$CACHE_TAG"
             if [[ -n "${{ inputs.extra-cache-from }}" ]]; then
               echo "${{ inputs.extra-cache-from }}"
             fi
@@ -153,10 +154,8 @@ jobs:
           build-args: ${{ inputs.build-args }}
           secrets: |
             github_token=${{ secrets.GITHUB_TOKEN }}
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}:${{ steps.context.outputs.platform-tag }}
           cache-to: |
-            type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}:${{ steps.context.outputs.platform-tag }},mode=max
+            type=registry,ref=${{ steps.context.outputs.cache-tag }},mode=max
           cache-from: ${{ steps.context.outputs.cache-from }}
           push: true
           provenance: false
