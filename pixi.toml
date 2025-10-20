@@ -122,12 +122,11 @@ r-bigmemory = ">=4.6.4,<5"
 "r-bigmemory.sri" = ">=0.1.8,<0.2"
 r-fastglm = ">=0.0.3,<0.0.4"
 r-mvnfast = ">=0.2.8,<0.3"
-r-pak = ">=0.8.0,<0.9"
 
 [feature.r.target.linux-aarch64.dependencies]
 ocl-icd-system = ">=1.0.0,<2"
 pkg-config = ">=0.29.2,<0.30"
-xorg-xproto = ">=7.0.31,<8"
+xorg-xorgproto = ">=2024.1,<2025"
 
 [feature.r.target.linux-64.dependencies]
 ocl-icd-system = ">=1.0.0,<2"
