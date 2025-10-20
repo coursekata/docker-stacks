@@ -104,7 +104,7 @@ resolve_dependencies <- function(env) {
   for (dep in environments[[env]]$depends) {
     deps <- c(resolve_dependencies(dep), deps)
   }
-  return(unique(deps))
+  unique(deps)
 }
 
 #' Install the specified environment
