@@ -6,69 +6,7 @@ CURRENT_PLATFORM := $(shell docker version --format '{{.Server.Os}}/{{.Server.Ar
 VALID_ENVS := $(shell pixi info --json | jq -r '.environments_info[] | select(.name != "default") | .name')
 
 export GITHUB_TOKEN
-export DOCKER_BUILDKIT:=1
-export DOCKER_CLI_EXPERIMENTAL=enabled
-
-# ------------------------------------------------------------------------------
-# Functions
-# ------------------------------------------------------------------------------
-
-# Terminal colors and utilities
-success := $(shell tput setaf 2)
-info := $(shell tput setaf 4)
-error := $(shell tput setaf 1)
-sgr0 := $(shell tput sgr0)
-comma := ,
-
-# Validate PIXI_ENV
-define validate_env
-	@if ! echo "$(VALID_ENVS)" | grep -q -w "$(1)"; then \
-		printf "\n"; \
-		printf "$(error)Error: Invalid PIXI_ENV '$(1)'\n"; \
-		printf "  Valid environments are: $(VALID_ENVS)$(sgr0)\n"; \
-		printf "\n"; \
-		exit 1; \
-	fi
-endef
-
-# Build an image for a given platform
-define build_image
-	$(call validate_env,$(1))
-	@printf '\n$(info)Building $(DS_OWNER)/$(1)$(3)$(sgr0)\n'
-	docker buildx build --tag $(DS_OWNER)/$(1)$(3) \
-		--platform=$(2) \
-	  --build-arg=PIXI_ENV="$(1)" \
-	  --secret=id=github_token,env=GITHUB_TOKEN \
-		--cache-to=type=registry,ref=$(DS_OWNER)/$(1)$(3) \
-		--cache-from=type=registry,ref=$(DS_OWNER)/$(1):arm64 \
-		--cache-from=type=registry,ref=$(DS_OWNER)/$(1):amd64 \
-		--load .
-	@printf "Docker image $(DS_OWNER)/$(1) built successfully for $(1).\n"
-endef
-
-# Test an image for a given platform
-define test_image
-	$(call validate_env,$(1))
-	@printf '\n$(info)Testing $(DS_OWNER)/$(1)$(3)$(sgr0)\n'
-	@docker run --rm \
-		--platform="$(2)" \
-		--mount=type=bind,source="./tests/test-packages.sh",target=/tmp/test-packages.sh \
-		--mount=type=bind,source="./tests/packages.txt",target=/tmp/packages.txt \
-		--mount=type=bind,source="./tests/$(notdir $(1)).sh",target=/tmp/test.sh \
-		"$(DS_OWNER)/$(1)$(3)" $(SHELL) /tmp/test.sh
-endef
-
-# Run an image for a given platform
-define run_image
-	$(call validate_env,$(1))
-	docker run -it --rm --platform=$(2) -p=8888:8888 $(2) $(DS_OWNER)/$(1)$(3)
-endef
-
-# Run an image and open a shell for a given platform
-define run_shell
-	$(call validate_env,$(1))
-	docker run -it --rm --platform=$(2) $(DS_OWNER)/$(1)$(3) $(SHELL)
-endef
+export DS_OWNER
 
 
 # ------------------------------------------------------------------------------
@@ -87,46 +25,40 @@ help:
 		awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 build/%: ## Build for default architecture
-	$(call build_image,$*,$(CURRENT_PLATFORM),)
+	./scripts/build.sh --image $* --platform $(CURRENT_PLATFORM) --tag $(DS_OWNER)/$*
 build-amd64/%: ## Build for amd64 architecture
-	$(call build_image,$*,linux/amd64,:amd64)
+	./scripts/build.sh --image $* --platform linux/amd64 --tag $(DS_OWNER)/$*:amd64
 build-arm64/%: ## Build for arm64 architecture
-	$(call build_image,$*,linux/arm64,:arm64)
-build-multiarch/%: ## Build for all architectures simultaneously
-	$(call build_image,$*,linux/amd64$(comma)linux/arm64,:latest)
+	./scripts/build.sh --image $* --platform linux/arm64 --tag $(DS_OWNER)/$*:arm64
 
 build-all: $(foreach I, $(VALID_ENVS), build/$(I)) ## Build all images for default architecture
 build-all-amd64: $(foreach I, $(VALID_ENVS), build-amd64/$(I)) ## Build all images for amd64 architecture
 build-all-arm64: $(foreach I, $(VALID_ENVS), build-arm64/$(I)) ## Build all images for arm64 architecture
-build-all-multiarch: $(foreach I, $(VALID_ENVS), build-amd64/$(I) build-arm64/$(I)) ## Build all images for all architectures
 
 test/%: build/% ## Test image for default architecture
-	$(call test_image,$*,$(CURRENT_PLATFORM),)
+	./scripts/test.sh --image $* --platform $(CURRENT_PLATFORM) --tag $(DS_OWNER)/$*
 test-amd64/%: build-amd64/% ## Test image for amd64 architecture
-	$(call test_image,$*,linux/amd64,:amd64)
+	./scripts/test.sh --image $* --platform linux/amd64 --tag $(DS_OWNER)/$*:amd64
 test-arm64/%: build-arm64/% ## Test image for arm64 architecture
-	$(call test_image,$*,linux/arm64,:arm64)
-test-multiarch/%: test-amd64/% test-arm64/% ## Test image for all architectures
-	@
+	./scripts/test.sh --image $* --platform linux/arm64 --tag $(DS_OWNER)/$*:arm64
 
 test-all: $(foreach I, $(VALID_ENVS), test/$(I)) ## Test all images for default architecture
 test-all-amd64: $(foreach I, $(VALID_ENVS), test-amd64/$(I)) ## Test all images for amd64 architecture
 test-all-arm64: $(foreach I, $(VALID_ENVS), test-arm64/$(I)) ## Test all images for arm64 architecture
-test-all-multiarch: $(foreach I, $(VALID_ENVS), test-amd64/$(I) test-arm64/$(I)) ## Test all images for all architectures
 
-shell/%: ## Run container and open bash shell for default architecture
-	$(call run_shell,$*,$(CURRENT_PLATFORM),)
-shell-amd64/%: ## Run container and open bash shell for amd64 architecture
-	$(call run_shell,$*,linux/amd64,:amd64)
-shell-arm64/%: ## Run container and open bash shell for arm64 architecture
-	$(call run_shell,$*,linux/arm64,:arm64)
+shell/%: build/% ## Run container and open bash shell for default architecture
+	./scripts/run-shell.sh --image $(DS_OWNER)/$* --platform $(CURRENT_PLATFORM)
+shell-amd64/%: build-amd64/% ## Run container and open bash shell for amd64 architecture
+	./scripts/run-shell.sh --image $(DS_OWNER)/$*:amd64 --platform linux/amd64
+shell-arm64/%: build-arm64/% ## Run container and open bash shell for arm64 architecture
+	./scripts/run-shell.sh --image $(DS_OWNER)/$*:arm64 --platform linux/arm64
 
 run/%: ## Run container for default architecture
-	$(call run_image,$*,$(CURRENT_PLATFORM),)
+	./scripts/run.sh --image $(DS_OWNER)/$* --platform $(CURRENT_PLATFORM)
 run-amd64/%: ## Run container for amd64 architecture
-	$(call run_image,$*,linux/amd64,:amd64)
+	./scripts/run.sh --image $(DS_OWNER)/$*:amd64 --platform linux/amd64
 run-arm64/%: ## Run container for arm64 architecture
-	$(call run_image,$*,linux/arm64,:arm64)
+	./scripts/run.sh --image $(DS_OWNER)/$*:arm64 --platform linux/arm64
 
 img-clean: img-rm-dang img-rm ## clean built and dangling images
 img-list: ## list images
