@@ -78,3 +78,4 @@ jobs:
       build-args: |
         PIXI_ENV=${{ matrix.pixi_env }}
       cache-from: ${{ needs.foundation.outputs.cache-from }}
+      free-disk-space: ${{ matrix.free_disk_space || false }}
