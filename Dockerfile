@@ -11,6 +11,13 @@ ARG PIXI_ENV=default
 ARG PIXI_VERSION=0.39.2
 ARG PIXI_DIR=/opt/pixi
 
+# -----------------------------------------------------------------------------
+# Other image-based dependencies
+# -----------------------------------------------------------------------------
+FROM quay.io/jupyter/base-notebook:python-3.12 AS jupyter--base-notebook
+FROM quay.io/jupyter/docker-stacks-foundation:python-3.12 AS jupyter--docker-stacks-foundation
+FROM ghcr.io/prefix-dev/pixi:${PIXI_VERSION}-${ROOT_CODENAME} AS pixi
+
 
 # -----------------------------------------------------------------------------
 # Base image with common dependencies
@@ -85,8 +92,7 @@ RUN apt-get update --yes && \
     update-alternatives --install /usr/bin/nano nano /bin/nano-tiny 10
 
 # Utility for giving the user appropriate file permissions recursively
-# https://quay.io/jupyter/docker-stacks-foundation
-COPY --from=quay.io/jupyter/docker-stacks-foundation /usr/local/bin/fix-permissions /usr/local/bin/
+COPY --from=jupyter--docker-stacks-foundation /usr/local/bin/fix-permissions /usr/local/bin/
 
 # configure environment
 ENV SHELL=/bin/bash \
@@ -100,7 +106,7 @@ ENV NB_USER="${NB_USER}" \
 
 # setup user
 RUN if grep -q "${NB_UID}" /etc/passwd; then \
-    userdel --remove $(id -un "${NB_UID}"); \
+    userdel --remove "$(id -un "${NB_UID}")"; \
     fi && \
     echo "auth requisite pam_deny.so" >> /etc/pam.d/su && \
     sed -i.bak -e 's/^%admin/#%admin/' /etc/sudoers && \
@@ -114,15 +120,14 @@ RUN if grep -q "${NB_UID}" /etc/passwd; then \
 # https://github.com/jupyter/docker-stacks/issues/915#issuecomment-1068528799
 HEALTHCHECK --interval=3s --timeout=1s --start-period=3s --retries=3 \
     CMD /etc/jupyter/docker_healthcheck.py || exit 1
-# https://quay.io/jupyter/base-notebook
-COPY --from=quay.io/jupyter/base-notebook \
+COPY --from=jupyter--base-notebook \
     /etc/jupyter/docker_healthcheck.py \
     /etc/jupyter/
 
 # server configuration
 ENV JUPYTER_PORT=8888
 EXPOSE $JUPYTER_PORT
-COPY --from=quay.io/jupyter/base-notebook \
+COPY --from=jupyter--base-notebook \
     /etc/jupyter/jupyter_server_config.py \
     /etc/jupyter/
 
@@ -131,8 +136,7 @@ CMD ["start-notebook.py"]
 # create dirs for startup hooks
 RUN mkdir /usr/local/bin/start-notebook.d && \
     mkdir /usr/local/bin/before-notebook.d
-# https://quay.io/jupyter/base-notebook
-COPY --from=quay.io/jupyter/base-notebook \
+COPY --from=jupyter--base-notebook \
     /usr/local/bin/run-hooks.sh \
     /usr/local/bin/start.sh \
     /usr/local/bin/start-notebook.py \
@@ -154,9 +158,7 @@ RUN mkdir "${HOME}/work"
 # -----------------------------------------------------------------------------
 # Build the dependencies
 # -----------------------------------------------------------------------------
-FROM ghcr.io/prefix-dev/pixi:${PIXI_VERSION}-${ROOT_CODENAME} AS pixi
 FROM base AS build
-# https://ghcr.io/prefix-dev/pixi
 COPY --from=pixi /usr/local/bin/pixi /usr/local/bin/pixi
 
 # install dependencies with pixi
@@ -170,12 +172,12 @@ USER root
 
 # create script to activate the environment
 RUN echo "#!/bin/bash" > /usr/local/bin/before-notebook.d/10activate-env.sh && \
-    pixi shell-hook -e ${PIXI_ENV} >> /usr/local/bin/before-notebook.d/10activate-env.sh && \
+    pixi shell-hook -e "${PIXI_ENV}" >> /usr/local/bin/before-notebook.d/10activate-env.sh && \
     chmod +x /usr/local/bin/before-notebook.d/10activate-env.sh
 
 # create shell wrapper that activates the environment
 RUN echo "#!/bin/bash" > /usr/local/bin/wrapper.sh && \
-    pixi shell-hook -e ${PIXI_ENV} >> /usr/local/bin/wrapper.sh && \
+    pixi shell-hook -e "${PIXI_ENV}" >> /usr/local/bin/wrapper.sh && \
     echo "exec \"\$@\"" >> /usr/local/bin/wrapper.sh && \
     chmod +x /usr/local/bin/wrapper.sh
 
@@ -205,12 +207,14 @@ SHELL ["/usr/local/bin/wrapper.sh", "/bin/bash", "-o", "pipefail", "-c"]
 
 # configure R and Jupyter
 COPY --chown=${NB_UID}:${NB_GID} Rprofile.site "${R_HOME}/etc/"
+# hadolint ignore=SC1008
 RUN jupyter server --generate-config && \
     jupyter lab clean && \
     rm -rf "${HOME}/.cache/yarn" && \
     fix-permissions "${HOME}"
 
 # ensure all R packages are installed
+# hadolint ignore=SC1008,SC2155
 RUN --mount=type=bind,source="requirements.r",target=/tmp/requirements.r \
     --mount=type=secret,id=github_token,uid=${NB_UID} \
     export GITHUB_PAT=$(cat /run/secrets/github_token) && \
