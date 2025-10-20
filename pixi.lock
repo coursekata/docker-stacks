@@ -1211,7 +1211,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/r-contfrac-1.1_12-r44h54b55ab_1007.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-correlation-0.8.8-r44hc72bb7e_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-corrplot-0.95-r44hc72bb7e_1.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/r-coursekata-0.18.1-r44hc72bb7e_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/r-coursekata-0.19.0-r44hc72bb7e_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-cowplot-1.2.0-r44hc72bb7e_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-cpp11-0.5.2-r44h785f33e_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-crayon-1.5.3-r44hc72bb7e_2.conda
@@ -2132,7 +2132,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/r-contfrac-1.1_12-r43habd023f_1006.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-correlation-0.8.8-r43hc72bb7e_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-corrplot-0.95-r43hc72bb7e_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/r-coursekata-0.18.1-r43hc72bb7e_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/r-coursekata-0.19.0-r43hc72bb7e_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-cowplot-1.2.0-r43hc72bb7e_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-cpp11-0.5.2-r43h785f33e_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-crayon-1.5.3-r43hc72bb7e_1.conda
@@ -3016,7 +3016,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/r-contfrac-1.1_12-r44h735ac91_1007.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-correlation-0.8.8-r44hc72bb7e_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-corrplot-0.95-r44hc72bb7e_1.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/r-coursekata-0.18.1-r44hc72bb7e_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/r-coursekata-0.19.0-r44hc72bb7e_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-cowplot-1.2.0-r44hc72bb7e_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-cpp11-0.5.2-r44h785f33e_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-crayon-1.5.3-r44hc72bb7e_2.conda
@@ -4204,7 +4204,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/r-commonmark-2.0.0-r44h54b55ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/r-conquer-1.3.3-r44h3704496_5.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-corrplot-0.95-r44hc72bb7e_1.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/r-coursekata-0.18.1-r44hc72bb7e_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/r-coursekata-0.19.0-r44hc72bb7e_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-cowplot-1.2.0-r44hc72bb7e_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-cpp11-0.5.2-r44h785f33e_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-crayon-1.5.3-r44hc72bb7e_2.conda
@@ -4630,7 +4630,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/r-commonmark-2.0.0-r43hdd76399_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/r-conquer-1.3.3-r43h5da6ed8_4.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-corrplot-0.95-r43hc72bb7e_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/r-coursekata-0.18.1-r43hc72bb7e_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/r-coursekata-0.19.0-r43hc72bb7e_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-cowplot-1.2.0-r43hc72bb7e_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-cpp11-0.5.2-r43h785f33e_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-crayon-1.5.3-r43hc72bb7e_1.conda
@@ -5062,7 +5062,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/r-commonmark-2.0.0-r44h735ac91_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/r-conquer-1.3.3-r44hfa0a987_5.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-corrplot-0.95-r44hc72bb7e_1.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/r-coursekata-0.18.1-r44hc72bb7e_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/r-coursekata-0.19.0-r44hc72bb7e_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-cowplot-1.2.0-r44hc72bb7e_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-cpp11-0.5.2-r44h785f33e_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-crayon-1.5.3-r44hc72bb7e_2.conda
@@ -5598,7 +5598,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/r-conquer-1.3.3-r44h3704496_5.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-correlation-0.8.8-r44hc72bb7e_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-corrplot-0.95-r44hc72bb7e_1.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/r-coursekata-0.18.1-r44hc72bb7e_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/r-coursekata-0.19.0-r44hc72bb7e_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-cowplot-1.2.0-r44hc72bb7e_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-cpp11-0.5.2-r44h785f33e_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-crayon-1.5.3-r44hc72bb7e_2.conda
@@ -6313,7 +6313,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/r-conquer-1.3.3-r43h5da6ed8_4.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-correlation-0.8.8-r43hc72bb7e_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-corrplot-0.95-r43hc72bb7e_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/r-coursekata-0.18.1-r43hc72bb7e_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/r-coursekata-0.19.0-r43hc72bb7e_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-cowplot-1.2.0-r43hc72bb7e_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-cpp11-0.5.2-r43h785f33e_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-crayon-1.5.3-r43hc72bb7e_1.conda
@@ -7004,7 +7004,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/r-conquer-1.3.3-r44hfa0a987_5.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-correlation-0.8.8-r44hc72bb7e_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-corrplot-0.95-r44hc72bb7e_1.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/r-coursekata-0.18.1-r44hc72bb7e_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/r-coursekata-0.19.0-r44hc72bb7e_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-cowplot-1.2.0-r44hc72bb7e_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-cpp11-0.5.2-r44h785f33e_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-crayon-1.5.3-r44hc72bb7e_2.conda
@@ -20939,9 +20939,9 @@ packages:
   purls: []
   size: 3774652
   timestamp: 1757502379347
-- conda: https://conda.anaconda.org/conda-forge/noarch/r-coursekata-0.18.1-r43hc72bb7e_0.conda
-  sha256: 7fb1a4af4c4cca42f334eaca1f0feb539d1c8a72173abcf490c0a6c1a125e787
-  md5: 47ccfb846d3aa35bb153f0a24e0b4469
+- conda: https://conda.anaconda.org/conda-forge/noarch/r-coursekata-0.19.0-r43hc72bb7e_0.conda
+  sha256: d0110638c5a416c67a3b8272f02974010c989171ceea093278a06c256a94100c
+  md5: 66dcb68a7084254a95463f9214caad47
   depends:
   - r-base >=4.3,<4.4.0a0
   - r-cli >=3.2.0
@@ -20962,11 +20962,11 @@ packages:
   license: AGPL-3.0-or-later
   license_family: AGPL
   purls: []
-  size: 243285
-  timestamp: 1734152146043
-- conda: https://conda.anaconda.org/conda-forge/noarch/r-coursekata-0.18.1-r44hc72bb7e_0.conda
-  sha256: 80365d2d68401a7c8f287d2d79807758d16378316c70ce56562381b78595c208
-  md5: bf4f8447c3a083b673b42f1e380b1028
+  size: 251243
+  timestamp: 1752713701607
+- conda: https://conda.anaconda.org/conda-forge/noarch/r-coursekata-0.19.0-r44hc72bb7e_1.conda
+  sha256: 418b4ff88bb497ee22c9e088e5eb599f08d42e0397cfbdffe07cd5cc48d3bcb7
+  md5: 1ae1bfbdf3add320181e4a5aebf06e46
   depends:
   - r-base >=4.4,<4.5.0a0
   - r-cli >=3.2.0
@@ -20987,8 +20987,8 @@ packages:
   license: AGPL-3.0-or-later
   license_family: AGPL
   purls: []
-  size: 246804
-  timestamp: 1734152149549
+  size: 255439
+  timestamp: 1758499330480
 - conda: https://conda.anaconda.org/conda-forge/noarch/r-cowplot-1.2.0-r43hc72bb7e_1.conda
   sha256: 5af9ac1c1647243fee363757f006f2e5971140d540755e333341832335a5fe5a
   md5: f251443ac3e630dad2c982fe77ea9528
