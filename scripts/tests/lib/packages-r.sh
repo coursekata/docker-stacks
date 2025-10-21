@@ -17,7 +17,8 @@ source "$_LIB_DIR/helpers.sh"
 get_r_packages() {
   local environment="$1"
   local packages=()
-  local lib_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  local lib_dir
+  lib_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   local rpixi_path="${lib_dir}/../../rpixi.R"
 
   # Extract packages using rpixi list (relative path from lib directory)
@@ -131,10 +132,13 @@ test_r_libraries_parallel() {
   for i in "${!packages[@]}"; do
     (
       package="${packages[$i]}"
-      if Rscript -e "suppressPackageStartupMessages(library('$package', quietly=TRUE))" 2>/dev/null; then
+      # Capture stderr to get error messages
+      if error_msg=$(Rscript -e "suppressPackageStartupMessages(library('$package', quietly=TRUE))" 2>&1); then
         echo "pass" >"$tempdir/$i"
       else
-        echo "fail:$package" >"$tempdir/$i"
+        # Store both package name and error message
+        echo "fail" >"$tempdir/$i"
+        echo "$error_msg" >"$tempdir/$i.err"
       fi
     ) &
     pids+=($!)
@@ -145,7 +149,8 @@ test_r_libraries_parallel() {
     wait "$pid" || true
   done
 
-  # Collect results
+  # Collect results and error messages
+  local -A error_messages
   for i in "${!packages[@]}"; do
     if [[ -f "$tempdir/$i" ]]; then
       result=$(cat "$tempdir/$i")
@@ -154,6 +159,10 @@ test_r_libraries_parallel() {
       else
         failed_packages+=("${packages[$i]}")
         TEST_FAILED=$((TEST_FAILED + 1))
+        # Capture error message if available
+        if [[ -f "$tempdir/$i.err" ]]; then
+          error_messages["${packages[$i]}"]=$(cat "$tempdir/$i.err")
+        fi
       fi
     fi
   done
@@ -164,7 +173,13 @@ test_r_libraries_parallel() {
   # Report results
   if [[ ${#failed_packages[@]} -gt 0 ]]; then
     error "Failed to load ${#failed_packages[@]} R packages:"
-    printf '    %s\n' "${failed_packages[@]}" >&2
+    for pkg in "${failed_packages[@]}"; do
+      printf '    %s\n' "$pkg" >&2
+      if [[ -n "${error_messages[$pkg]:-}" ]]; then
+        # Indent error message and trim whitespace
+        printf '        Error: %s\n' "${error_messages[$pkg]}" | sed 's/^/        /' | head -n 5 >&2
+      fi
+    done
     return 1
   else
     success "All ${#packages[@]} R packages loaded successfully"
@@ -225,7 +240,8 @@ test_r_packages() {
   init_tests "R Packages ($environment)"
 
   # Check if rpixi.R is available (relative path from run-tests.sh location)
-  local lib_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  local lib_dir
+  lib_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   local rpixi_path="${lib_dir}/../../rpixi.R"
 
   if [[ ! -f "$rpixi_path" ]]; then
