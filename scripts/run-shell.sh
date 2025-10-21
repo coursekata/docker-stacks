@@ -3,10 +3,10 @@
 set -euo pipefail
 
 # Terminal formatting
-BOLD=$(tput bold 2>/dev/null || echo '')
-UNDERLINE=$(tput smul 2>/dev/null || echo '')
-RESET=$(tput sgr0 2>/dev/null || echo '')
-DIM=$(tput dim 2>/dev/null || echo '')
+BOLD='\033[1m'
+UNDERLINE='\033[4m'
+RESET='\033[0m'
+DIM='\033[2m'
 
 show_help() {
   cat <<EOF

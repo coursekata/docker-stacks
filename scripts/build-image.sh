@@ -3,10 +3,10 @@
 set -euo pipefail
 
 # Terminal formatting
-BOLD=$(tput bold 2>/dev/null || echo '')
-UNDERLINE=$(tput smul 2>/dev/null || echo '')
-RESET=$(tput sgr0 2>/dev/null || echo '')
-DIM=$(tput dim 2>/dev/null || echo '')
+BOLD='\033[1m'
+UNDERLINE='\033[4m'
+RESET='\033[0m'
+DIM='\033[2m'
 
 show_help() {
   cat <<EOF
@@ -147,8 +147,6 @@ if [[ -z "${GITHUB_TOKEN:-}" ]]; then
 fi
 export GITHUB_TOKEN
 
-echo "Platform: $PLATFORM"
-
 # Determine platform tag for cache naming
 if [[ "$PLATFORM" == "linux/amd64" ]]; then
   PLATFORM_TAG="amd64"
@@ -161,7 +159,6 @@ fi
 CACHE_FROM_ARGS=()
 
 if [[ -n "${DS_OWNER:-}" ]]; then
-  echo "Using automatic cache sources from $DS_OWNER"
   CACHE_FROM_ARGS+=(
     --cache-from "type=registry,ref=$DS_OWNER/$IMAGE:latest"
     --cache-from "type=registry,ref=$DS_OWNER/$IMAGE:cache-$PLATFORM_TAG"
@@ -172,12 +169,6 @@ fi
 for cache_src in "${USER_CACHE_FROM_ARGS[@]}"; do
   CACHE_FROM_ARGS+=(--cache-from "$cache_src")
 done
-
-if [[ ${#CACHE_FROM_ARGS[@]} -gt 0 ]]; then
-  echo "Cache sources configured: ${#CACHE_FROM_ARGS[@]} sources"
-else
-  echo "No cache sources configured (building from scratch)"
-fi
 
 # Build Docker image using array for proper argument handling
 BUILD_CMD=(docker buildx build)
@@ -206,10 +197,6 @@ BUILD_CMD+=(--provenance=false)
 BUILD_CMD+=(--load)
 BUILD_CMD+=(.)
 
-echo "Building image..."
-echo "Command: ${BUILD_CMD[*]}"
+echo "${BUILD_CMD[*]}"
 
 "${BUILD_CMD[@]}"
-
-echo ""
-echo "Build complete! Image tagged as ${TAG:-docker-stacks-${IMAGE}}"

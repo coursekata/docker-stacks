@@ -3,7 +3,7 @@ prevent_s3_msgs <- Sys.getenv("_R_S3_METHOD_REGISTRATION_NOTE_OVERWRITES_", unse
 Sys.setenv(`_R_S3_METHOD_REGISTRATION_NOTE_OVERWRITES_` = prevent_s3_msgs)
 
 # add a default CRAN mirror
-ppm <- Sys.getenv("PPM", unset = "https://packagemanager.posit.co/cran/__linux__/jammy/latest")
+ppm <- Sys.getenv("PPM", unset = "https://packagemanager.posit.co/cran/__linux__/noble/latest")
 cran <- Sys.getenv("CRAN", unset = "https://cloud.r-project.org")
 options(repos = c(PPM = ppm, CRAN = cran))
 

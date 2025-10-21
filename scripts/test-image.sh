@@ -3,23 +3,23 @@
 set -euo pipefail
 
 # Terminal formatting
-BOLD=$(tput bold 2>/dev/null || echo '')
-UNDERLINE=$(tput smul 2>/dev/null || echo '')
-RESET=$(tput sgr0 2>/dev/null || echo '')
-DIM=$(tput dim 2>/dev/null || echo '')
+BOLD='\033[1m'
+UNDERLINE='\033[4m'
+RESET='\033[0m'
+DIM='\033[2m'
 
 show_help() {
   cat <<EOF
 ${BOLD}Run tests on a locally built Docker image${RESET}
 
-This script runs tests on a Docker image built by build.sh. It mounts the
-appropriate test scripts and executes them inside the container.
+This script runs tests on a Docker image built by build-image.sh. It mounts the
+test framework and executes tests inside the container.
 
 ${BOLD}${UNDERLINE}Usage${RESET}
   $0 --image IMAGE --platform PLATFORM [OPTIONS]
 
 ${BOLD}${UNDERLINE}Required Parameters${RESET}
-  ${BOLD}--image${RESET} IMAGE          Image name (used to find the test script tests/IMAGE.sh)
+  ${BOLD}--image${RESET} IMAGE          Image name (valid Pixi environment)
   ${BOLD}--platform${RESET} PLATFORM    Platform to test on (linux/amd64 or linux/arm64)
 
 ${BOLD}${UNDERLINE}Optional Parameters${RESET}
@@ -89,14 +89,21 @@ if ! "$SCRIPT_DIR/validate-env.sh" "$IMAGE" 2>/dev/null; then
   exit 1
 fi
 
+# Generate Python package list on host for testing
+PYTHON_PKG_LIST=$(mktemp)
+trap 'rm -f "$PYTHON_PKG_LIST"' EXIT
+"$SCRIPT_DIR/list-python-packages.sh" "$IMAGE" >"$PYTHON_PKG_LIST" 2>/dev/null || true
+
 # Run tests
 echo "Running tests for $IMAGE on $PLATFORM..."
 
+# IMAGE is a validated pixi environment name (no spaces/special chars)
+# shellcheck disable=SC2086
 docker run --rm --platform="$PLATFORM" \
-  --mount=type=bind,source="./tests/test-packages.sh",target=/tmp/test-packages.sh \
-  --mount=type=bind,source="./tests/packages.txt",target=/tmp/packages.txt \
-  --mount=type=bind,source="./tests/$IMAGE.sh",target=/tmp/test.sh \
+  --mount=type=bind,source="./scripts",target=/tmp/scripts \
+  --mount=type=bind,source="./pixi.toml",target=/home/jovyan/pixi.toml \
+  --mount=type=bind,source="./rpixi.toml",target=/home/jovyan/rpixi.toml \
+  --mount=type=bind,source="$PYTHON_PKG_LIST",target=/tmp/python-packages.txt,readonly \
+  -e PYTHON_PACKAGES_FILE=/tmp/python-packages.txt \
   "${TAG:-docker-stacks-${IMAGE}}" \
-  bash /tmp/test.sh
-
-echo "Tests completed successfully!"
+  bash /tmp/scripts/tests/run-tests.sh "$IMAGE"

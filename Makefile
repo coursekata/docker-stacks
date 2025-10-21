@@ -25,22 +25,28 @@ help:
 		awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 build/%: ## Build for default architecture
-	./scripts/build.sh --image $* --platform $(CURRENT_PLATFORM) --tag $(DS_OWNER)/$*
+	@echo ""
+	./scripts/build-image.sh --image $* --platform $(CURRENT_PLATFORM) --tag $(DS_OWNER)/$*
 build-amd64/%: ## Build for amd64 architecture
-	./scripts/build.sh --image $* --platform linux/amd64 --tag $(DS_OWNER)/$*:amd64
+	@echo ""
+	./scripts/build-image.sh --image $* --platform linux/amd64 --tag $(DS_OWNER)/$*:amd64
 build-arm64/%: ## Build for arm64 architecture
-	./scripts/build.sh --image $* --platform linux/arm64 --tag $(DS_OWNER)/$*:arm64
+	@echo ""
+	./scripts/build-image.sh --image $* --platform linux/arm64 --tag $(DS_OWNER)/$*:arm64
 
 build-all: $(foreach I, $(VALID_ENVS), build/$(I)) ## Build all images for default architecture
 build-all-amd64: $(foreach I, $(VALID_ENVS), build-amd64/$(I)) ## Build all images for amd64 architecture
 build-all-arm64: $(foreach I, $(VALID_ENVS), build-arm64/$(I)) ## Build all images for arm64 architecture
 
 test/%: build/% ## Test image for default architecture
-	./scripts/test.sh --image $* --platform $(CURRENT_PLATFORM) --tag $(DS_OWNER)/$*
+	@echo ""
+	./scripts/test-image.sh --image $* --platform $(CURRENT_PLATFORM) --tag $(DS_OWNER)/$*
 test-amd64/%: build-amd64/% ## Test image for amd64 architecture
-	./scripts/test.sh --image $* --platform linux/amd64 --tag $(DS_OWNER)/$*:amd64
+	@echo ""
+	./scripts/test-image.sh --image $* --platform linux/amd64 --tag $(DS_OWNER)/$*:amd64
 test-arm64/%: build-arm64/% ## Test image for arm64 architecture
-	./scripts/test.sh --image $* --platform linux/arm64 --tag $(DS_OWNER)/$*:arm64
+	@echo ""
+	./scripts/test-image.sh --image $* --platform linux/arm64 --tag $(DS_OWNER)/$*:arm64
 
 test-all: $(foreach I, $(VALID_ENVS), test/$(I)) ## Test all images for default architecture
 test-all-amd64: $(foreach I, $(VALID_ENVS), test-amd64/$(I)) ## Test all images for amd64 architecture
@@ -54,11 +60,11 @@ shell-arm64/%: build-arm64/% ## Run container and open bash shell for arm64 arch
 	./scripts/run-shell.sh --image $(DS_OWNER)/$*:arm64 --platform linux/arm64
 
 run/%: ## Run container for default architecture
-	./scripts/run.sh --image $(DS_OWNER)/$* --platform $(CURRENT_PLATFORM)
+	./scripts/run-container.sh --image $(DS_OWNER)/$* --platform $(CURRENT_PLATFORM)
 run-amd64/%: ## Run container for amd64 architecture
-	./scripts/run.sh --image $(DS_OWNER)/$*:amd64 --platform linux/amd64
+	./scripts/run-container.sh --image $(DS_OWNER)/$*:amd64 --platform linux/amd64
 run-arm64/%: ## Run container for arm64 architecture
-	./scripts/run.sh --image $(DS_OWNER)/$*:arm64 --platform linux/arm64
+	./scripts/run-container.sh --image $(DS_OWNER)/$*:arm64 --platform linux/arm64
 
 img-clean: img-rm-dang img-rm ## clean built and dangling images
 img-list: ## list images

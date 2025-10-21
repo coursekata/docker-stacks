@@ -240,11 +240,6 @@ parse_install_args <- function(cmd_args = character()) {
       help = "GitHub Personal Access Token [default: $GITHUB_PAT]",
       metavar = "TOKEN", dest = "github_token"
     ),
-    make_option("--log-file",
-      type = "character", default = NULL,
-      help = "Write installation log to file",
-      metavar = "PATH", dest = "log_file"
-    ),
     make_option("--version",
       action = "store_true", default = FALSE,
       help = "Show version and exit"
@@ -274,7 +269,7 @@ parse_install_args <- function(cmd_args = character()) {
   if (is_null(args$manifest_path)) args$manifest_path <- "./rpixi.toml"
 
   # Validate argument combinations
-  if (args$all && args$environment != "base-r-notebook") {
+  if (args$all && args$environment != "default") {
     abort(c(
       "Cannot specify both --all and --environment",
       "i" = "Use --all to install all environments, or -e to select one"
@@ -897,7 +892,7 @@ list_packages <- function(env_name, config, args) {
 
   # Output one package per line (for easy bash consumption)
   for (pkg in unique(all_packages)) {
-    cat(pkg, "\n")
+    cat(pkg, "\n", sep = "")
   }
 }
 
@@ -1115,6 +1110,77 @@ install_package <- function(pkg_name, pkg_spec, args) {
   list(installed = TRUE, skipped = FALSE)
 }
 
+#' Categorize package by installation type
+#'
+#' @param pkg_spec Character or List. Package specification
+#' @return Character. One of: "cran_unversioned", "cran_versioned", "github", "custom_repo"
+categorize_package_type <- function(pkg_spec) {
+  if (is_string(pkg_spec)) {
+    # String specs with content are versioned
+    if (nzchar(pkg_spec) && pkg_spec != "*") {
+      return("cran_versioned")
+    } else {
+      return("cran_unversioned")
+    }
+  } else if (is.list(pkg_spec)) {
+    if (!is_null(pkg_spec$github)) {
+      return("github")
+    } else if (!is_null(pkg_spec$repos)) {
+      return("custom_repo")
+    } else if (!is_null(pkg_spec$version)) {
+      return("cran_versioned")
+    } else {
+      # No version, github, or repos specified
+      return("cran_unversioned")
+    }
+  }
+
+  # Invalid package specification type
+  abort(c(
+    "Invalid package specification type",
+    "x" = "Package specification must be a string or list",
+    "i" = "Check rpixi.toml format"
+  ), call = caller_env())
+}
+
+#' Batch install non-versioned CRAN packages
+#'
+#' @param pkg_names Character vector. Names of packages to install
+#' @param args List. Parsed arguments (for install options and logging)
+#' @return List with 'installed' and 'skipped' counts
+install_cran_batch <- function(pkg_names, args) {
+  if (length(pkg_names) == 0) {
+    return(list(installed = 0, skipped = 0))
+  }
+
+  # Filter out already-installed packages if skip_installed is enabled
+  to_install <- pkg_names
+  skipped <- 0
+
+  if (args$skip_installed && !args$force) {
+    to_install <- Filter(function(pkg) !is_package_installed(pkg), pkg_names)
+    skipped <- length(pkg_names) - length(to_install)
+
+    # Log skipped packages
+    if (skipped > 0) {
+      skipped_names <- setdiff(pkg_names, to_install)
+      for (pkg in skipped_names) {
+        log_info(paste0("  [SKIP] ", pkg, " (already installed)"), args$quiet)
+      }
+    }
+  }
+
+  # Install remaining packages
+  if (length(to_install) > 0) {
+    log_info(paste0("  [INSTALL] Batch installing ", length(to_install), " packages from CRAN"), args$quiet)
+    if (!args$dry_run) {
+      remotes::install_cran(to_install, upgrade = "never", quiet = args$quiet)
+    }
+  }
+
+  list(installed = length(to_install), skipped = skipped)
+}
+
 #' Install packages for an environment
 #'
 #' Installs all packages required by an environment, following its dependency
@@ -1129,12 +1195,48 @@ install_environment <- function(env_name, config, args) {
   deps <- resolve_dependencies(env_name, config, args = args)
   log_info(paste("Resolved dependencies:", paste(deps, collapse = ", ")), args$quiet)
 
-  # Collect all packages to install
+  # Collect all packages from all features
   all_packages <- list()
   for (dep in deps) {
     pkgs <- get_feature_packages(dep, config)
     if (length(pkgs) > 0) {
-      all_packages <- c(all_packages, list(list(feature = dep, packages = pkgs)))
+      # Merge packages, avoiding duplicates
+      for (pkg_name in names(pkgs)) {
+        if (!pkg_name %in% names(all_packages)) {
+          all_packages[[pkg_name]] <- pkgs[[pkg_name]]
+        }
+      }
+    }
+  }
+
+  if (length(all_packages) == 0) {
+    log_info("No packages to install", args$quiet)
+    return(list(installed = 0, skipped = 0))
+  }
+
+  # Categorize packages by type and force flag
+  cran_unversioned_normal <- character()
+  cran_unversioned_forced <- character()
+  other_packages <- list()  # list of lists: list(name, spec, forced)
+
+  for (pkg_name in names(all_packages)) {
+    pkg_spec <- all_packages[[pkg_name]]
+    is_forced <- (is.list(pkg_spec) && !is_null(pkg_spec$force) && pkg_spec$force) || args$force
+    pkg_type <- categorize_package_type(pkg_spec)
+
+    if (pkg_type == "cran_unversioned") {
+      if (is_forced) {
+        cran_unversioned_forced <- c(cran_unversioned_forced, pkg_name)
+      } else {
+        cran_unversioned_normal <- c(cran_unversioned_normal, pkg_name)
+      }
+    } else {
+      # All other types: install sequentially
+      other_packages[[length(other_packages) + 1]] <- list(
+        name = pkg_name,
+        spec = pkg_spec,
+        forced = is_forced
+      )
     }
   }
 
@@ -1142,19 +1244,43 @@ install_environment <- function(env_name, config, args) {
   total_installed <- 0
   total_skipped <- 0
 
-  for (feature_pkg in all_packages) {
-    feature_name <- feature_pkg$feature
-    packages <- feature_pkg$packages
+  # Batch install non-versioned CRAN packages (non-forced)
+  if (length(cran_unversioned_normal) > 0) {
+    log_info(paste0("\nBatch installing ", length(cran_unversioned_normal), " non-versioned CRAN packages..."), args$quiet)
+    result <- install_cran_batch(cran_unversioned_normal, args)
+    total_installed <- total_installed + result$installed
+    total_skipped <- total_skipped + result$skipped
+  }
 
-    if (length(packages) == 0) next
+  # Batch install non-versioned CRAN packages (forced)
+  if (length(cran_unversioned_forced) > 0) {
+    log_info(paste0("\nBatch installing ", length(cran_unversioned_forced), " non-versioned CRAN packages (forced)..."), args$quiet)
+    # Set force flag temporarily
+    args_forced <- args
+    args_forced$force <- TRUE
+    result <- install_cran_batch(cran_unversioned_forced, args_forced)
+    total_installed <- total_installed + result$installed
+    total_skipped <- total_skipped + result$skipped
+  }
 
-    log_info(paste0("\nInstalling ", feature_name, " packages..."), args$quiet)
+  # Install other packages sequentially (versioned CRAN, GitHub, custom repos)
+  if (length(other_packages) > 0) {
+    log_info(paste0("\nInstalling ", length(other_packages), " packages (versioned/GitHub/custom)..."), args$quiet)
 
-    for (pkg_name in names(packages)) {
-      pkg_spec <- packages[[pkg_name]]
+    for (pkg_info in other_packages) {
+      pkg_name <- pkg_info$name
+      pkg_spec <- pkg_info$spec
+
+      # Set force flag if needed
+      if (pkg_info$forced && !args$force) {
+        args_pkg <- args
+        args_pkg$force <- TRUE
+      } else {
+        args_pkg <- args
+      }
 
       result <- tryCatch(
-        install_package(pkg_name, pkg_spec, args),
+        install_package(pkg_name, pkg_spec, args_pkg),
         error = function(e) {
           abort(c(
             "Package installation failed",
