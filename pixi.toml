@@ -16,6 +16,7 @@ jupyterhub-singleuser = ">=5.2.1,<6"
 jupyterlab = ">=4.3.3,<5"
 notebook = ">=7.3.1,<8"
 nbclassic = ">=1.1.0,<2"
+r-rcpptoml = ">=0.2.3,<0.3"
 
 [feature.base-r.dependencies]
 unixodbc = ">=2.3.12,<3"

@@ -13,7 +13,8 @@ on:
       # build
       - pixi.lock
       - Dockerfile
-      - requirements.r
+      - rpixi.toml
+      - scripts/rpixi.R
       - Rprofile.site
       # test
       - tests/**

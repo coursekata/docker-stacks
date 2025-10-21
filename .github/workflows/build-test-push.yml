@@ -176,5 +176,8 @@ jobs:
             --mount=type=bind,source="./tests/test-packages.sh",target=/tmp/test-packages.sh \
             --mount=type=bind,source="./tests/packages.txt",target=/tmp/packages.txt \
             --mount=type=bind,source="./tests/${{ inputs.image }}.sh",target=/tmp/test.sh \
+            --mount=type=bind,source="./scripts",target=/home/jovyan/scripts \
+            --mount=type=bind,source="./pixi.toml",target=/home/jovyan/pixi.toml \
+            --mount=type=bind,source="./rpixi.toml",target=/home/jovyan/rpixi.toml \
             test-image:local \
             bash /tmp/test.sh

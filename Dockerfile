@@ -215,11 +215,12 @@ RUN jupyter server --generate-config && \
 
 # ensure all R packages are installed
 # hadolint ignore=SC1008,SC2155
-RUN --mount=type=bind,source="requirements.r",target=/tmp/requirements.r \
+RUN --mount=type=bind,source="scripts/rpixi.R",target=/tmp/rpixi.R \
+    --mount=type=bind,source="rpixi.toml",target=/tmp/rpixi.toml \
     --mount=type=secret,id=github_token,uid=${NB_UID} \
     export GITHUB_PAT=$(cat /run/secrets/github_token) && \
     export R_REMOTES_UPGRADE="never" && \
-    Rscript /tmp/requirements.r -e "${PIXI_ENV}"
+    Rscript /tmp/rpixi.R install -e "${PIXI_ENV}" --manifest-path /tmp/rpixi.toml
 
 ARG DEFAULT_KERNEL
 ENV DEFAULT_KERNEL="${DEFAULT_KERNEL}"
