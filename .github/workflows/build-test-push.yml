@@ -161,13 +161,6 @@ jobs:
           provenance: false
           outputs: type=image,name=ghcr.io/${{ github.repository_owner }}/${{ inputs.image }},push-by-digest=true,name-canonical=true,push=true
 
-      - name: Pull image for testing
-        if: inputs.skip-tests != true
-        shell: bash
-        run: |
-          docker pull ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}@${{ steps.build.outputs.digest }}
-          docker tag ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}@${{ steps.build.outputs.digest }} test-image:local
-
       - name: Test
         if: inputs.skip-tests != true
         shell: bash
@@ -178,5 +171,5 @@ jobs:
             --mount=type=bind,source="./scripts",target=/home/jovyan/scripts \
             --mount=type=bind,source="./pixi.toml",target=/home/jovyan/pixi.toml \
             --mount=type=bind,source="./rpixi.toml",target=/home/jovyan/rpixi.toml \
-            test-image:local \
+            ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}@${{ steps.build.outputs.digest }} \
             bash /tmp/tests/${{ inputs.image }}.sh
