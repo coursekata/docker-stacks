@@ -158,10 +158,6 @@ vega_datasets = ">=0.9.0,<0.10"
 wordcloud = ">=1.9.4,<2"
 yellowbrick = ">=1.4,<2"
 cmdstan = ">=2.36.0,<3"
-r-brms = ">=2.20.1,<3"
-r-cmdstanr = ">=0.8.1,<0.9"
-r-ggstatsplot = ">=0.13.0,<0.14"
-r-rstanarm = ">=2.32.1,<3"
 r-coda = ">=0.19_4.1,<0.20"
 r-digest = ">=0.6.37,<0.7"
 geopandas = ">=1.0.1,<2"
@@ -171,6 +167,13 @@ altair-latimes = ">=0.0.2, <0.0.3"
 dash-cytoscape = ">=1.0.2, <2"
 gensim = ">=4.4.0, <5"
 yahoo-fin = ">=0.8.9.1, <0.9"
+
+[feature.datascience.target.linux-aarch64.dependencies]
+# installing these in the amd64 image can cause TBB symbol conflicts between conda and CRAN builds
+r-brms = ">=2.23.0,<3"
+r-cmdstanr = ">=0.9.0,<0.10"
+r-ggstatsplot = ">=0.13.1,<0.14"
+r-rstanarm = ">=2.32.1,<3"
 
 [environments.base-r-notebook]
 features = ["base-r"]
