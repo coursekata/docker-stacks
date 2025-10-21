@@ -4,7 +4,6 @@ channels = ["conda-forge", "default"]
 description = "CourseKata Jupyter environments"
 name = "coursekata"
 platforms = ["linux-aarch64", "linux-64", "osx-64"]
-version = "0.1.0"
 
 [tasks]
 
