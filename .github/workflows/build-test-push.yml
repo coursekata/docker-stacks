@@ -164,12 +164,21 @@ jobs:
       - name: Test
         if: inputs.skip-tests != true
         shell: bash
+        env:
+          IMAGE_NAME: ${{ inputs.image }}
+          PLATFORM: ${{ inputs.platform }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+          REPO_OWNER: ${{ github.repository_owner }}
         run: |
-          docker run --rm --platform=${{ inputs.platform }} \
-            --mount=type=bind,source="./tests/lib",target=/tmp/tests/lib \
-            --mount=type=bind,source="./tests/${{ inputs.image }}.sh",target=/tmp/tests/${{ inputs.image }}.sh \
-            --mount=type=bind,source="./scripts",target=/home/jovyan/scripts \
+          # Generate Python package list for testing
+          ./scripts/list-python-packages.sh "$IMAGE_NAME" > python-packages.txt
+
+          # Run tests in the built image
+          docker run --rm --platform="$PLATFORM" \
+            --mount=type=bind,source="./scripts",target=/tmp/scripts \
             --mount=type=bind,source="./pixi.toml",target=/home/jovyan/pixi.toml \
             --mount=type=bind,source="./rpixi.toml",target=/home/jovyan/rpixi.toml \
-            ghcr.io/${{ github.repository_owner }}/${{ inputs.image }}@${{ steps.build.outputs.digest }} \
-            bash /tmp/tests/${{ inputs.image }}.sh
+            --mount=type=bind,source="./python-packages.txt",target=/tmp/python-packages.txt,readonly \
+            -e PYTHON_PACKAGES_FILE=/tmp/python-packages.txt \
+            "ghcr.io/${REPO_OWNER}/${IMAGE_NAME}@${DIGEST}" \
+            bash /tmp/scripts/tests/run-tests.sh "$IMAGE_NAME"
