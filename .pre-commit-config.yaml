@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: update-pak-scripts
+        name: Update pak installer scripts
+        entry: ./scripts/update-pak-scripts.sh
+        language: script
+        files: ^rpixi\.toml$
+        pass_filenames: false

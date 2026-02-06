@@ -134,10 +134,11 @@ dispatch_command <- function(cmd, args) {
     "tree" = cmd_tree(args),
     "info" = cmd_info(args),
     "validate" = cmd_validate(args),
+    "pakgen" = cmd_pakgen(args),
     abort(c(
       "Unknown command",
       "x" = paste("Unknown command:", cmd),
-      "i" = "Valid commands: install, list, tree, info, validate, bootstrap"
+      "i" = "Valid commands: install, list, tree, info, validate, pakgen, bootstrap"
     ))
   )
 }
@@ -150,7 +151,7 @@ main <- function() {
   args_raw <- commandArgs(trailingOnly = TRUE)
 
   # Determine subcommand
-  valid_commands <- c("install", "list", "tree", "info", "validate")
+  valid_commands <- c("install", "list", "tree", "info", "validate", "pakgen")
 
   if (length(args_raw) == 0) {
     # No args: show help
@@ -161,6 +162,7 @@ main <- function() {
     cat("  tree       Show dependency tree for an environment\n")
     cat("  info       Show available environments\n")
     cat("  validate   Validate rpixi.toml syntax\n")
+    cat("  pakgen     Generate standalone pak installer scripts\n")
     cat("  bootstrap  Install rpixi dependencies\n")
     cat("\nRun 'rpixi <COMMAND> --help' for more information on a command.\n")
     quit(status = EXIT_SUCCESS, save = "no")
@@ -177,7 +179,7 @@ main <- function() {
     abort(c(
       "Unknown command",
       "x" = paste("Unknown command:", args_raw[1]),
-      "i" = "Valid commands: install, list, tree, info, validate, bootstrap",
+      "i" = "Valid commands: install, list, tree, info, validate, pakgen, bootstrap",
       "i" = "Run 'rpixi' without arguments to see usage"
     ))
   }
@@ -722,6 +724,191 @@ cmd_validate <- function(cmd_args) {
 
   # If we got here, validation succeeded
   log_info("rpixi.toml is valid", args$quiet)
+  quit(status = EXIT_SUCCESS, save = "no")
+}
+
+#' Parse pakgen command arguments
+#'
+#' @param cmd_args Character vector. Command-line arguments to parse
+#' @return List of parsed arguments
+parse_pakgen_args <- function(cmd_args = character()) {
+  parser <- optparse::OptionParser(
+    usage = "rpixi pakgen [options]",
+    description = paste(
+      "\nGenerate standalone R scripts that install packages using pak.",
+      "\nGenerated scripts are self-contained and can be run with Rscript."
+    )
+  )
+
+  parser <- optparse::add_option(parser,
+    c("-e", "--environment"),
+    type = "character",
+    default = NULL,
+    help = "Environment to generate script for",
+    metavar = "ENV",
+    dest = "environment"
+  )
+
+  parser <- optparse::add_option(parser,
+    c("-a", "--all"),
+    action = "store_true", default = FALSE,
+    help = "Generate scripts for all environments"
+  )
+
+  parser <- optparse::add_option(parser,
+    c("-o", "--output-dir"),
+    type = "character",
+    default = "./pak-scripts",
+    help = "Output directory for generated scripts [default: %default]",
+    metavar = "PATH",
+    dest = "output_dir"
+  )
+
+  parser <- optparse::add_option(parser,
+    c("-m", "--manifest-path"),
+    type = "character",
+    default = "./rpixi.toml",
+    help = "Path to rpixi.toml [default: %default]",
+    metavar = "PATH",
+    dest = "manifest_path"
+  )
+
+  parser <- optparse::add_option(parser,
+    c("-v", "--verbose"),
+    action = "store_true", default = FALSE,
+    help = "Enable verbose output",
+    dest = "verbose"
+  )
+
+  parser <- optparse::add_option(parser,
+    c("-q", "--quiet"),
+    action = "store_true", default = FALSE,
+    help = "Suppress non-essential output",
+    dest = "quiet"
+  )
+
+  args <- optparse::parse_args(parser, args = cmd_args, positional_arguments = FALSE)
+
+  # Handle NULL values
+  if (is_null(args$verbose)) args$verbose <- FALSE
+  if (is_null(args$quiet)) args$quiet <- FALSE
+  if (is_null(args$all)) args$all <- FALSE
+  if (is_null(args$output_dir)) args$output_dir <- "./pak-scripts"
+  if (is_null(args$manifest_path)) args$manifest_path <- "./rpixi.toml"
+
+  # Validate: must specify either --all or --environment
+  if (!args$all && is_null(args$environment)) {
+    abort(c(
+      "No environment specified",
+      "x" = "Must specify either --environment or --all",
+      "i" = "Use -e ENV to generate for a specific environment",
+      "i" = "Use -a to generate for all environments"
+    ))
+  }
+
+  # Validate: cannot specify both --all and --environment
+  if (args$all && !is_null(args$environment)) {
+    abort(c(
+      "Cannot specify both --all and --environment",
+      "i" = "Use --all to generate all environments, or -e to select one"
+    ))
+  }
+
+  args
+}
+
+#' Pakgen command handler
+#'
+#' Handles the 'rpixi pakgen' subcommand. Generates standalone pak installer
+#' scripts for one or all environments.
+#'
+#' @param cmd_args Character vector. Command-line arguments for pakgen command
+cmd_pakgen <- function(cmd_args) {
+  args <- tryCatch(
+    parse_pakgen_args(cmd_args),
+    error = function(e) {
+      abort(c(
+        "Failed to parse arguments",
+        "x" = e$message
+      ), call = NULL)
+    }
+  )
+
+  # Print header
+  log_info(paste0("rpixi pakgen v", VERSION), args$quiet)
+
+  # Read config
+  config <- tryCatch(
+    read_requirements(args$manifest_path, args),
+    error = function(e) {
+      abort(c(
+        "Failed to read rpixi.toml",
+        "x" = e$message,
+        "i" = paste("Path:", args$manifest_path)
+      ), call = NULL)
+    }
+  )
+
+  # Determine environments to generate
+  valid_envs <- get_valid_environments(config)
+  if (args$all) {
+    envs_to_generate <- valid_envs
+  } else {
+    if (!args$environment %in% valid_envs) {
+      abort(c(
+        "Environment not found",
+        "x" = paste("Invalid environment:", args$environment),
+        "i" = "Available environments:",
+        set_names(paste("", valid_envs), rep("*", length(valid_envs)))
+      ), call = NULL)
+    }
+    envs_to_generate <- args$environment
+  }
+
+  # Create output directory
+  if (!dir.exists(args$output_dir)) {
+    log_verbose(paste("Creating output directory:", args$output_dir), args$verbose, args$quiet)
+    tryCatch(
+      dir.create(args$output_dir, recursive = TRUE),
+      error = function(e) {
+        abort(c(
+          "Failed to create output directory",
+          "x" = paste("Path:", args$output_dir),
+          "i" = e$message
+        ), call = NULL)
+      }
+    )
+  }
+
+  # Generate scripts
+  generated_files <- character()
+  for (env in envs_to_generate) {
+    log_info(paste("Generating script for:", env), args$quiet)
+    output_path <- file.path(args$output_dir, paste0(env, ".R"))
+
+    tryCatch(
+      {
+        script_content <- generate_pak_script(env, config, args)
+        writeLines(script_content, output_path)
+        Sys.chmod(output_path, "755")
+        generated_files <- c(generated_files, output_path)
+        log_verbose(paste("  Written:", output_path), args$verbose, args$quiet)
+      },
+      error = function(e) {
+        abort(c(
+          "Failed to generate script",
+          "x" = paste("Environment:", env),
+          "i" = e$message
+        ), call = NULL)
+      }
+    )
+  }
+
+  # Print summary
+  log_info(paste0(
+    "\nGenerated ", length(generated_files), " script(s) in ", args$output_dir
+  ), args$quiet)
+
   quit(status = EXIT_SUCCESS, save = "no")
 }
 
@@ -1426,6 +1613,254 @@ install_environment <- function(env_name, config, args) {
   }
 
   list(installed = total_installed, skipped = total_skipped)
+}
+
+# =============================================================================
+# Pak Script Generation
+# =============================================================================
+
+#' Convert package specification to pak reference format
+#'
+#' Transforms rpixi.toml package specs into pak-compatible package references.
+#'
+#' @param pkg_name Character. Name of the package
+#' @param pkg_spec Character or List. Package specification from rpixi.toml
+#' @return List with 'pak_ref' (character) and 'custom_repo' (character or NULL)
+transform_to_pak_ref <- function(pkg_name, pkg_spec) {
+  # Simple string specs (CRAN packages)
+  if (is_string(pkg_spec)) {
+    # Ignore version constraints for pak - it handles versions automatically
+    return(list(pak_ref = pkg_name, custom_repo = NULL))
+  }
+
+  # Complex specs (lists)
+  if (is.list(pkg_spec)) {
+    # GitHub packages
+    if (!is_null(pkg_spec$github)) {
+      repo <- pkg_spec$github
+      # Add ref (tag, branch, or rev) if specified
+      ref <- pkg_spec$tag %||% pkg_spec$branch %||% pkg_spec$rev
+      if (!is_null(ref)) {
+        pak_ref <- paste0(repo, "@", ref)
+      } else {
+        pak_ref <- repo
+      }
+      return(list(pak_ref = pak_ref, custom_repo = NULL))
+    }
+
+    # Custom repo packages
+    if (!is_null(pkg_spec$repos)) {
+      return(list(pak_ref = pkg_name, custom_repo = pkg_spec$repos))
+    }
+
+    # CRAN with explicit version (ignore version for pak)
+    if (!is_null(pkg_spec$version)) {
+      return(list(pak_ref = pkg_name, custom_repo = NULL))
+    }
+
+    # Fallback for other list specs (e.g., just force = true)
+    return(list(pak_ref = pkg_name, custom_repo = NULL))
+  }
+
+  # Unknown spec type
+  abort(c(
+    "Invalid package specification",
+    "x" = paste("Package", pkg_name, "has unknown specification format"),
+    "i" = "Expected string or list with 'github', 'repos', or 'version' field"
+  ), call = caller_env())
+}
+
+#' Generate pak installer script for an environment
+#'
+#' Creates a self-contained R script that installs all packages for an
+#' environment using the pak package manager.
+#'
+#' @param env_name Character. Name of environment to generate script for
+#' @param config List. Parsed rpixi.toml configuration
+#' @param args List. Parsed arguments (for logging verbosity)
+#' @return Character vector containing the complete script
+generate_pak_script <- function(env_name, config, args) {
+  # Resolve dependencies to get all features
+  deps <- resolve_dependencies(env_name, config, args = args)
+  log_verbose(
+    paste("  Resolved dependencies:", paste(deps, collapse = ", ")),
+    args$verbose, args$quiet
+  )
+
+  # Collect packages from all features, tracking which feature each came from
+  standard_packages <- list()  # list of list(name, pak_ref, feature)
+  custom_repo_packages <- list()  # list of list(name, pak_ref, repo, feature)
+
+  for (dep in deps) {
+    pkgs <- get_feature_packages(dep, config)
+    if (length(pkgs) > 0) {
+      for (pkg_name in names(pkgs)) {
+        # Skip if already added (first occurrence wins)
+        already_added <- any(vapply(
+          c(standard_packages, custom_repo_packages),
+          function(p) p$name == pkg_name,
+          logical(1)
+        ))
+        if (already_added) next
+
+        pkg_spec <- pkgs[[pkg_name]]
+        transformed <- transform_to_pak_ref(pkg_name, pkg_spec)
+
+        if (is_null(transformed$custom_repo)) {
+          standard_packages[[length(standard_packages) + 1]] <- list(
+            name = pkg_name,
+            pak_ref = transformed$pak_ref,
+            feature = dep
+          )
+        } else {
+          custom_repo_packages[[length(custom_repo_packages) + 1]] <- list(
+            name = pkg_name,
+            pak_ref = transformed$pak_ref,
+            repo = transformed$custom_repo,
+            feature = dep
+          )
+        }
+      }
+    }
+  }
+
+  log_verbose(
+    paste("  Standard packages:", length(standard_packages)),
+    args$verbose, args$quiet
+  )
+  log_verbose(
+    paste("  Custom repo packages:", length(custom_repo_packages)),
+    args$verbose, args$quiet
+  )
+
+  # Build script
+  script_lines <- character()
+
+  # Header
+  script_lines <- c(script_lines, build_script_header(
+    env_name,
+    length(standard_packages) + length(custom_repo_packages),
+    args$manifest_path
+  ))
+
+  # Pak bootstrap
+  script_lines <- c(script_lines, "", build_pak_bootstrap())
+
+  # Standard packages install
+  if (length(standard_packages) > 0) {
+    script_lines <- c(script_lines, "", build_pak_install_code(
+      standard_packages, deps, "main"
+    ))
+  }
+
+  # Custom repo packages (each in separate install block)
+  for (pkg in custom_repo_packages) {
+    script_lines <- c(script_lines, "", build_custom_repo_install(pkg))
+  }
+
+  # Footer
+  script_lines <- c(script_lines, "", 'message("Installation complete!")')
+
+  script_lines
+}
+
+#' Build script header with metadata
+#'
+#' @param env_name Character. Environment name
+#' @param pkg_count Integer. Total number of packages
+#' @param manifest_path Character. Path to rpixi.toml
+#' @return Character vector of header lines
+build_script_header <- function(env_name, pkg_count, manifest_path) {
+  c(
+    "#!/usr/bin/env Rscript",
+    "",
+    "#' CourseKata R Package Installer",
+    "#'",
+    paste0("#' This script installs R packages for the ", env_name, " environment"),
+    "#' using the pak package manager.",
+    "#'",
+    paste0("#' Generated by rpixi pakgen v", VERSION),
+    paste0("#' Environment: ", env_name),
+    paste0("#' Package count: ", pkg_count),
+    paste0("#' Source: ", manifest_path),
+    "#'",
+    "#' Usage:",
+    paste0("#'   Rscript ", env_name, ".R"),
+    "#'   # or",
+    paste0("#'   ./", env_name, ".R")
+  )
+}
+
+#' Build pak bootstrap code
+#'
+#' @return Character vector of bootstrap code lines
+build_pak_bootstrap <- function() {
+  c(
+    "# Bootstrap pak package manager",
+    'if (!requireNamespace("pak", quietly = TRUE)) {',
+    '  message("Installing pak...")',
+    '  install.packages("pak", repos = "https://cloud.r-project.org/")',
+    "}"
+  )
+}
+
+#' Build pak::pkg_install code for standard packages
+#'
+#' @param packages List of package info lists (name, pak_ref, feature)
+#' @param features Character vector of features in order
+#' @param block_name Character. Name for this install block (for logging)
+#' @return Character vector of installation code lines
+build_pak_install_code <- function(packages, features, block_name) {
+  pkg_count <- length(packages)
+
+  lines <- c(
+    paste0("# Install packages (", pkg_count, " total)"),
+    paste0('message("Installing ', pkg_count, ' packages...")'),
+    "pak::pkg_install(",
+    "  c("
+  )
+
+  # Group packages by feature for better readability
+  current_feature <- NULL
+  for (i in seq_along(packages)) {
+    pkg <- packages[[i]]
+
+    # Add feature comment if feature changed
+    if (is_null(current_feature) || pkg$feature != current_feature) {
+      current_feature <- pkg$feature
+      feature_label <- if (current_feature == "base") "Base dependencies" else paste0("Feature: ", current_feature)
+      if (i == 1) {
+        lines <- c(lines, paste0("    # ", feature_label))
+      } else {
+        lines <- c(lines, "", paste0("    # ", feature_label))
+      }
+    }
+
+    # Add package reference
+    comma <- if (i < pkg_count) "," else ""
+    lines <- c(lines, paste0('    "', pkg$pak_ref, '"', comma))
+  }
+
+  lines <- c(lines,
+    "  ),",
+    "  upgrade = FALSE",
+    ")"
+  )
+
+  lines
+}
+
+#' Build installation code for a custom repo package
+#'
+#' @param pkg List with name, pak_ref, repo, feature
+#' @return Character vector of installation code lines
+build_custom_repo_install <- function(pkg) {
+  c(
+    paste0("# Custom repo: ", pkg$name, " from ", pkg$repo),
+    paste0('message("Installing ', pkg$name, ' from custom repository...")'),
+    paste0('options(repos = c(getOption("repos"), "', pkg$repo, '"))'),
+    paste0('pak::pkg_install("', pkg$pak_ref, '", upgrade = FALSE)')
+  )
 }
 
 # =============================================================================
