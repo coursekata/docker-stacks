@@ -10,6 +10,21 @@ This guide covers development workflows, testing, CI/CD, and contribution guidel
 - GitHub CLI (`gh`) or `GITHUB_TOKEN` environment variable
 - Make
 - Pixi (optional, for local dependency management)
+- [prek](https://github.com/anthropics/prek) for pre-commit hooks
+
+### Setting Up Pre-commit Hooks
+
+This project uses pre-commit hooks to keep generated files in sync. Install prek and set up the hooks:
+
+```bash
+# Install prek (requires pipx or pip)
+pipx install prek
+
+# Install the pre-commit hooks
+prek install
+```
+
+The hooks will automatically regenerate `pak-scripts/*.R` files when `rpixi.toml` changes.
 
 ### Building Images Locally
 
