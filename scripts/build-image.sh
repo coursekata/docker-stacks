@@ -155,7 +155,7 @@ else
 fi
 
 # Construct cache-from arguments automatically (matches GHA workflow behavior)
-# Uses DS_OWNER env var if set (e.g., from Makefile)
+# Uses DS_OWNER env var if set (e.g., from justfile)
 CACHE_FROM_ARGS=()
 
 if [[ -n "${DS_OWNER:-}" ]]; then

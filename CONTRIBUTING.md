@@ -8,7 +8,7 @@ This guide covers development workflows, testing, CI/CD, and contribution guidel
 
 - Docker Desktop or Docker Engine
 - GitHub CLI (`gh`) or `GITHUB_TOKEN` environment variable
-- Make
+- [just](https://github.com/casey/just) command runner
 - Pixi (optional, for local dependency management)
 - [prek](https://github.com/anthropics/prek) for pre-commit hooks
 
@@ -28,18 +28,19 @@ The hooks will automatically regenerate `pak-scripts/*.R` files when `rpixi.toml
 
 ### Building Images Locally
 
-Use Makefile targets to build images:
+Use `just` recipes to build images:
 
 ```bash
 # Build for your current architecture
-make build/r-notebook
+just build r-notebook
 
-# Build for specific architectures
-make build-amd64/r-notebook
-make build-arm64/datascience-notebook
+# Build for a specific architecture
+just build r-notebook amd64
+just build datascience-notebook arm64
 
 # Build all images
-make build-all
+just build-all
+just build-all amd64
 ```
 
 The build system automatically pulls cache from `ghcr.io/coursekata/*` if `DS_OWNER` is set.
@@ -50,11 +51,11 @@ Always test after building:
 
 ```bash
 # Test after building
-make test/r-notebook
-make test-amd64/essentials-notebook
+just test r-notebook
+just test essentials-notebook amd64
 
 # Test all images
-make test-all
+just test-all
 ```
 
 See `scripts/tests/README.md` for details on the test framework architecture.
@@ -63,10 +64,10 @@ See `scripts/tests/README.md` for details on the test framework architecture.
 
 ```bash
 # Run container and get shell access
-make shell/r-notebook
+just shell r-notebook
 
 # Run container normally (starts Jupyter)
-make run/datascience-notebook
+just run datascience-notebook
 ```
 
 ### Direct Script Usage
@@ -100,7 +101,7 @@ Tests run inside Docker containers to validate that images are correctly configu
 ### Test Execution Flow
 
 ```txt
-make test/r-notebook
+just test r-notebook
   └─> ./scripts/test-image.sh
         ├─> Validates environment name against pixi.toml
         ├─> Generates Python package list on host
@@ -172,14 +173,14 @@ This dramatically speeds up builds by reusing layers from previous builds.
 
 The `base` stage installs `texlive`, which can hang on GitHub Actions `ubuntu-latest` runners.
 
-**Solution**: Run `make test/base-r-notebook` locally to cache the base layer to the registry. This allows GitHub Actions to skip building the base stage and use the cached layer.
+**Solution**: Run `just test base-r-notebook` locally to cache the base layer to the registry. This allows GitHub Actions to skip building the base stage and use the cached layer.
 
 #### Test Failures
 
 If tests fail in CI:
 
 1. Pull the image locally: `docker pull ghcr.io/coursekata/<image>:cache-<platform>`
-2. Run tests locally: `make test/<image>`
+2. Run tests locally: `just test <image>`
 3. Debug with `TEST_DEBUG=1` environment variable
 4. Run individual test modules as shown in `scripts/tests/README.md`
 
@@ -189,7 +190,7 @@ If tests fail in CI:
 
 1. Run `pixi add --feature <feature-name> <package-name>` to add the package and update the lock file
    - Note you can also scope it to a platform with `--platform linux-amd64` or `--platform linux-aarch64`
-2. Rebuild and test: `make build/<image> && make test/<image>`
+2. Rebuild and test: `just build <image> && just test <image>`
 
 ### R Packages
 
@@ -197,7 +198,7 @@ If tests fail in CI:
 2. Determine if you can add it via `pixi add` as well, but remember that `rpixi.toml` is the source of truth
    for R packages: adding via `pixi add` is only improve install times
 3. Validate syntax: `./scripts/rpixi.R validate`
-4. Rebuild and test: `make build/<image> && make test/<image>`
+4. Rebuild and test: `just build <image> && just test <image>`
 
 Example:
 
@@ -222,7 +223,7 @@ Images build on one another in this order:
 
 ## Pull Request Guidelines
 
-1. **Test locally**: Always run `make test-all` before pushing
+1. **Test locally**: Always run `just test-all` before pushing
 2. **Update tests**: Add tests for new functionality
 3. **Update documentation**: Update README.md, or this file if needed
 4. **Verify CI**: Ensure GitHub Actions pass for all images and platforms
@@ -240,7 +241,7 @@ All images must support both AMD64 and ARM64. When adding dependencies:
 
 Building images requires GitHub authentication for package installation:
 
-- **Preferred**: `gh auth login` (Makefile auto-exports token)
+- **Preferred**: `gh auth login` (justfile auto-exports token)
 - **Alternative**: Set `GITHUB_TOKEN` environment variable
 
 ## Getting Help
