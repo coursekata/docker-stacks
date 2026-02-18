@@ -48,7 +48,7 @@ ENV_NAME="$1"
 VALID_ENVS=$(pixi info --json | jq -r '.environments_info[] | select(.name != "default") | .name')
 
 # Check if the environment name is in the list
-if echo "$VALID_ENVS" | grep -q -w "$ENV_NAME"; then
+if echo "$VALID_ENVS" | grep -qx "$ENV_NAME"; then
   exit 0
 else
   echo "Error: Invalid environment '$ENV_NAME'" >&2
