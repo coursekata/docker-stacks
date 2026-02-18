@@ -168,6 +168,9 @@ dash-cytoscape = ">=1.0.2, <2"
 gensim = ">=4.4.0, <5"
 yahoo-fin = ">=0.8.9.1, <0.9"
 
+[feature.datascience.target.linux-64.dependencies]
+r-nimble = ">=1.4.1,<2"
+
 [feature.datascience.target.linux-aarch64.dependencies]
 # installing these in the amd64 image can cause TBB symbol conflicts between conda and CRAN builds
 r-brms = ">=2.23.0,<3"

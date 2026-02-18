@@ -1384,6 +1384,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/r-mvnfast-0.2.8-r44h3704496_3.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/r-mvtnorm-1.3_3-r44h11cdb10_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-neuralnet-1.44.2-r44hc72bb7e_6.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/r-nimble-1.4.1-r44h2ddecb4_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/r-nlme-3.1_168-r44heaba542_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/r-nloptr-2.2.1-r44h8ae9fae_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/r-nnet-7.3_20-r44h54b55ab_1.conda
@@ -1410,6 +1411,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/r-polyclip-1.10_7-r44h3697838_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-polynom-1.4_1-r44hc72bb7e_4.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-posterior-1.6.1-r44hc72bb7e_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/r-pracma-2.4.6-r44hc72bb7e_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-praise-1.0.0-r44hc72bb7e_1009.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-prettyunits-1.2.0-r44hc72bb7e_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/r-proc-1.19.0.1-r44h3697838_1.conda
@@ -27994,6 +27996,30 @@ packages:
   purls: []
   size: 137894
   timestamp: 1758571681908
+- conda: https://conda.anaconda.org/conda-forge/linux-64/r-nimble-1.4.1-r44h2ddecb4_0.conda
+  sha256: 1b5180d25849fe51b8ba70cc3f78829ce4e78a071c2d707ab33e475264319901
+  md5: c2c57b8cafb6df97e4dc6778ed364ee9
+  depends:
+  - __glibc >=2.17,<3.0.a0
+  - gxx_linux-64 14.*
+  - libblas >=3.9.0,<4.0a0
+  - libgcc >=14
+  - libgfortran
+  - libgfortran5 >=14.3.0
+  - liblapack >=3.9.0,<4.0a0
+  - libstdcxx >=14
+  - make
+  - r-base >=4.4,<4.5.0a0
+  - r-coda
+  - r-igraph
+  - r-numderiv
+  - r-pracma
+  - r-r6
+  license: BSD-3-Clause AND GPL-2.0-or-later
+  license_family: GPL2
+  purls: []
+  size: 8980623
+  timestamp: 1770979563650
 - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/r-nleqslv-3.3.5-r43ha805bf2_2.conda
   sha256: 7a0bea91091e1b9aaff9ff1416b5d3396c329211ffe38b67e7fbd1d4d6255d72
   md5: b5cd30f1701b9ab0cc20d58d875b0663
@@ -29025,6 +29051,16 @@ packages:
   purls: []
   size: 1013692
   timestamp: 1757534127643
+- conda: https://conda.anaconda.org/conda-forge/noarch/r-pracma-2.4.6-r44hc72bb7e_0.conda
+  sha256: c1e0473705d5588879a0435c5a8aff21e31259e87e48ffc97444cab2060a80b3
+  md5: e9556fe24295234d2b4019bfb35012a0
+  depends:
+  - r-base >=4.4,<4.5.0a0
+  license: GPL-3.0-or-later
+  license_family: GPL3
+  purls: []
+  size: 1738931
+  timestamp: 1761147926570
 - conda: https://conda.anaconda.org/conda-forge/noarch/r-praise-1.0.0-r43hc72bb7e_1008.conda
   sha256: 87c3a81a7359a09e199fafd7bbe3c6eb395078f844f6a1dbaed7b09ca76f6d72
   md5: 73c82834d0920677d71a8a1bc0f624a9

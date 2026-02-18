@@ -61,8 +61,10 @@ V8 = { force = true }
 brms = "*"
 cmdstanr = { repos = "https://mc-stan.org/r-packages/" }
 ggstatsplot = "*"
+nimble = "*"
 rethinking = { github = "rmcelreath/rethinking", tag = "v2.2.1" }
 rstanarm = "*"
+simDAG = "*"
 
 [environments.base-r-notebook]
 features = []
