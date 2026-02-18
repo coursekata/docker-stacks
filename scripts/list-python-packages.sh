@@ -41,6 +41,7 @@ pixi_json=$(pixi list -e "$ENVIRONMENT" --json) || exit 1
 packages=$(
   echo "$pixi_json" \
     | jq -r '.[] | select(.is_explicit) | select(.name | test("^(r-|python$|pip$|unixodbc$|cmdstan$)") | not) | .name' \
+    | sed 's/^jupyterhub-singleuser$/jupyterhub/' \
     | sort -u
 )
 
