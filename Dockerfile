@@ -8,14 +8,14 @@ ARG ROOT_CODENAME=noble
 
 # Pixi settings
 ARG PIXI_ENV=default
-ARG PIXI_VERSION=0.39.2
+ARG PIXI_VERSION=0.50.2
 ARG PIXI_DIR=/opt/pixi
 
 # -----------------------------------------------------------------------------
 # Other image-based dependencies
 # -----------------------------------------------------------------------------
-FROM quay.io/jupyter/base-notebook:python-3.12 AS jupyter--base-notebook
-FROM quay.io/jupyter/docker-stacks-foundation:python-3.12 AS jupyter--docker-stacks-foundation
+FROM quay.io/jupyter/base-notebook:python-3.13 AS jupyter--base-notebook
+FROM quay.io/jupyter/docker-stacks-foundation:python-3.13 AS jupyter--docker-stacks-foundation
 FROM ghcr.io/prefix-dev/pixi:${PIXI_VERSION}-${ROOT_CODENAME} AS pixi
 
 

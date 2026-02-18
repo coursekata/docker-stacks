@@ -8,7 +8,7 @@ platforms = ["linux-aarch64", "linux-64", "osx-64"]
 [tasks]
 
 [dependencies]
-python = ">=3.12.0,<3.14"
+python = ">=3.13.0,<3.14"
 pip = ">=24.3.1,<25"
 jupyter_core = ">=5.7.2,<6"
 jupyterhub-singleuser = ">=5.2.1,<6"
