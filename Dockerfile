@@ -92,7 +92,7 @@ RUN apt-get update --yes && \
     update-alternatives --install /usr/bin/nano nano /bin/nano-tiny 10
 
 # Utility for giving the user appropriate file permissions recursively
-COPY --from=jupyter--docker-stacks-foundation /usr/local/bin/fix-permissions /usr/local/bin/
+COPY --link --from=jupyter--docker-stacks-foundation /usr/local/bin/fix-permissions /usr/local/bin/
 
 # configure environment
 ENV SHELL=/bin/bash \
@@ -120,14 +120,14 @@ RUN if grep -q "${NB_UID}" /etc/passwd; then \
 # https://github.com/jupyter/docker-stacks/issues/915#issuecomment-1068528799
 HEALTHCHECK --interval=3s --timeout=1s --start-period=3s --retries=3 \
     CMD /etc/jupyter/docker_healthcheck.py || exit 1
-COPY --from=jupyter--base-notebook \
+COPY --link --from=jupyter--base-notebook \
     /etc/jupyter/docker_healthcheck.py \
     /etc/jupyter/
 
 # server configuration
 ENV JUPYTER_PORT=8888
 EXPOSE $JUPYTER_PORT
-COPY --from=jupyter--base-notebook \
+COPY --link --from=jupyter--base-notebook \
     /etc/jupyter/jupyter_server_config.py \
     /etc/jupyter/
 
@@ -136,7 +136,7 @@ CMD ["start-notebook.py"]
 # create dirs for startup hooks
 RUN mkdir /usr/local/bin/start-notebook.d && \
     mkdir /usr/local/bin/before-notebook.d
-COPY --from=jupyter--base-notebook \
+COPY --link --from=jupyter--base-notebook \
     /usr/local/bin/run-hooks.sh \
     /usr/local/bin/start.sh \
     /usr/local/bin/start-notebook.py \
@@ -159,7 +159,7 @@ RUN mkdir "${HOME}/work"
 # Build the dependencies
 # -----------------------------------------------------------------------------
 FROM base AS build
-COPY --from=pixi /usr/local/bin/pixi /usr/local/bin/pixi
+COPY --link --from=pixi /usr/local/bin/pixi /usr/local/bin/pixi
 
 # install dependencies with pixi
 ARG PIXI_DIR PIXI_ENV
