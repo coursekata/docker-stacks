@@ -1,10 +1,10 @@
 set shell := ["bash", "-cu"]
 
-export DS_OWNER := env_var_or_default("DS_OWNER", "ghcr.io/coursekata")
-export GITHUB_TOKEN := env_var_or_default("GITHUB_TOKEN", `gh auth token 2>/dev/null || echo ""`)
+export DS_OWNER := env("DS_OWNER", "ghcr.io/coursekata")
+export GITHUB_TOKEN := env("GITHUB_TOKEN", `gh auth token 2>/dev/null || echo ""`)
 
 CURRENT_ARCH := `uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/'`
-VALID_ENVS := `pixi info --json | jq -r '.environments_info[] | select(.name != "default") | .name'`
+VALID_ENVS := `pixi info --json | jq -r '[.environments_info[] | select(.name == "default" | not) | .name] | join(" ")'`
 
 # List available recipes
 default:
