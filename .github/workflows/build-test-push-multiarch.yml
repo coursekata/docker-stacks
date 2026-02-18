@@ -38,6 +38,10 @@ on:
         type: boolean
         required: false
         default: false
+      lock-artifact:
+        description: Name of a workflow artifact containing an updated pixi.lock file to use instead of the checked-in version
+        type: string
+        required: false
 
     outputs:
       cache-from:
@@ -59,6 +63,7 @@ jobs:
       extra-cache-from: ${{ inputs.cache-from }}
       free-disk-space: ${{ inputs.free-disk-space }}
       skip-tests: ${{ inputs.skip-tests }}
+      lock-artifact: ${{ inputs.lock-artifact }}
 
   build-arm64:
     name: Build (ARM64)
@@ -74,6 +79,7 @@ jobs:
       extra-cache-from: ${{ inputs.cache-from }}
       free-disk-space: ${{ inputs.free-disk-space }}
       skip-tests: ${{ inputs.skip-tests }}
+      lock-artifact: ${{ inputs.lock-artifact }}
 
   manifest:
     name: Create Multi-Arch Manifest

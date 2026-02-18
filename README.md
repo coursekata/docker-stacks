@@ -56,6 +56,6 @@ A downside of this approach is that when we update this repository, that particu
 If you need your images to be highly reproducible, e.g. for use in systems where the image stability is critical, you will likely want to make sure that the image does not change at all when you pull. There are two ways to do this:
 
 1. Use the full SHA digest of the image
-2. Use a dated tag: all of these images are built twice a week (Tuesday and Friday starting at 1:00 UTC), so you will see many tags like `2023-04-21` indicating when they were built
+2. Use a dated tag: all of these images are built weekly (Monday starting at 3:00 UTC), so you will see many tags like `2023-04-21` indicating when they were built
 
 Using one of these two methods will ensure that the image will be the same everytime you pull it.
