@@ -36,11 +36,29 @@ fi
 
 ENVIRONMENT=$1
 
+# Non-Python packages to exclude from testing.
+# R packages are excluded separately via the "^r-" prefix pattern in jq.
+EXCLUDE_PACKAGES=(
+  # Infrastructure
+  python
+  pip
+  # System / build tools
+  cmdstan
+  ocl-icd-system
+  pkg-config
+  unixodbc
+  xorg-xorgproto
+)
+
+# Build jq-compatible regex: ^(r-|python$|pip$|...)
+exclude_exact=$(printf "|%s$" "${EXCLUDE_PACKAGES[@]}")
+exclude_regex="^(r-${exclude_exact})"
+
 pixi_json=$(pixi list -e "$ENVIRONMENT" --json) || exit 1
 
 packages=$(
   echo "$pixi_json" \
-    | jq -r '.[] | select(.requested_spec != null) | select(.name | test("^(r-|python$|pip$|unixodbc$|cmdstan$)") | not) | .name' \
+    | jq -r --arg regex "$exclude_regex" '.[] | select(.requested_spec != null) | select(.name | test($regex) | not) | .name' \
     | sed 's/^jupyterhub-singleuser$/jupyterhub/' \
     | sort -u
 )
