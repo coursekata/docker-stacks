@@ -8,7 +8,7 @@ ARG ROOT_CODENAME=noble
 
 # Pixi settings
 ARG PIXI_ENV=default
-ARG PIXI_VERSION=0.50.2
+ARG PIXI_VERSION=0.63.2
 ARG PIXI_DIR=/opt/pixi
 
 # -----------------------------------------------------------------------------

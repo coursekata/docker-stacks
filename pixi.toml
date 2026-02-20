@@ -1,9 +1,10 @@
-[project]
+[workspace]
 authors = ["Adam Blake <adam@ablake.dev>"]
 channels = ["conda-forge", "default"]
 description = "CourseKata Jupyter environments"
 name = "coursekata"
 platforms = ["linux-aarch64", "linux-64", "osx-64"]
+requires-pixi = ">=0.63.2"
 
 [tasks]
 
