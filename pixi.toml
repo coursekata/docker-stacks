@@ -162,6 +162,7 @@ cmdstan = ">=2.36.0,<3"
 r-coda = ">=0.19_4.1,<0.20"
 r-digest = ">=0.6.37,<0.7"
 geopandas = ">=1.0.1,<2"
+r-distributions3 = ">=0.2.2,<0.3"
 
 [feature.datascience.pypi-dependencies]
 altair-latimes = ">=0.0.2, <0.0.3"

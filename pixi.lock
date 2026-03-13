@@ -4,6 +4,8 @@ environments:
     channels:
     - url: https://conda.anaconda.org/conda-forge/
     - url: https://conda.anaconda.org/default/
+    options:
+      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_openmp_mutex-4.5-20_gnu.conda
@@ -795,6 +797,8 @@ environments:
     - url: https://conda.anaconda.org/default/
     indexes:
     - https://pypi.org/simple
+    options:
+      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_openmp_mutex-4.5-20_gnu.conda
@@ -1231,6 +1235,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/r-diffobj-0.3.6-r44h54b55ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/r-digest-0.6.39-r44h3697838_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-distributional-0.6.0-r44hc72bb7e_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/r-distributions3-0.2.2-r44hc72bb7e_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-doby-4.7.1-r44hc72bb7e_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-doparallel-1.0.17-r44hc72bb7e_4.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-downlit-0.4.5-r44hc72bb7e_0.conda
@@ -2127,6 +2132,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/r-diffobj-0.3.6-r43hdd76399_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/r-digest-0.6.37-r43h6170684_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-distributional-0.5.0-r43hc72bb7e_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/r-distributions3-0.2.3-r43hc72bb7e_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-doby-4.7.0-r43hc72bb7e_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-doparallel-1.0.17-r43hc72bb7e_3.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-downlit-0.4.4-r43hc72bb7e_1.conda
@@ -3008,6 +3014,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/r-diffobj-0.3.6-r44h735ac91_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/r-digest-0.6.39-r44ha730edb_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-distributional-0.6.0-r44hc72bb7e_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/r-distributions3-0.2.2-r44hc72bb7e_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-doby-4.7.1-r44hc72bb7e_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-doparallel-1.0.17-r44hc72bb7e_4.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-downlit-0.4.5-r44hc72bb7e_0.conda
@@ -3437,6 +3444,8 @@ environments:
     channels:
     - url: https://conda.anaconda.org/conda-forge/
     - url: https://conda.anaconda.org/default/
+    options:
+      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_openmp_mutex-4.5-20_gnu.conda
@@ -4156,6 +4165,8 @@ environments:
     - url: https://conda.anaconda.org/default/
     indexes:
     - https://pypi.org/simple
+    options:
+      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_openmp_mutex-4.5-20_gnu.conda
@@ -5499,6 +5510,8 @@ environments:
     - url: https://conda.anaconda.org/default/
     indexes:
     - https://pypi.org/simple
+    options:
+      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_openmp_mutex-4.5-20_gnu.conda
@@ -22128,6 +22141,32 @@ packages:
   purls: []
   size: 578910
   timestamp: 1768461419560
+- conda: https://conda.anaconda.org/conda-forge/noarch/r-distributions3-0.2.2-r44hc72bb7e_0.conda
+  sha256: 0229e42311c7e5ee354d8f6e2e1c84159827878d4c7f7b56ec583070a6592cdd
+  md5: f79f8a2f841f772261f93f0acc004616
+  depends:
+  - r-base >=4.4,<4.5.0a0
+  - r-ellipsis
+  - r-ggplot2
+  - r-glue
+  license: MIT
+  license_family: MIT
+  purls: []
+  size: 1280140
+  timestamp: 1726525452779
+- conda: https://conda.anaconda.org/conda-forge/noarch/r-distributions3-0.2.3-r43hc72bb7e_1.conda
+  sha256: bb814425f2faf49308886d9fa9568c771ffb2d25f3aaa2594c49a10bc93fae32
+  md5: 3c54436af534b75ae5738ffab1af4c67
+  depends:
+  - r-base >=4.3,<4.4.0a0
+  - r-ellipsis
+  - r-ggplot2
+  - r-glue
+  license: MIT
+  license_family: MIT
+  purls: []
+  size: 1238247
+  timestamp: 1758193289001
 - conda: https://conda.anaconda.org/conda-forge/noarch/r-doby-4.7.0-r43hc72bb7e_0.conda
   sha256: 27dac2b297c2fbca5f53f8cbc5aa6286c49d6e25ef1eb0b6cf5fba6b45b6e7f9
   md5: 810478c538f919ce0fbe57caa4d97fae

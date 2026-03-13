@@ -60,6 +60,7 @@ V8 = { force = true }
 [feature.datascience.dependencies]
 brms = "*"
 cmdstanr = { repos = "https://mc-stan.org/r-packages/" }
+distributions3 = "*"
 ggstatsplot = "*"
 nimble = "*"
 rethinking = { github = "rmcelreath/rethinking", tag = "v2.2.1" }
