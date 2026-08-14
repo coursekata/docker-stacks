@@ -26,13 +26,7 @@ options(
   pkg.sysreqs_platform = "ubuntu-24.04"
 )
 
-# Custom repositories must be configured BEFORE resolution, not after.
-# Packages outside CRAN (cmdstanr) and packages that depend on them
-# (rethinking) are resolved in the same pass, so a repo added afterwards
-# is too late and the whole solve fails.
-options(repos = c(getOption("repos"), "https://mc-stan.org/r-packages/"))
-
-message("Installing 57 R packages for datascience-notebook ...")
+message("Installing 56 R packages for datascience-notebook ...")
 pak::pkg_install(
   c(
     "IRkernel",
@@ -48,50 +42,49 @@ pak::pkg_install(
     "statmod",
     "coursekata/testwhat@v4.11.3.2",
     "DHARMa",
-    "OCSdata",
-    "RcppTOML",
     "Stat2Data",
-    "V8?reinstall",
-    "av",
     "bayesplot",
-    "broom.mixed",
     "car",
     "dagitty",
-    "datapasta",
     "easystats",
     "emmeans",
-    "gganimate",
     "ggdag",
     "ggeffects",
-    "gifski",
     "gt",
-    "gtsummary",
     "here",
     "janitor",
     "lmerTest",
     "loo",
-    "mapdata",
-    "mapproj",
     "marginaleffects",
-    "mobilizingcs/mobilizr",
     "neuralnet",
     "posterior",
-    "profvis",
     "psych",
     "reticulate",
-    "simstudy",
     "sjPlot",
-    "tidybayes",
     "tidymodels",
     "tidyverse",
     "brms",
-    "cmdstanr",
     "distributions3",
-    "ggstatsplot",
     "nimble",
-    "rmcelreath/rethinking@v2.2.1",
     "rstanarm",
-    "simDAG"
+    "simDAG",
+    "BiocManager",
+    "DataExplorer",
+    "R4HCR",
+    "Rtsne",
+    "conformalbayes",
+    "datasauRus",
+    "extraDistr",
+    "gitcreds",
+    "latex2exp",
+    "mlpwr",
+    "mlr3verse",
+    "modelsummary",
+    "probably",
+    "sessioninfo",
+    "skimr",
+    "transport",
+    "uwot"
   ),
   upgrade = FALSE,
   ask = FALSE

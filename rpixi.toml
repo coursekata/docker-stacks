@@ -19,53 +19,54 @@ statmod = "*"
 testwhat = { github = "coursekata/testwhat", tag = "v4.11.3.2" }
 
 [feature.r.dependencies]
-av = "*"
 bayesplot = "*"
-"broom.mixed" = "*"
 car = "*"
 dagitty = "*"
-datapasta = "*"
 DHARMa = "*"
 easystats = "*"
 emmeans = "*"
-gganimate = "*"
 ggdag = "*"
 ggeffects = "*"
-gifski = "*"
 gt = "*"
-gtsummary = "*"
 here = "*"
 janitor = "*"
 lmerTest = "*"
 loo = "*"
-mapdata = "*"
-mapproj = "*"
 marginaleffects = "*"
-mobilizr = { github = "mobilizingcs/mobilizr" }
 neuralnet = "*"
-OCSdata = "*"
 posterior = "*"
-profvis = "*"
 psych = "*"
-RcppTOML = "*"
 reticulate = "*"
-simstudy = "*"
 sjPlot = "*"
 Stat2Data = "*"
-tidybayes = "*"
 tidymodels = "*"
 tidyverse = "*"
-V8 = { force = true }
 
 [feature.datascience.dependencies]
 brms = "*"
-cmdstanr = { repos = "https://mc-stan.org/r-packages/" }
 distributions3 = "*"
-ggstatsplot = "*"
 nimble = "*"
-rethinking = { github = "rmcelreath/rethinking", tag = "v2.2.1" }
 rstanarm = "*"
 simDAG = "*"
+
+[feature.instructor-9e09470c-489b-4f9b-af4c-ffc524e10637.dependencies]
+BiocManager = "*"
+conformalbayes = "*"
+DataExplorer = "*"
+datasauRus = "*"
+extraDistr = "*"
+gitcreds = "*"
+latex2exp = "*"
+mlpwr = "*"
+mlr3verse = "*"
+modelsummary = "*"
+probably = "*"
+R4HCR = "*"
+Rtsne = "*"
+sessioninfo = "*"
+skimr = "*"
+transport = "*"
+uwot = "*"
 
 [environments.base-r-notebook]
 features = []
@@ -77,4 +78,4 @@ features = ["essentials"]
 features = ["essentials", "r"]
 
 [environments.datascience-notebook]
-features = ["essentials", "r", "datascience"]
+features = ["essentials", "r", "datascience", "instructor-9e09470c-489b-4f9b-af4c-ffc524e10637"]
