@@ -213,14 +213,18 @@ RUN jupyter server --generate-config && \
     rm -rf "${HOME}/.cache/yarn" && \
     fix-permissions "${HOME}"
 
-# ensure all R packages are installed
+# install R packages and their system dependencies
 # hadolint ignore=SC1008,SC2155
-RUN --mount=type=bind,source="scripts/rpixi.R",target=/tmp/rpixi.R \
-    --mount=type=bind,source="rpixi.toml",target=/tmp/rpixi.toml \
-    --mount=type=secret,id=github_token,uid=${NB_UID} \
+USER root
+RUN --mount=type=bind,source="pak-scripts",target=/tmp/pak-scripts \
+    --mount=type=secret,id=github_token,uid=0 \
     export GITHUB_PAT=$(cat /run/secrets/github_token) && \
-    export R_REMOTES_UPGRADE="never" && \
-    Rscript /tmp/rpixi.R install -e "${PIXI_ENV}" --manifest-path /tmp/rpixi.toml
+    apt-get update && \
+    Rscript "/tmp/pak-scripts/${PIXI_ENV}.R" && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* && \
+    fix-permissions "${CONDA_DIR}"
+
+USER ${NB_UID}
 
 ARG DEFAULT_KERNEL
 ENV DEFAULT_KERNEL="${DEFAULT_KERNEL}"

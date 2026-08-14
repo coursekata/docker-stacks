@@ -12,17 +12,17 @@ source "$_LIB_DIR/helpers.sh"
 # R Package Extraction
 # -----------------------------------------------------------------------------
 
-# Get list of R packages for an environment using rpixi list
+# Get list of R packages for an environment using rpak list
 # Usage: get_r_packages "environment-name"
 get_r_packages() {
   local environment="$1"
   local packages=()
   local lib_dir
   lib_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  local rpixi_path="${lib_dir}/../../rpixi.R"
+  local rpak_path="${lib_dir}/../../rpak.R"
 
-  # Extract packages using rpixi list (relative path from lib directory)
-  mapfile -t packages < <(Rscript "$rpixi_path" list -e "$environment" 2>/dev/null || true)
+  # Extract packages using rpak list (relative path from lib directory)
+  mapfile -t packages < <(Rscript "$rpak_path" list "$environment" 2>/dev/null || true)
 
   if [[ ${#packages[@]} -eq 0 ]]; then
     debug "No R packages found for $environment"
@@ -239,15 +239,15 @@ test_r_packages() {
 
   init_tests "R Packages ($environment)"
 
-  # Check if rpixi.R is available (relative path from run-tests.sh location)
+  # Check if rpak.R is available (relative path from run-tests.sh location)
   local lib_dir
   lib_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  local rpixi_path="${lib_dir}/../../rpixi.R"
+  local rpak_path="${lib_dir}/../../rpak.R"
 
-  if [[ ! -f "$rpixi_path" ]]; then
+  if [[ ! -f "$rpak_path" ]]; then
     TEST_TOTAL=$((TEST_TOTAL + 1))
     TEST_FAILED=$((TEST_FAILED + 1))
-    error "rpixi.R not found at $rpixi_path"
+    error "rpak.R not found at $rpak_path"
     print_test_summary
     return 1
   fi

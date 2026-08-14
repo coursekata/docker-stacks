@@ -22,11 +22,11 @@ echo
 
 # Validate rpixi.toml
 echo "Checking rpixi.toml..."
-if Rscript scripts/rpixi.R validate --manifest-path rpixi.toml >/dev/null 2>&1; then
+if Rscript scripts/rpak.R validate >/dev/null 2>&1; then
   echo "✓ rpixi.toml is valid"
 else
   echo "✗ rpixi.toml has errors"
-  Rscript scripts/rpixi.R validate --manifest-path rpixi.toml
+  Rscript scripts/rpak.R validate
   exit 1
 fi
 

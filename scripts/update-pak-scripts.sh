@@ -12,7 +12,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$REPO_ROOT"
 
 # Generate pak scripts
-./scripts/rpixi.R pakgen --all -o ./pak-scripts -q
+Rscript ./scripts/rpak.R pakgen
 
 # Stage the generated files if any changed
 git add pak-scripts/*.R 2>/dev/null || true
