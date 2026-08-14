@@ -195,10 +195,17 @@ If tests fail in CI:
 ### R Packages
 
 1. Edit `rpixi.toml` in the appropriate feature section
-2. Determine if you can add it via `pixi add` as well, but remember that `rpixi.toml` is the source of truth
-   for R packages: adding via `pixi add` is only improve install times
-3. Validate syntax: `./scripts/rpixi.R validate`
-4. Rebuild and test: `just build <image> && just test <image>`
+2. Do **not** add a matching `r-*` package via `pixi add`. conda-forge has no `r-*`
+   builds for R 4.6, so a single one pins the whole solve-group back to 4.5.x and
+   silently downgrades R for every image.
+3. Validate syntax: `Rscript ./scripts/rpak.R validate`
+4. Regenerate installers: `./scripts/update-pak-scripts.sh` (the prek hook does this
+   for you on commit). The Dockerfile runs `pak-scripts/<env>.R`, so this step is what
+   actually changes the build.
+5. Rebuild and test: `just build <image> && just test <image>`
+
+A bare name means CRAN. If the package is not on CRAN it needs an explicit source —
+`{ github = "user/repo" }` or `{ repos = "https://..." }` — or resolution fails.
 
 Example:
 

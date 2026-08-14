@@ -7,7 +7,7 @@ IRkernel = "*"
 rlang = "*"
 
 [feature.essentials.dependencies]
-coursekata = { force = true }
+coursekata = { github = "coursekata/coursekata-r", force = true }
 fivethirtyeight = "*"
 fivethirtyeightdata = { github = "coursekata/fivethirtyeightdata" }
 ggpubr = "*"

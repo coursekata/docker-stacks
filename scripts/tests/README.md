@@ -65,7 +65,7 @@ Python package tests:
 
 R package tests:
 
-- Extracts R packages from `rpixi.toml` via `scripts/rpixi.R list`
+- Extracts R packages from `rpixi.toml` via `scripts/rpak.R list`
 - Tests package loading via `library()`
 - Parallel loading tests for performance
 - Special handling for cmdstanr configuration (CMDSTAN env var)
@@ -107,7 +107,7 @@ Test modules use relative paths for foolproof script discovery:
 
 ```bash
 local lib_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-local rpixi_path="${lib_dir}/../../rpixi.R"
+local rpak_path="${lib_dir}/../../rpak.R"
 ```
 
 ### Parallel Execution

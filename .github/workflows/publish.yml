@@ -14,7 +14,10 @@ on:
       - pixi.lock
       - Dockerfile
       - rpixi.toml
-      - scripts/rpixi.R
+      - scripts/rpak.R
+      # the Dockerfile installs R packages by running these directly, so a
+      # regenerated installer must trigger a rebuild
+      - pak-scripts/**
       - Rprofile.site
       # test
       - tests/**
