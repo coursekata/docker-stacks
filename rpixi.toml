@@ -20,6 +20,7 @@ testwhat = { github = "coursekata/testwhat", tag = "v4.11.3.2" }
 
 [feature.r.dependencies]
 bayesplot = "*"
+BrailleR = { github = "ajrgodfrey/BrailleR" }
 car = "*"
 dagitty = "*"
 DHARMa = "*"

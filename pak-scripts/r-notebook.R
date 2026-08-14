@@ -26,7 +26,7 @@ options(
   pkg.sysreqs_platform = "ubuntu-24.04"
 )
 
-message("Installing 34 R packages for r-notebook ...")
+message("Installing 35 R packages for r-notebook ...")
 pak::pkg_install(
   c(
     "IRkernel",
@@ -41,6 +41,7 @@ pak::pkg_install(
     "plotly",
     "statmod",
     "coursekata/testwhat@v4.11.3.2",
+    "ajrgodfrey/BrailleR",
     "DHARMa",
     "Stat2Data",
     "bayesplot",
