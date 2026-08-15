@@ -222,6 +222,7 @@ RUN --mount=type=bind,source="pak-scripts",target=/tmp/pak-scripts \
     export GITHUB_PAT=$(cat /run/secrets/github_token) && \
     apt-get update && \
     Rscript "/tmp/pak-scripts/${PIXI_ENV}.R" && \
+    Rscript -e 'IRkernel::installspec(user = FALSE, prefix = Sys.getenv("CONDA_DIR"))' && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
     fix-permissions "${CONDA_DIR}"
 
