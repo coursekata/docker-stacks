@@ -11,16 +11,15 @@ on:
       - .github/workflows/build-test-push-multiarch.yml
       - .github/workflows/build-test-push.yml
       # build
+      - pixi.toml
       - pixi.lock
       - Dockerfile
       - rpixi.toml
-      - scripts/rpak.R
       # the Dockerfile installs R packages by running these directly, so a
       # regenerated installer must trigger a rebuild
       - pak-scripts/**
       - Rprofile.site
-      # test
-      - tests/**
+      - scripts/**
   schedule:
     # Weekly, at 03:00 on Monday UTC time (see https://crontab.guru)
     - cron: "0 3 * * 1"
