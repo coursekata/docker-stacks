@@ -26,7 +26,7 @@ options(
   pkg.sysreqs_platform = "ubuntu-24.04"
 )
 
-message("Installing 57 R packages for datascience-notebook ...")
+message("Installing 69 R packages for datascience-notebook ...")
 pak::pkg_install(
   c(
     "IRkernel",
@@ -69,22 +69,34 @@ pak::pkg_install(
     "nimble",
     "rstanarm",
     "simDAG",
+    "BH",
     "BiocManager",
     "DataExplorer",
     "R4HCR",
+    "RcppArmadillo",
+    "RcppEigen",
+    "RcppProgress",
     "Rtsne",
+    "broom.mixed",
     "conformalbayes",
+    "cpp11",
     "datasauRus",
+    "dqrng",
     "extraDistr",
+    "flextable",
     "gitcreds",
     "latex2exp",
     "mlpwr",
     "mlr3verse",
     "modelsummary",
     "probably",
+    "progress",
+    "renv",
     "sessioninfo",
+    "sitmo",
     "skimr",
     "transport",
+    "truncnorm",
     "uwot"
   ),
   upgrade = FALSE,
