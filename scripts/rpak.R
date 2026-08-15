@@ -87,10 +87,6 @@ SPEC_KEYS <- c("github", "tag", "repos", "force")
 as_ref <- function(name, spec) {
   repo <- NULL
 
-  # An unquoted dot in a TOML key is a path separator, so `broom.mixed = "*"`
-  # parses as the table broom = { mixed = "*" } and silently resolves to the
-  # ref "broom" -- a real CRAN package, so the build goes green without ever
-  # installing what was asked for. A genuine spec table only has SPEC_KEYS.
   if (is.list(spec)) {
     unknown <- setdiff(names(spec), SPEC_KEYS)
     if (length(unknown)) {
@@ -199,10 +195,6 @@ cmd_pakgen <- function() {
     writeLines(render_script(env, refs), path)
     Sys.chmod(path, "0755")
 
-    # The test suite needs the package names too. Emitting them here means no
-    # test path has to run this script -- the smallest images have no TOML
-    # parser, so resolving the manifest inside a test container either reaches
-    # for the network or fails silently into an empty, vacuously green list.
     names_path <- file.path(OUTDIR, paste0(env, ".packages.txt"))
     writeLines(names(env_packages(m, env)), names_path)
 

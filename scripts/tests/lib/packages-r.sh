@@ -238,9 +238,6 @@ test_r_packages() {
 
   mapfile -t packages < <(get_r_packages "$environment")
 
-  # An empty list means the list could not be read, not that the image has no R
-  # packages. Returning success here lets the suite go green having asserted
-  # nothing at all.
   if [[ ${#packages[@]} -eq 0 ]]; then
     TEST_TOTAL=$((TEST_TOTAL + 1))
     TEST_FAILED=$((TEST_FAILED + 1))
