@@ -215,8 +215,7 @@ cmd_list <- function(env, as_refs = FALSE) {
   } else {
     names(env_packages(m, env))
   }
-  cat(out, sep = "\n")
-  cat("\n")
+  writeLines(out)
 }
 
 cmd_validate <- function() {
