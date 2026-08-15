@@ -137,6 +137,7 @@ CMD ["start-notebook.py"]
 RUN mkdir /usr/local/bin/start-notebook.d && \
     mkdir /usr/local/bin/before-notebook.d
 COPY --link --from=jupyter--base-notebook \
+    /usr/local/bin/_docker_stacks_log.sh \
     /usr/local/bin/run-hooks.sh \
     /usr/local/bin/start.sh \
     /usr/local/bin/start-notebook.py \
