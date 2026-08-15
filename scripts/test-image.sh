@@ -94,6 +94,13 @@ PYTHON_PKG_LIST=$(mktemp)
 trap 'rm -f "$PYTHON_PKG_LIST"' EXIT
 "$SCRIPT_DIR/list-python-packages.sh" "$IMAGE" >"$PYTHON_PKG_LIST" 2>/dev/null || true
 
+R_PKG_LIST="pak-scripts/${IMAGE}.packages.txt"
+if [[ ! -s "$R_PKG_LIST" ]]; then
+  echo "Error: $R_PKG_LIST is missing or empty"
+  echo "Run ./scripts/update-pak-scripts.sh to regenerate it from rpixi.toml"
+  exit 1
+fi
+
 # Run tests
 echo "Running tests for $IMAGE on $PLATFORM..."
 
@@ -105,5 +112,7 @@ docker run --rm --platform="$PLATFORM" \
   --mount=type=bind,source="./rpixi.toml",target=/home/jovyan/rpixi.toml \
   --mount=type=bind,source="$PYTHON_PKG_LIST",target=/tmp/python-packages.txt,readonly \
   -e PYTHON_PACKAGES_FILE=/tmp/python-packages.txt \
+  --mount=type=bind,source="./$R_PKG_LIST",target=/tmp/r-packages.txt,readonly \
+  -e R_PACKAGES_FILE=/tmp/r-packages.txt \
   "${TAG:-docker-stacks-${IMAGE}}" \
   bash /tmp/scripts/tests/run-tests.sh "$IMAGE"

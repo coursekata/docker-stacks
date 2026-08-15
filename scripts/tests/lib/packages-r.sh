@@ -16,21 +16,18 @@ source "$_LIB_DIR/helpers.sh"
 # Usage: get_r_packages "environment-name"
 get_r_packages() {
   local environment="$1"
-  local packages=()
-  local lib_dir
-  lib_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  local rpak_path="${lib_dir}/../../rpak.R"
 
-  # Extract packages using rpak list (relative path from lib directory)
-  mapfile -t packages < <(Rscript "$rpak_path" list "$environment" 2>/dev/null || true)
-
-  if [[ ${#packages[@]} -eq 0 ]]; then
-    debug "No R packages found for $environment"
+  if [[ -z "${R_PACKAGES_FILE:-}" ]]; then
+    error "R_PACKAGES_FILE is not set; the caller must provide the package list"
     return 1
   fi
 
-  printf '%s\n' "${packages[@]}"
-  return 0
+  if [[ ! -f "${R_PACKAGES_FILE}" ]]; then
+    error "R package list not found at ${R_PACKAGES_FILE}"
+    return 1
+  fi
+
+  grep -v '^[[:space:]]*$' "${R_PACKAGES_FILE}"
 }
 
 # -----------------------------------------------------------------------------
@@ -239,25 +236,17 @@ test_r_packages() {
 
   init_tests "R Packages ($environment)"
 
-  # Check if rpak.R is available (relative path from run-tests.sh location)
-  local lib_dir
-  lib_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  local rpak_path="${lib_dir}/../../rpak.R"
-
-  if [[ ! -f "$rpak_path" ]]; then
-    TEST_TOTAL=$((TEST_TOTAL + 1))
-    TEST_FAILED=$((TEST_FAILED + 1))
-    error "rpak.R not found at $rpak_path"
-    print_test_summary
-    return 1
-  fi
-
-  # Get R packages for this environment
   mapfile -t packages < <(get_r_packages "$environment")
 
+  # An empty list means the list could not be read, not that the image has no R
+  # packages. Returning success here lets the suite go green having asserted
+  # nothing at all.
   if [[ ${#packages[@]} -eq 0 ]]; then
-    info "No R packages to test for $environment"
-    return 0
+    TEST_TOTAL=$((TEST_TOTAL + 1))
+    TEST_FAILED=$((TEST_FAILED + 1))
+    error "No R packages resolved for $environment"
+    print_test_summary
+    return 1
   fi
 
   info "Found ${#packages[@]} R packages for $environment"

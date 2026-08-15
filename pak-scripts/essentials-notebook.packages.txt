@@ -1,0 +1,12 @@
+IRkernel
+rlang
+Lock5withR
+coursekata
+fivethirtyeight
+fivethirtyeightdata
+ggpubr
+gridExtra
+lme4
+plotly
+statmod
+testwhat

@@ -179,6 +179,12 @@ jobs:
           # Generate Python package list for testing
           ./scripts/list-python-packages.sh "$IMAGE_NAME" > python-packages.txt
 
+          R_PKG_LIST="pak-scripts/${IMAGE_NAME}.packages.txt"
+          if [ ! -s "$R_PKG_LIST" ]; then
+            echo "::error::$R_PKG_LIST is missing or empty; run ./scripts/update-pak-scripts.sh"
+            exit 1
+          fi
+
           # Run tests in the built image
           docker run --rm --platform="$PLATFORM" \
             --mount=type=bind,source="./scripts",target=/tmp/scripts \
@@ -186,5 +192,7 @@ jobs:
             --mount=type=bind,source="./rpixi.toml",target=/home/jovyan/rpixi.toml \
             --mount=type=bind,source="./python-packages.txt",target=/tmp/python-packages.txt,readonly \
             -e PYTHON_PACKAGES_FILE=/tmp/python-packages.txt \
+            --mount=type=bind,source="./$R_PKG_LIST",target=/tmp/r-packages.txt,readonly \
+            -e R_PACKAGES_FILE=/tmp/r-packages.txt \
             "ghcr.io/${REPO_OWNER}/${IMAGE_NAME}@${DIGEST}" \
             bash /tmp/scripts/tests/run-tests.sh "$IMAGE_NAME"

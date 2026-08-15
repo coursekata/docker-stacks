@@ -198,6 +198,14 @@ cmd_pakgen <- function() {
     path <- file.path(OUTDIR, paste0(env, ".R"))
     writeLines(render_script(env, refs), path)
     Sys.chmod(path, "0755")
+
+    # The test suite needs the package names too. Emitting them here means no
+    # test path has to run this script -- the smallest images have no TOML
+    # parser, so resolving the manifest inside a test container either reaches
+    # for the network or fails silently into an empty, vacuously green list.
+    names_path <- file.path(OUTDIR, paste0(env, ".packages.txt"))
+    writeLines(names(env_packages(m, env)), names_path)
+
     cat(sprintf("wrote %-40s %3d packages\n", path, length(refs)))
   }
 }
