@@ -82,8 +82,24 @@ env_packages <- function(manifest, env) {
 #'
 #' A bare string ("*" or a version) means CRAN. Versions are informational:
 #' pak resolves to current, matching the previous behaviour.
+SPEC_KEYS <- c("github", "tag", "repos", "force")
+
 as_ref <- function(name, spec) {
   repo <- NULL
+
+  # An unquoted dot in a TOML key is a path separator, so `broom.mixed = "*"`
+  # parses as the table broom = { mixed = "*" } and silently resolves to the
+  # ref "broom" -- a real CRAN package, so the build goes green without ever
+  # installing what was asked for. A genuine spec table only has SPEC_KEYS.
+  if (is.list(spec)) {
+    unknown <- setdiff(names(spec), SPEC_KEYS)
+    if (length(unknown)) {
+      stop(sprintf(
+        "%s: unknown spec key(s): %s\n  For the package \"%s.%s\", quote the key: \"%s.%s\" = \"*\"",
+        name, paste(unknown, collapse = ", "), name, unknown[1], name, unknown[1]
+      ), call. = FALSE)
+    }
+  }
 
   if (is.character(spec)) {
     ref <- name
