@@ -32,7 +32,7 @@ pak::pkg_install(
     "IRkernel",
     "rlang",
     "coursekata/Lock5withR",
-    "coursekata/coursekata-r?reinstall",
+    "coursekata/coursekata-r@0.20.0?reinstall",
     "fivethirtyeight",
     "coursekata/fivethirtyeightdata",
     "ggpubr",
