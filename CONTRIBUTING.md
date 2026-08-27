@@ -14,7 +14,7 @@ This guide covers development workflows, testing, CI/CD, and contribution guidel
 
 ### Setting Up Pre-commit Hooks
 
-This project uses pre-commit hooks to keep generated files in sync. Install prek and set up the hooks:
+This project uses pre-commit hooks to run local checks. Install prek and set up the hooks:
 
 ```bash
 # Install prek (requires pipx or pip)
@@ -23,8 +23,6 @@ pipx install prek
 # Install the pre-commit hooks
 prek install
 ```
-
-The hooks will automatically regenerate `pak-scripts/*.R` files when `rpixi.toml` changes.
 
 ### Building Images Locally
 
@@ -105,10 +103,10 @@ just test r-notebook
   └─> ./scripts/test-image.sh
         ├─> Validates environment name against pixi.toml
         ├─> Generates Python package list on host
+        ├─> Generates R package list via `scripts/r-refs.py <image> --names`
         └─> Runs docker with mounts:
               - ./scripts → /tmp/scripts
               - ./pixi.toml → /home/jovyan/pixi.toml
-              - ./rpixi.toml → /home/jovyan/rpixi.toml
               - Generated package list → /tmp/python-packages.txt
             └─> bash /tmp/scripts/tests/run-tests.sh r-notebook
 ```
@@ -194,28 +192,26 @@ If tests fail in CI:
 
 ### R Packages
 
-1. Edit `rpixi.toml` in the appropriate feature section
+1. Edit the relevant `r/<feature>.txt` file — one pak ref per line, `#` comments
+   and blank lines allowed. The filename is the feature name.
 2. Do **not** add a matching `r-*` package via `pixi add`. conda-forge has no `r-*`
    builds for R 4.6, so a single one pins the whole solve-group back to 4.5.x and
    silently downgrades R for every image.
-3. Validate syntax: `Rscript ./scripts/rpak.R validate`
-4. Regenerate installers: `./scripts/update-pak-scripts.sh` (the prek hook does this
-   for you on commit). The Dockerfile runs `pak-scripts/<env>.R`, so this step is what
-   actually changes the build.
-5. Rebuild and test: `just build <image> && just test <image>`
+3. Rebuild and test: `just build <image> && just test <image>`
 
-A bare name means CRAN. If the package is not on CRAN it needs an explicit source —
-`{ github = "user/repo" }` or `{ repos = "https://..." }` — or resolution fails.
+A bare name means CRAN. An off-CRAN package needs a pak ref pinned to a full
+40-hex commit SHA — `<package>=<owner>/<repo>@<sha>` — never a tag or branch,
+both of which can move out from under a resolved build. Append `?reinstall`
+to force a reinstall even when pak thinks the version is already satisfied.
 
 Example:
 
-```toml
-[feature.essentials.dependencies]
-coursekata = { force = true }
-testwhat = { github = "coursekata/testwhat", tag = "v4.11.3.2" }
+```txt
+coursekata=coursekata/coursekata-r@5e68e7716b02065823d17491de4a18e57774185e?reinstall
+ggpubr
 ```
 
-See `rpixi.toml` for package source examples (CRAN, GitHub, custom repos).
+`just gate static` validates the ref syntax; nothing needs regenerating.
 
 ## The Six Images
 
@@ -224,9 +220,14 @@ which Pixi environment gets installed into it. The images are **not**
 `FROM`-chained — nothing is built on top of anything else here.
 "Downstream" describes cumulative *manifest features* (a package present
 in `r-notebook` and everything above it), not an inherited image layer.
-Containment is proven statically, from the committed `pixi.lock` and
-`rpixi.toml`, before any image is built — that's what `just gate static`
-does — not by rebuilding and diffing, and not by inheritance.
+Containment is proven statically, from the committed `pixi.lock`, before
+any image is built — that's what `just gate static` does — not by
+rebuilding and diffing, and not by inheritance. `pixi.toml`'s
+`[environments.*]` `features` lists are the single definition of tier
+composition for both languages: the R side parses `pixi.toml` directly
+(`scripts/get-refs.py`) and concatenates the matching `r/<feature>.txt`
+files, including the two instructor features, which carry no conda
+packages at all.
 
 Four tiers form a ladder, each a superset of the one before:
 
@@ -257,10 +258,9 @@ Two more images exist for specific consumers and sit outside the ladder:
   `base-r-notebook`, which contains no Python teaching stack at all.
 
 **Important**: a change to a feature multiple environments share — anything
-in `pixi.toml`'s `[dependencies]` or `[feature.notebook]`, or the
-base/essentials/r features in `rpixi.toml` — affects every tier that
-includes it. Rebuild and test every affected tier, not just the one you
-were editing.
+in `pixi.toml`'s `[dependencies]` or `[feature.notebook]`, or a shared
+`r/<feature>.txt` spec file — affects every tier that includes it. Rebuild
+and test every affected tier, not just the one you were editing.
 
 ## The CRAN Repository
 
@@ -283,7 +283,10 @@ of building from source: 5.5s versus 1m49s for the same resolve.
 Bioconductor repositories pak would otherwise add; no package in any tier
 is of Bioconductor origin.
 
-`PPM` is the escape hatch: set it, before starting R or when running the
+Determinism doesn't come from a frozen date here — it comes from CI
+resolving the package list once and handing that same resolution to both
+architecture builds, so they can't drift from each other. `PPM` is still
+the escape hatch: set it, before starting R or when running the
 container, to pin a dated snapshot for reproducible local testing. The
 shipped default never does this for you.
 

@@ -1,0 +1,9 @@
+coursekata=coursekata/coursekata-r@5e68e7716b02065823d17491de4a18e57774185e?reinstall
+fivethirtyeight
+fivethirtyeightdata=coursekata/fivethirtyeightdata@8de5de424ee5d5891fca08d4ef8734e28ff0618d
+ggpubr
+gridExtra
+lme4
+Lock5withR=coursekata/Lock5withR@f2773d9f828b72882ed1c4d6b3b2e539a3b3b24a
+plotly
+statmod

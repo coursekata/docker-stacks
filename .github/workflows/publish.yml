@@ -83,7 +83,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       images: ${{ steps.matrix.outputs.images }}
-      snapshot: ${{ steps.snapshot.outputs.snapshot }}
     steps:
       - name: Checkout
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
@@ -98,15 +97,6 @@ jobs:
         uses: prefix-dev/setup-pixi@28eb668aafebd9dede9d97c4ba1cd9989a4d0004 # v0.9.2
         with:
           run-install: false
-
-      - name: Compute candidate snapshot
-        id: snapshot
-        run: |
-          # Two days behind the run date: Posit builds Linux binaries
-          # asynchronously, and a same-day snapshot is the one most likely
-          # to fall back to a source compile on arm64.
-          SNAPSHOT=$(date -u -d '2 days ago' +%F)
-          echo "snapshot=$SNAPSHOT" >> "$GITHUB_OUTPUT"
 
       - name: Derive image matrix
         id: matrix
@@ -134,6 +124,10 @@ jobs:
               } ]')
           echo "images=$include" >> "$GITHUB_OUTPUT"
 
+  # Resolve every environment's R refs to pinned versions once, so both
+  # architecture builds install the exact same package set. Runs on
+  # ubuntu-24.04 (not ubuntu-latest): the sysreqs platform and the lock's
+  # recorded os must be noble to match the image.
   # Build foundation base layer for both architectures
   # The base target doesn't use pixi at all. It runs first because every image
   # build reads its layers from the registry cache, not because of the lock.
@@ -169,4 +163,3 @@ jobs:
       cache-from: ${{ needs.foundation.outputs.cache-from }}
       free-disk-space: ${{ matrix.image == 'datascience-notebook' || matrix.image == 'datascience-core' }}
       lock-artifact: pixi-lock
-      snapshot: ${{ needs.setup.outputs.snapshot }}

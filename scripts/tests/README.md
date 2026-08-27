@@ -51,6 +51,7 @@ Jupyter and kernel tests:
 - Kernel availability (IR and Python3)
 - IRkernel registration verification
 - Default kernel configuration
+- Kernel execution (one cell through `ir` and `python3`)
 - Health check validation
 
 ### `packages-python.sh`
@@ -65,7 +66,7 @@ Python package tests:
 
 R package tests:
 
-- Extracts R packages from `rpixi.toml` via `scripts/rpak.R list`
+- Extracts R packages via `scripts/r-refs.py <env> --names`
 - Tests package loading via `library()`
 - Parallel loading tests for performance
 - Special handling for cmdstanr configuration (CMDSTAN env var)
@@ -107,7 +108,7 @@ Test modules use relative paths for foolproof script discovery:
 
 ```bash
 local lib_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-local rpak_path="${lib_dir}/../../rpak.R"
+local refs_path="${lib_dir}/../../r-refs.py"
 ```
 
 ### Parallel Execution
@@ -172,7 +173,6 @@ Set `TEST_DEBUG=1` to see detailed debug information:
 docker run --rm -e TEST_DEBUG=1 --platform=linux/amd64 \
   --mount=type=bind,source="./scripts",target=/tmp/scripts \
   --mount=type=bind,source="./pixi.toml",target=/home/jovyan/pixi.toml \
-  --mount=type=bind,source="./rpixi.toml",target=/home/jovyan/rpixi.toml \
   ghcr.io/coursekata/base-r-notebook \
   bash /tmp/scripts/tests/run-tests.sh base-r-notebook
 ```

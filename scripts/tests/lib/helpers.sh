@@ -274,7 +274,6 @@ get_test_environment() {
   if [[ -n "${TEST_ENV:-}" ]]; then
     echo "$TEST_ENV"
   else
-    # Try to detect from common patterns (you might need to customize this)
     echo "unknown"
   fi
 }

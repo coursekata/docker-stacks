@@ -5,8 +5,8 @@ Everything here is provable from committed text, in seconds, before any image
 exists: pixi.lock containment across the ladder, the solve-group split that
 keeps exercises-notebook's asttokens ceiling off the ladder, cross-arch
 version equality over the packages we actually name, the CRAN repository
-configuration, the R
-GitHub refs, generator/lockfile sync, and CI Action pinning.
+configuration, the R refs in r/, the feature ladder pixi.toml defines for
+both languages, and CI Action pinning.
 
 python3 + PyYAML rather than bash/yq because pixi.lock is 632KB of YAML and
 the repo carries no other YAML tooling; both are present on ubuntu-24.04
@@ -15,11 +15,10 @@ runners and locally.
 
 from __future__ import annotations
 
+import json
 import re
-import shutil
 import subprocess
 import sys
-import tempfile
 import time
 import tomllib
 from pathlib import Path
@@ -45,9 +44,18 @@ GATED_CORE = {
 PPM_LATEST = "https://packagemanager.posit.co/cran/__linux__/noble/latest"
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 
-# The R ladder as rpixi.toml expresses it — four notebook tiers. datascience-core
-# and exercises-notebook are checked separately (env-name parity, not nesting).
-R_LADDER = ["base-r-notebook", "essentials-notebook", "r-notebook", "datascience-notebook"]
+# A bare name resolves from CRAN; a name-overridden or plain GitHub ref must
+# carry a 40-char commit SHA, never a movable tag or branch.
+CRAN_REF_RE = re.compile(r"^[A-Za-z][A-Za-z0-9._]*$")
+GITHUB_REF_RE = re.compile(
+    r"^([A-Za-z][A-Za-z0-9._]*=)?[A-Za-z0-9._-]+/[A-Za-z0-9._-]+@[0-9a-f]{40}(\?reinstall)?$"
+)
+
+# Four notebook tiers, the nesting pixi.toml's `features` lists must express
+# for both languages now that R composition rides the same manifest.
+# datascience-core and exercises-notebook are checked separately (env-name
+# parity, not nesting).
+LADDER = ["base-r-notebook", "essentials-notebook", "r-notebook", "datascience-notebook"]
 
 
 def load_toml(path: Path) -> dict:
@@ -221,11 +229,18 @@ def report_cross_arch_rest(pixi: dict, lock: dict, index: dict, gated: set[str])
 
 def check_rprofile(failures: list[str]) -> None:
     text = (ROOT / "Rprofile.site").read_text()
+    code = "\n".join(line.split("#", 1)[0] for line in text.splitlines())
 
-    if "cloud.r-project.org" in text:
-        failures.append("Rprofile.site: a second repository makes resolution nondeterministic; pak takes the newest across all of them")
+    # Counted as a bare "options(repos =" occurrence, not via the paren-balanced
+    # call regex below: a second call can smuggle extra repos through a nested
+    # paren (e.g. c(getOption("repos"), CRAN2 = ...)) that the call regex's
+    # single-level `[^)]*` can't see past, so this count is what actually
+    # enforces "exactly one repos-setting call" against that shape.
+    repo_calls = re.findall(r"options\(\s*repos\s*=", code)
+    if len(repo_calls) != 1:
+        failures.append(f"Rprofile.site: found {len(repo_calls)} options(repos = ...) calls, expected exactly one")
 
-    m = re.search(r"options\(repos\s*=\s*c\(([^)]*)\)\)", text)
+    m = re.search(r"options\(repos\s*=\s*c\(([^)]*)\)\)", code)
     if not m:
         failures.append("Rprofile.site: no options(repos = c(...)) call found")
     else:
@@ -240,6 +255,9 @@ def check_rprofile(failures: list[str]) -> None:
     if "pkg.use_bioconductor = FALSE" not in text:
         failures.append("Rprofile.site: pak adds five rolling Bioconductor repos unless pkg.use_bioconductor = FALSE")
 
+    if "HTTPUserAgent" not in text:
+        failures.append("Rprofile.site: HTTPUserAgent is unset — PPM serves source instead of binaries without it (measured 5.5s vs 1m49s)")
+
     m = re.search(r'Sys\.getenv\(\s*"PPM"\s*,\s*unset\s*=\s*"([^"]+)"\s*\)', text)
     if not m:
         failures.append("Rprofile.site: no PPM default found (Sys.getenv(\"PPM\", unset = ...))")
@@ -247,95 +265,76 @@ def check_rprofile(failures: list[str]) -> None:
         failures.append(f"Rprofile.site: PPM default {m.group(1)!r} != {PPM_LATEST!r} — no frozen date belongs anywhere in this file")
 
 
-def check_pak_scripts_repos(failures: list[str]) -> None:
-    # pak-scripts/*.R are what actually runs inside the image, so the single
-    # repository is only as real as what's committed there, not just what
-    # Rprofile.site says.
-    for script in sorted((ROOT / "pak-scripts").glob("*.R")):
-        text = script.read_text()
-        for banned in ("cloud.r-project.org",):
-            if banned in text:
-                failures.append(
-                    f"pak-scripts repos: {script.name}: forbidden string {banned!r} present — "
-                    "a fallback repo in a shipped installer reintroduces exactly the ambiguity Rprofile.site removes"
-                )
-        for lineno, line in enumerate(text.splitlines(), start=1):
-            if "options(repos" in line:
-                failures.append(
-                    f"pak-scripts repos: {script.name}:{lineno}: {line.strip()!r} configures a repository "
-                    "beyond the one Rprofile.site already sets"
-                )
+def check_r_specs(failures: list[str], pixi: dict) -> None:
+    valid_features = set(pixi.get("feature", {})) | {"default"}
+    owner: dict[str, str] = {}
 
+    for spec_file in sorted((ROOT / "r").glob("*.txt")):
+        if spec_file.stem not in valid_features:
+            failures.append(f"r specs: r/{spec_file.name} has no matching feature in pixi.toml")
 
-def check_rpixi(failures: list[str], pixi: dict, rpixi: dict) -> None:
-    tables = [("(dependencies)", rpixi.get("dependencies", {}))]
-    tables += [(f"feature.{n}", f.get("dependencies", {})) for n, f in rpixi.get("feature", {}).items()]
-
-    for table, deps in tables:
-        for name, spec in deps.items():
-            if not isinstance(spec, dict):
+        for lineno, raw in enumerate(spec_file.read_text().splitlines(), start=1):
+            ref = raw.split("#", 1)[0].strip()
+            if not ref:
                 continue
-            if "repos" in spec:
-                failures.append(
-                    f"rpixi refs: {table}.{name} sets a custom \"repos\" ({spec['repos']!r}) — "
-                    "custom R repos are banned (R0); off-CRAN packages must be GitHub refs pinned to a SHA"
-                )
-            if "github" not in spec:
-                continue
-            if "tag" in spec:
-                failures.append(f"rpixi refs: {table}.{name} pins a movable \"tag\" — pin \"commit\" instead")
-            commit = spec.get("commit")
-            if not commit or not SHA_RE.fullmatch(commit):
-                failures.append(f"rpixi refs: {table}.{name} commit {commit!r} is not a 40-char lowercase-hex SHA")
 
-    feats = {e: set(rpixi["environments"][e]["features"]) for e in R_LADDER if e in rpixi["environments"]}
-    for lo, hi in zip(R_LADDER, R_LADDER[1:]):
+            if "::" in ref:
+                failures.append(
+                    f"r specs: r/{spec_file.name}:{lineno}: {ref!r} uses a custom-repo escape hatch — "
+                    "custom R repos are banned (R0)"
+                )
+                continue
+
+            if not (CRAN_REF_RE.fullmatch(ref) or GITHUB_REF_RE.fullmatch(ref)):
+                failures.append(
+                    f"r specs: r/{spec_file.name}:{lineno}: {ref!r} is not a bare CRAN name or a "
+                    "SHA-pinned GitHub ref — a movable tag or bare branch means the same ref resolves "
+                    "to different code tomorrow, and two of these are dataset packages where a column "
+                    "rename silently invalidates every worked example in a chapter"
+                )
+                continue
+
+            name = ref.split("=", 1)[0].split("@", 1)[0].split("?", 1)[0]
+            if name in owner and owner[name] != spec_file.name:
+                failures.append(f"r specs: package {name!r} appears in both r/{owner[name]} and r/{spec_file.name}")
+            else:
+                owner[name] = spec_file.name
+
+
+def check_ladder(failures: list[str], pixi: dict) -> None:
+    envs = pixi["environments"]
+    feats = {name: set(envs[name]["features"]) for name in LADDER if name in envs}
+    for lo, hi in zip(LADDER, LADDER[1:]):
         if lo not in feats or hi not in feats:
             continue
-        if not feats[lo] <= feats[hi]:
-            failures.append(f"rpixi ladder: {lo} features {sorted(feats[lo])} not <= {hi} features {sorted(feats[hi])}")
+        if not feats[lo] < feats[hi]:  # strict: each rung must add something
+            failures.append(f"ladder: {lo} features {sorted(feats[lo])} not a strict subset of {hi} features {sorted(feats[hi])}")
 
-    pixi_envs = set(pixi["environments"])
-    rpixi_envs = set(rpixi["environments"])
-    if pixi_envs != rpixi_envs:
-        failures.append(
-            f"rpixi/pixi env parity: only in pixi.toml={sorted(pixi_envs - rpixi_envs)}, "
-            f"only in rpixi.toml={sorted(rpixi_envs - pixi_envs)}"
+
+def check_environment_features(failures: list[str], pixi: dict) -> None:
+    # scripts/get-refs.py reads tier composition by parsing pixi.toml directly
+    # (declared features + ["default"]) rather than shelling out to pixi; this
+    # is the one assumption that makes that valid.
+    try:
+        result = subprocess.run(
+            ["pixi", "info", "--json"], cwd=ROOT, check=True,
+            capture_output=True, text=True, timeout=30,
         )
-
-
-def check_generator_sync(failures: list[str]) -> None:
-    # Only rpixi.toml and the generator itself are inputs to `pakgen`; a full
-    # tree copy would also drag along the multi-GB local .pixi cache for no
-    # reason, which is not a tradeoff worth making for a 10-second gate.
-    if shutil.which("Rscript") is None:
-        # Reported, never fatal: the gate must not die on a runner without R,
-        # and the prek hook already regenerates these on every rpixi.toml edit.
-        print("report generator sync: Rscript not available, pak-scripts freshness unchecked")
+    except FileNotFoundError:
+        failures.append("environment features: pixi is not on PATH")
+        return
+    except subprocess.CalledProcessError as e:
+        failures.append(f"environment features: pixi info --json failed:\n{(e.stdout + e.stderr).strip()}")
         return
 
-    with tempfile.TemporaryDirectory() as tmp:
-        tmp_path = Path(tmp)
-        shutil.copy(ROOT / "rpixi.toml", tmp_path / "rpixi.toml")
-        (tmp_path / "scripts").mkdir()
-        shutil.copy(ROOT / "scripts" / "rpak.R", tmp_path / "scripts" / "rpak.R")
-
-        result = subprocess.run(
-            ["Rscript", "scripts/rpak.R", "pakgen"], cwd=tmp_path,
-            capture_output=True, text=True,
-        )
-        if result.returncode != 0:
-            failures.append(f"generator sync: scripts/rpak.R pakgen failed:\n{result.stdout}{result.stderr}")
-            return
-
-        diff = subprocess.run(
-            ["diff", "-rq", str(tmp_path / "pak-scripts"), str(ROOT / "pak-scripts")],
-            capture_output=True, text=True,
-        )
-        if diff.returncode != 0:
+    reported = {e["name"]: e["features"] for e in json.loads(result.stdout)["environments_info"]}
+    for name, env in pixi["environments"].items():
+        expected = list(env["features"]) + ["default"]
+        actual = reported.get(name)
+        if actual != expected:
             failures.append(
-                "generator sync: pak-scripts/ is out of date with rpixi.toml; "
-                f"run scripts/update-pak-scripts.sh\n{diff.stdout}{diff.stderr}"
+                f"environment features: {name}: pixi info reports {actual}, expected declared "
+                f"features + ['default'] = {expected}"
             )
 
 
@@ -376,7 +375,6 @@ def main() -> int:
     failures: list[str] = []
 
     pixi = load_toml(ROOT / "pixi.toml")
-    rpixi = load_toml(ROOT / "rpixi.toml")
 
     # Read before pixi ever runs: every check downstream of check_lock_fresh
     # must reason about these committed bytes, not whatever pixi leaves on
@@ -392,9 +390,9 @@ def main() -> int:
     gated = check_cross_arch_gated(failures, pixi, lock, index)
     report_cross_arch_rest(pixi, lock, index, gated)
     check_rprofile(failures)
-    check_pak_scripts_repos(failures)
-    check_rpixi(failures, pixi, rpixi)
-    check_generator_sync(failures)
+    check_r_specs(failures, pixi)
+    check_ladder(failures, pixi)
+    check_environment_features(failures, pixi)
     check_workflow_pins(failures)
 
     elapsed = time.time() - start
