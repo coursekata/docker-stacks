@@ -56,7 +56,7 @@ just test essentials-notebook amd64
 just test-all
 ```
 
-See `scripts/tests/README.md` for details on the test framework architecture.
+See [Testing](#testing) for how the suite is structured.
 
 ### Running Containers
 
@@ -76,9 +76,6 @@ You can also use the scripts directly:
 # Build
 ./scripts/build-image.sh --image r-notebook --platform linux/amd64 --tag my-tag
 
-# Test
-./scripts/test-image.sh --image r-notebook --platform linux/amd64 --tag my-tag
-
 # Run shell
 ./scripts/run-shell.sh --image my-tag --platform linux/amd64
 
@@ -90,26 +87,22 @@ You can also use the scripts directly:
 
 ### Test Architecture
 
-Tests run inside Docker containers to validate that images are correctly configured. The test suite:
+Tests run inside the image they are testing, against the Dockerfile's `test`
+stage: `final` plus bats, the suite, and the package lists the suite asserts
+against. Nothing is mounted at run time and nothing is resolved on the host, so
+`docker run <test image>` is the whole invocation and CI exercises the same
+image a developer does.
 
-1. Mounts the `scripts/` directory into the container at `/tmp/scripts`
-2. Executes `scripts/tests/run-tests.sh` with the environment name
-3. Tests run in logical order: fast tests (environment checks) first, slow tests (package validation) last
+Tests run in a fixed order: fast environment checks first, slow package
+validation last.
 
 ### Test Execution Flow
 
-```txt
-just test r-notebook
-  └─> ./scripts/test-image.sh
-        ├─> Validates environment name against pixi.toml
-        ├─> Generates Python package list on host
-        ├─> Generates R package list via `scripts/r-refs.py <image> --names`
-        └─> Runs docker with mounts:
-              - ./scripts → /tmp/scripts
-              - ./pixi.toml → /home/jovyan/pixi.toml
-              - Generated package list → /tmp/python-packages.txt
-            └─> bash /tmp/scripts/tests/run-tests.sh r-notebook
-```
+`just test <image>` builds `--target test` and runs it. Building the test stage
+builds the image under test, so there is no separate build step to keep in sync.
+
+CI does the same in two steps: it pushes `final` by digest, then builds `test`
+on top of the cache it just wrote, so the tested layers are the pushed ones.
 
 ### What Gets Tested
 
@@ -126,7 +119,7 @@ Each image is tested for:
    - Kernel availability (IR, Python3)
    - IRkernel registration
    - Default kernel configuration
-   - Health check
+   - Kernel execution (one cell through `ir` and `python3`)
 
 3. **Package Installation**:
    - Python packages: installation check (`pip show`) and import validation
@@ -134,7 +127,16 @@ Each image is tested for:
 
 ### Adding Tests
 
-See `scripts/tests/README.md` for detailed instructions on adding tests to existing modules, creating new test modules, and modifying the test runner.
+Tests are [bats-core](https://bats-core.readthedocs.io/) files under `scripts/tests/`. `run-tests.sh` hands bats the whole directory, so a new `.bats` file runs without being wired in anywhere.
+
+`packages-python.bats` and `packages-r.bats` generate one test per package from
+`PYTHON_PACKAGES_FILE` and `R_PACKAGES_FILE`. The test stage resolves both with
+`scripts/get-refs.py` and bakes them in, so they are already set inside the
+image; running a file standalone elsewhere needs them set by hand.
+
+Execution is serial: bats `--jobs` needs GNU parallel, which the images do not carry. `TEST_DEBUG=1` adds `--trace --show-output-of-passing-tests`.
+
+bats itself is not in the published images. It is installed by the Dockerfile's `test` stage, which is built with `--target test` and never published — the `images` job targets `final` explicitly and the static gate asserts no published target installs it.
 
 ## CI/CD
 
@@ -180,7 +182,7 @@ If tests fail in CI:
 1. Pull the image locally: `docker pull ghcr.io/coursekata/<image>:cache-<platform>`
 2. Run tests locally: `just test <image>`
 3. Debug with `TEST_DEBUG=1` environment variable
-4. Run individual test modules as shown in `scripts/tests/README.md`
+4. Run a single file: `bats scripts/tests/<file>.bats` inside the test image
 
 ## Modifying Dependencies
 
@@ -324,5 +326,5 @@ Building images requires GitHub authentication for package installation:
 
 ## Getting Help
 
-- **Test framework**: See `scripts/tests/README.md`
+- **Test framework**: See [Testing](#testing)
 - **Issues**: Open an issue at <https://github.com/coursekata/docker-stacks/issues>

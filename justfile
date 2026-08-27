@@ -25,13 +25,17 @@ _build image arch:
     suffix=$(just _tag_suffix "{{ arch }}")
     ./scripts/build-image.sh --image "{{ image }}" --platform "$platform" --tag "{{ DS_OWNER }}/{{ image }}${suffix}"
 
+# The test image is `final` plus bats and the suite, so building it also
+# builds the image under test; there is nothing to mount at run time.
 [private]
-_test image arch: (_build image arch)
+_test image arch:
     #!/usr/bin/env bash
     set -euo pipefail
     platform="linux/{{ arch }}"
     suffix=$(just _tag_suffix "{{ arch }}")
-    ./scripts/test-image.sh --image "{{ image }}" --platform "$platform" --tag "{{ DS_OWNER }}/{{ image }}${suffix}"
+    tag="{{ DS_OWNER }}/{{ image }}${suffix}-test"
+    ./scripts/build-image.sh --image "{{ image }}" --platform "$platform" --target test --tag "$tag"
+    docker run --rm --platform="$platform" "$tag"
 
 [private]
 _shell image arch: (_build image arch)
@@ -118,7 +122,7 @@ img-clean: img-rm-dang img-rm
 # Lint every shell script the same way CI does
 [group('gate')]
 lint:
-    shellcheck -S warning scripts/*.sh scripts/tests/*.sh scripts/tests/lib/*.sh
+    shellcheck -S warning scripts/*.sh scripts/tests/*.sh scripts/tests/*.bats
 
 # Run a release gate (track: static; the weekly signal stays one command)
 [group('gate')]

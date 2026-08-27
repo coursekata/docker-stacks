@@ -165,33 +165,33 @@ jobs:
           provenance: false
           outputs: type=image,name=ghcr.io/${{ github.repository_owner }}/next/${{ inputs.image }},push-by-digest=true,name-canonical=true,push=true
 
+      # Builds `final` plus bats and the suite. Every layer below the test
+      # stage is already in the local build cache from the push above, so this
+      # adds the test layers and nothing else, and what runs is byte-identical
+      # to what was pushed.
+      - name: Build test image
+        if: inputs.skip-tests != true
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          target: test
+          platforms: ${{ inputs.platform }}
+          build-args: ${{ inputs.build-args }}
+          secrets: |
+            github_token=${{ secrets.GITHUB_TOKEN }}
+          cache-from: ${{ steps.context.outputs.cache-from }}
+          load: true
+          push: false
+          provenance: false
+          tags: ${{ inputs.image }}:test
+
       - name: Test
         if: inputs.skip-tests != true
         shell: bash
         env:
-          IMAGE_NAME: ${{ inputs.image }}
           PLATFORM: ${{ inputs.platform }}
-          DIGEST: ${{ steps.build.outputs.digest }}
-          REPO_OWNER: ${{ github.repository_owner }}
-        run: |
-          # Generate Python package list for testing
-          ./scripts/list-python-packages.sh "$IMAGE_NAME" > python-packages.txt
-
-          # Test against the composed direct names, not the ~450-entry
-          # resolved closure: the point is that the packages an image
-          # advertises load, not the whole dependency tree.
-          python3 scripts/r-refs.py "$IMAGE_NAME" --names > r-packages.txt
-
-          # Run tests in the built image
-          docker run --rm --platform="$PLATFORM" \
-            --mount=type=bind,source="./scripts",target=/tmp/scripts \
-            --mount=type=bind,source="./pixi.toml",target=/home/jovyan/pixi.toml \
-            --mount=type=bind,source="./python-packages.txt",target=/tmp/python-packages.txt,readonly \
-            -e PYTHON_PACKAGES_FILE=/tmp/python-packages.txt \
-            --mount=type=bind,source="./r-packages.txt",target=/tmp/r-packages.txt,readonly \
-            -e R_PACKAGES_FILE=/tmp/r-packages.txt \
-            "ghcr.io/${REPO_OWNER}/next/${IMAGE_NAME}@${DIGEST}" \
-            bash /tmp/scripts/tests/run-tests.sh "$IMAGE_NAME"
+          TEST_IMAGE: ${{ inputs.image }}:test
+        run: docker run --rm --platform="$PLATFORM" "$TEST_IMAGE"
 
       # A record of what this image actually contains, not a prediction made
       # before it existed. Nothing gates on it; the two architectures may

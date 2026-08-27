@@ -32,7 +32,7 @@ jobs:
           name: pixi-lock
           path: .
 
-      # run-install: false — the gate only needs the pixi binary for `pixi
+      # run-install: false because the gate only needs the pixi binary for `pixi
       # lock --check`, not an installed environment; and the runner's system
       # python3 (not an activated env's) is what should end up on PATH.
       - name: Setup Pixi
@@ -41,14 +41,14 @@ jobs:
           run-install: false
 
       # PyYAML is not guaranteed on the runner image, and this gate now blocks
-      # every build — an ImportError here stops the whole lane.
+      # every build: an ImportError here stops the whole lane.
       - name: Install gate dependencies
         run: python3 -m pip install --quiet pyyaml
 
       # shellcheck ships on the runner. It has been passing all along with
       # nothing enforcing it, which is the same as not passing.
       - name: Shellcheck
-        run: shellcheck -S warning scripts/*.sh scripts/tests/*.sh scripts/tests/lib/*.sh
+        run: shellcheck -S warning scripts/*.sh scripts/tests/*.sh scripts/tests/*.bats
 
       - name: Static gate
         run: python3 scripts/gate/static.py
@@ -156,6 +156,7 @@ jobs:
     secrets: inherit
     with:
       image: ${{ matrix.image }}
+      target: final
       title: ${{ matrix.title }}
       description: ${{ matrix.description }}
       build-args: |
