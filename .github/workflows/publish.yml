@@ -1,11 +1,45 @@
 ---
-name: Build Currency Candidate
+name: Build and Publish Images
 
 on:
   workflow_dispatch:
   schedule:
     # Weekly, at 03:00 on Monday UTC time (see https://crontab.guru)
     - cron: "0 3 * * 1"
+  # Anything that changes what an image contains rebuilds it. Docs, licences
+  # and the READMEs deliberately do not: they cannot alter the artifact.
+  push:
+    branches: [main]
+    paths:
+      # ci/cd
+      - .github/workflows/publish.yml
+      - .github/workflows/build-test-push-multiarch.yml
+      - .github/workflows/build-test-push.yml
+      # build
+      - pixi.toml
+      - pixi.lock
+      - Dockerfile
+      - Rprofile.site
+      # the Dockerfile composes pak refs from these
+      - r/**
+      # get-refs.py and the test suite both ship into the build
+      - scripts/**
+  pull_request:
+    branches: [main]
+    paths:
+      # ci/cd
+      - .github/workflows/publish.yml
+      - .github/workflows/build-test-push-multiarch.yml
+      - .github/workflows/build-test-push.yml
+      # build
+      - pixi.toml
+      - pixi.lock
+      - Dockerfile
+      - Rprofile.site
+      # the Dockerfile composes pak refs from these
+      - r/**
+      # get-refs.py and the test suite both ship into the build
+      - scripts/**
 
 # https://docs.github.com/en/actions/using-jobs/using-concurrency
 concurrency:
@@ -138,6 +172,7 @@ jobs:
     with:
       image: foundation
       target: base
+      publish: ${{ github.event_name != 'pull_request' }}
       title: Foundational Image for CourseKata Notebook Images
       description: System dependencies for CourseKata notebook images.
       skip-tests: true
@@ -157,6 +192,7 @@ jobs:
     with:
       image: ${{ matrix.image }}
       target: final
+      publish: ${{ github.event_name != 'pull_request' }}
       title: ${{ matrix.title }}
       description: ${{ matrix.description }}
       build-args: |

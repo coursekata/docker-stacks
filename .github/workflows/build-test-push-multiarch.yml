@@ -20,6 +20,11 @@ on:
         description: The target layer to build
         type: string
         required: false
+      publish:
+        description: Whether to tag the result. False on pull requests, which build and test but must not move a published tag.
+        type: boolean
+        required: false
+        default: true
       build-args:
         description: Build arguments to pass to the image
         type: string
@@ -83,6 +88,7 @@ jobs:
 
   manifest:
     name: Create Multi-Arch Manifest
+    if: inputs.publish
     needs: [build-amd64, build-arm64]
     runs-on: ubuntu-latest
     outputs:
