@@ -112,3 +112,20 @@ img-rm-dang:
 # Clean all images (dangling + built)
 [group('images')]
 img-clean: img-rm-dang img-rm
+
+# --- Gate ---
+
+# Lint every shell script the same way CI does
+[group('gate')]
+lint:
+    shellcheck -S warning scripts/*.sh scripts/tests/*.sh scripts/tests/lib/*.sh
+
+# Run a release gate (track: static; the weekly signal stays one command)
+[group('gate')]
+gate track="static":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    case "{{ track }}" in
+        static) python3 scripts/gate/static.py ;;
+        *) echo "unknown gate track: {{ track }}" >&2; exit 1 ;;
+    esac

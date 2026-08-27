@@ -6,3 +6,4 @@
 # python environments
 .venv/
 venv/
+__pycache__/
