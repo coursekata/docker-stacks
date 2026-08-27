@@ -2,10 +2,20 @@
 prevent_s3_msgs <- Sys.getenv("_R_S3_METHOD_REGISTRATION_NOTE_OVERWRITES_", unset = "false")
 Sys.setenv(`_R_S3_METHOD_REGISTRATION_NOTE_OVERWRITES_` = prevent_s3_msgs)
 
-# add a default CRAN mirror
-ppm <- Sys.getenv("PPM", unset = "https://packagemanager.posit.co/cran/__linux__/noble/latest")
-cran <- Sys.getenv("CRAN", unset = "https://cloud.r-project.org")
-options(repos = c(PPM = ppm, CRAN = cran))
+# The entry MUST be named CRAN: pkgcache injects its own rolling
+# cran.rstudio.com whenever getOption("repos") has no entry by that name, so
+# naming it anything else leaves this one inert while looking correct. Measured,
+# not assumed. pak also resolves in a subprocess that re-reads this file, so
+# options(repos=) set at an R prompt never reaches it: verify by asking pak
+# what it resolved, never by reading getOption("repos").
+#
+# PPM overrides the URL for pinning a date locally.
+snap <- Sys.getenv("PPM", unset = "https://packagemanager.posit.co/cran/__linux__/noble/latest")
+options(repos = c(CRAN = snap))
+
+# pak adds five Bioconductor repos unless told otherwise; they are a second
+# rolling source and no package in any tier is of Bioconductor origin.
+options(pkg.use_bioconductor = FALSE)
 
 # setup user agent for RSPM
 # https://docs.posit.co/rspm/admin/serving-binaries/#binary-user-agents
@@ -23,6 +33,9 @@ options(jupyter.plot_mimetypes = c(
   "image/svg+xml",
   "image/png"
 ))
+
+# match the CourseKata Hub's plot defaults so a learner's plots look the same
+options(repr.plot.width = 8, repr.plot.height = 4, repr.plot.res = 200)
 
 # don't show all startup messages for CourseKata
 options(coursekata.quiet = TRUE)
