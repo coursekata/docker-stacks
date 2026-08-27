@@ -43,7 +43,31 @@ source("https://raw.githubusercontent.com/coursekata/docker-stacks/main/pak-scri
 # Rscript pak-scripts/r-notebook.R
 ```
 
+### `next/*` is not a product
+
+You may see a `ghcr.io/coursekata/next/<image>` namespace in this organization's GHCR packages. It holds weekly build candidates used internally before a release is promoted. It carries no compatibility promise, nothing here ever tells you to pull it, and no tag in it is stable. If you're choosing what to run, everything on this page is about the six images above — `next/*` isn't one of them.
+
+### Installing R Packages Locally
+
+If you want to install the same R packages on your local machine (without using Docker), you can run the installer scripts in the [pak-scripts/](pak-scripts/) directory. These scripts use the [pak](https://pak.r-lib.org/) package manager for fast, reliable installation.
+
+```r
+# From R, run the script for your desired environment:
+source("https://raw.githubusercontent.com/coursekata/docker-stacks/main/pak-scripts/essentials-notebook.R")
+
+# Or download and run locally:
+# Rscript pak-scripts/r-notebook.R
+```
+
 ## Tagging
+
+**This section is being replaced and does not describe the current build.**
+The weekly build now publishes only to the `next/*` namespace above — not
+to the six repositories this page covers — and none of the `sha-`, dated,
+or "most recent stable" behavior below is currently produced. A release
+contract describing what the six images above actually promise, and how
+they're tagged, is coming; until then, treat the rest of this section as
+historical.
 
 These images are built based on a variety of triggers, and each trigger results in a different tag. You will notice that some issues have multiple tags, this is because the tags are there to either help you keep up-to-date, or pin your image to a specific revision or timepoint. This section is structured based on why you might choose one tag compared to another.
 

@@ -1,25 +1,8 @@
 ---
-name: Publish Images
+name: Build Currency Candidate
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      # ci/cd
-      - .github/workflows/publish.yml
-      - .github/workflows/build-test-push-multiarch.yml
-      - .github/workflows/build-test-push.yml
-      # build
-      - pixi.toml
-      - pixi.lock
-      - Dockerfile
-      - rpixi.toml
-      # the Dockerfile installs R packages by running these directly, so a
-      # regenerated installer must trigger a rebuild
-      - pak-scripts/**
-      - Rprofile.site
-      - scripts/**
   schedule:
     # Weekly, at 03:00 on Monday UTC time (see https://crontab.guru)
     - cron: "0 3 * * 1"
@@ -31,16 +14,55 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # A static proof that fails before any image exists beats a build-time one.
+  # Gates the lock `update-lock` just regenerated, not the committed one, so
+  # a `pixi update` that breaks containment or cross-arch identity is caught
+  # before the matrix burns 40 minutes building it.
+  gate:
+    name: Static Gate
+    needs: [update-lock]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Download updated lock file
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: pixi-lock
+          path: .
+
+      # run-install: false — the gate only needs the pixi binary for `pixi
+      # lock --check`, not an installed environment; and the runner's system
+      # python3 (not an activated env's) is what should end up on PATH.
+      - name: Setup Pixi
+        uses: prefix-dev/setup-pixi@28eb668aafebd9dede9d97c4ba1cd9989a4d0004 # v0.9.2
+        with:
+          run-install: false
+
+      # PyYAML is not guaranteed on the runner image, and this gate now blocks
+      # every build — an ImportError here stops the whole lane.
+      - name: Install gate dependencies
+        run: python3 -m pip install --quiet pyyaml
+
+      # shellcheck ships on the runner. It has been passing all along with
+      # nothing enforcing it, which is the same as not passing.
+      - name: Shellcheck
+        run: shellcheck -S warning scripts/*.sh scripts/tests/*.sh scripts/tests/lib/*.sh
+
+      - name: Static gate
+        run: python3 scripts/gate/static.py
+
   # Resolve package versions once so all builds use the same lock file
   update-lock:
     name: Update Lock File
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
       - name: Setup Pixi
-        uses: prefix-dev/setup-pixi@v0.9.2
+        uses: prefix-dev/setup-pixi@28eb668aafebd9dede9d97c4ba1cd9989a4d0004 # v0.9.2
         with:
           run-install: false
 
@@ -48,16 +70,75 @@ jobs:
         run: pixi update
 
       - name: Upload lock file
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: pixi-lock
           path: pixi.lock
 
-  # Build foundation base layer for both architectures
-  # The base target doesn't use pixi, but we sequence after update-lock so the
-  # lock file is ready before any downstream image builds start.
-  foundation:
+  # Derive the build matrix from the manifest so adding an environment never
+  # needs a workflow edit
+  setup:
+    name: Derive Build Matrix
     needs: [update-lock]
+    runs-on: ubuntu-latest
+    outputs:
+      images: ${{ steps.matrix.outputs.images }}
+      snapshot: ${{ steps.snapshot.outputs.snapshot }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Download updated lock file
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: pixi-lock
+          path: .
+
+      - name: Setup Pixi
+        uses: prefix-dev/setup-pixi@28eb668aafebd9dede9d97c4ba1cd9989a4d0004 # v0.9.2
+        with:
+          run-install: false
+
+      - name: Compute candidate snapshot
+        id: snapshot
+        run: |
+          # Two days behind the run date: Posit builds Linux binaries
+          # asynchronously, and a same-day snapshot is the one most likely
+          # to fall back to a source compile on arm64.
+          SNAPSHOT=$(date -u -d '2 days ago' +%F)
+          echo "snapshot=$SNAPSHOT" >> "$GITHUB_OUTPUT"
+
+      - name: Derive image matrix
+        id: matrix
+        run: |
+          # Titles and descriptions become OCI labels. Quoted heredoc so the
+          # apostrophes survive; an environment with no entry still builds,
+          # taking its own name and a generated description.
+          meta=$(cat <<'JSON'
+          {
+            "base-r-notebook":      {"title": "Base R Notebook",      "description": "Jupyter Lab, Python, and R, and that's it."},
+            "essentials-notebook":  {"title": "Essentials Notebook",  "description": "CourseKata essentials - everything used in the books."},
+            "r-notebook":           {"title": "R Notebook",           "description": "CourseKata essentials and other R packages for teaching and learning data science."},
+            "datascience-notebook": {"title": "Data Science Notebook","description": "R and Python packages for teaching and learning data science."},
+            "datascience-core":     {"title": "Data Science Core",    "description": "The Data Science Notebook environment without the Jupyter front end, for embedding in CKHub."},
+            "exercises-notebook":   {"title": "Exercises Notebook",   "description": "Essentials plus the exercise-checking machinery that grades inline book exercises."}
+          }
+          JSON
+          )
+          images=$(pixi info --json | jq -c '[.environments_info[].name | select(. != "default")]')
+          include=$(jq -c -n --argjson images "$images" --argjson meta "$meta" '
+            [ $images[] | . as $name | {
+                image: $name,
+                title: ($meta[$name].title // $name),
+                description: ($meta[$name].description // ("CourseKata " + $name + " environment."))
+              } ]')
+          echo "images=$include" >> "$GITHUB_OUTPUT"
+
+  # Build foundation base layer for both architectures
+  # The base target doesn't use pixi at all. It runs first because every image
+  # build reads its layers from the registry cache, not because of the lock.
+  foundation:
+    needs: [gate]
     uses: ./.github/workflows/build-test-push-multiarch.yml
     secrets: inherit
     with:
@@ -71,31 +152,11 @@ jobs:
 
   # Build all notebook images (each builds both architectures internally)
   images:
-    needs: [foundation, update-lock]
+    needs: [gate, foundation, setup, update-lock]
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - image: base-r-notebook
-            pixi_env: base-r-notebook
-            title: Base R Notebook
-            description: Jupyter Lab, Python, and R, and that's it.
-
-          - image: essentials-notebook
-            pixi_env: essentials-notebook
-            title: Essentials Notebook
-            description: CourseKata essentials - everything used in the books.
-
-          - image: r-notebook
-            pixi_env: r-notebook
-            title: R Notebook
-            description: CourseKata essentials and other R packages for teaching and learning data science.
-
-          - image: datascience-notebook
-            pixi_env: datascience-notebook
-            title: Data Science Notebook
-            description: R and Python packages for teaching and learning data science.
-            free_disk_space: true
+        include: ${{ fromJson(needs.setup.outputs.images) }}
 
     uses: ./.github/workflows/build-test-push-multiarch.yml
     secrets: inherit
@@ -104,7 +165,8 @@ jobs:
       title: ${{ matrix.title }}
       description: ${{ matrix.description }}
       build-args: |
-        PIXI_ENV=${{ matrix.pixi_env }}
+        PIXI_ENV=${{ matrix.image }}
       cache-from: ${{ needs.foundation.outputs.cache-from }}
-      free-disk-space: ${{ matrix.free_disk_space || false }}
+      free-disk-space: ${{ matrix.image == 'datascience-notebook' || matrix.image == 'datascience-core' }}
       lock-artifact: pixi-lock
+      snapshot: ${{ needs.setup.outputs.snapshot }}
