@@ -16,6 +16,8 @@ lme4 = "*"
 Lock5withR = { github = "coursekata/Lock5withR", commit = "f2773d9f828b72882ed1c4d6b3b2e539a3b3b24a" }  # master
 plotly = "*"
 statmod = "*"
+
+[feature.exercises.dependencies]
 testwhat = { github = "coursekata/testwhat", commit = "56502e3291c11a31301b15d63e227b4918d5d634" }  # v4.11.3.2
 
 [feature.r.dependencies]
@@ -92,3 +94,9 @@ features = ["essentials", "r"]
 
 [environments.datascience-notebook]
 features = ["essentials", "r", "datascience", "instructor-9e09470c-489b-4f9b-af4c-ffc524e10637"]
+
+[environments.datascience-core]
+features = ["essentials", "r", "datascience", "instructor-9e09470c-489b-4f9b-af4c-ffc524e10637"]
+
+[environments.exercises-notebook]
+features = ["essentials", "exercises"]

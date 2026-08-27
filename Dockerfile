@@ -8,6 +8,9 @@ ARG ROOT_CODENAME=noble
 
 # Pixi settings
 ARG PIXI_ENV=default
+# Python settings
+ARG PYTHON_MINOR=3.13
+
 ARG PIXI_VERSION=0.63.2
 ARG PIXI_DIR=/opt/pixi
 
@@ -194,14 +197,19 @@ ARG PIXI_ENV
 LABEL org.coursekata.image.authors="tech@coursekata.org"
 LABEL org.coursekata.image.ref.name="coursekata/${PIXI_ENV}"
 
-ARG PIXI_DIR
+ARG PIXI_DIR PYTHON_MINOR
 ENV CONDA_DIR="${PIXI_DIR}/.pixi/envs/${PIXI_ENV}"
-ENV R_HOME="${CONDA_DIR}/lib/R"\
+ENV R_HOME="${CONDA_DIR}/lib/R" \
+    R_LIBS_SITE="${CONDA_DIR}/lib/R/library" \
+    CK_SITE_PACKAGES="${CONDA_DIR}/lib/python${PYTHON_MINOR}/site-packages" \
     TZ=Etc/UTC \
     _R_SHLIB_STRIP_=true
 
 # copy and setup the packages installed in the build stage
 COPY --from=build "${CONDA_DIR}" "${CONDA_DIR}"
+USER root
+RUN mkdir -p /opt/ck && ln -sfn "${CONDA_DIR}" /opt/ck/env
+USER ${NB_UID}
 COPY --from=build /usr/local/bin/before-notebook.d /usr/local/bin/before-notebook.d
 COPY --from=build /usr/local/bin/wrapper.sh /usr/local/bin/wrapper.sh
 SHELL ["/usr/local/bin/wrapper.sh", "/bin/bash", "-o", "pipefail", "-c"]
@@ -209,9 +217,11 @@ SHELL ["/usr/local/bin/wrapper.sh", "/bin/bash", "-o", "pipefail", "-c"]
 # configure R and Jupyter
 COPY --chown=${NB_UID}:${NB_GID} Rprofile.site "${R_HOME}/etc/"
 # hadolint ignore=SC1008
-RUN jupyter server --generate-config && \
+RUN if command -v jupyter-lab >/dev/null 2>&1; then \
+    jupyter server --generate-config && \
     jupyter lab clean && \
-    rm -rf "${HOME}/.cache/yarn" && \
+    rm -rf "${HOME}/.cache/yarn"; \
+    fi && \
     fix-permissions "${HOME}"
 
 # install R packages and their system dependencies
@@ -225,7 +235,8 @@ RUN --mount=type=bind,source="pak-scripts",target=/tmp/pak-scripts \
     Rscript "/tmp/pak-scripts/${PIXI_ENV}.R" && \
     Rscript -e 'IRkernel::installspec(user = FALSE, prefix = Sys.getenv("CONDA_DIR"))' && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
-    fix-permissions "${CONDA_DIR}"
+    fix-permissions "${CONDA_DIR}" && \
+    test -d "$R_LIBS_SITE" && test -d "$CK_SITE_PACKAGES" && test -d /opt/ck/env/lib/R
 
 USER ${NB_UID}
 

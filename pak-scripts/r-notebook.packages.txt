@@ -9,7 +9,6 @@ gridExtra
 lme4
 plotly
 statmod
-testwhat
 BrailleR
 DHARMa
 Stat2Data

@@ -22,7 +22,7 @@ options(
   pkg.sysreqs_platform = "ubuntu-24.04"
 )
 
-message("Installing 35 R packages for r-notebook ...")
+message("Installing 34 R packages for r-notebook ...")
 pak::pkg_install(
   c(
     "IRkernel",
@@ -36,7 +36,6 @@ pak::pkg_install(
     "lme4",
     "plotly",
     "statmod",
-    "coursekata/testwhat@56502e3291c11a31301b15d63e227b4918d5d634",
     "ajrgodfrey/BrailleR@98f0185cc8d240391a1e8c818022e68eb1d4e3c4",
     "DHARMa",
     "Stat2Data",
