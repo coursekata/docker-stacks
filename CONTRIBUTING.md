@@ -228,6 +228,40 @@ Images build on one another in this order:
 
 **Important**: Changes to a base image affect all downstream images. When modifying `base-r-notebook`, rebuild and test all dependent images.
 
+## The CRAN Repository
+
+`Rprofile.site` ships exactly one R repository — the rolling Posit
+Package Manager endpoint `.../noble/latest`. There is no second, no
+fallback: pak resolves across every configured repository and returns the
+newest version it finds anywhere, so a second repository wouldn't add
+redundancy, it would make resolution nondeterministic.
+
+**The repository must be named `CRAN`, and that name is load-bearing.**
+pkgcache injects its own rolling `cran.rstudio.com` whenever
+`getOption("repos")` contains no entry by that name — so configuring PPM
+under any other name leaves it inert while looking correct. Measured at
+snapshot `2026-06-01`, where that snapshot offers ggpubr 0.6.3: `c(PPM =
+snap)` resolves 1.0.0 from `cran.rstudio.com`, and `c(CRAN = snap)`
+resolves 0.6.3 from the snapshot instead. Separately, `Rprofile.site`
+also sets `HTTPUserAgent` — that's what makes PPM serve binaries instead
+of building from source: 5.5s versus 1m49s for the same resolve.
+`options(pkg.use_bioconductor = FALSE)` closes the same hole for the five
+Bioconductor repositories pak would otherwise add; no package in any tier
+is of Bioconductor origin.
+
+`PPM` is the escape hatch: set it, before starting R or when running the
+container, to pin a dated snapshot for reproducible local testing. The
+shipped default never does this for you.
+
+**Testing gotcha.** pak resolves in a subprocess that re-reads
+`Rprofile.site` from disk, so `options(repos = ...)` typed at an R prompt
+never reaches it — a "fix" verified that way will appear to work while
+doing nothing. `getOption("repos")` is doubly misleading here: it shows
+neither the injected CRAN nor the Bioconductor repos. Ask pak
+(`pak::repo_get()`), or install something and inspect where it came from —
+`packageDescription("<pkg>")$Repository`, or the `RemoteRepos` field pak
+records — never by inspecting `getOption("repos")` in the calling session.
+
 ## Pull Request Guidelines
 
 1. **Test locally**: Always run `just test-all` before pushing

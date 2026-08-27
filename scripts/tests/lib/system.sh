@@ -78,7 +78,7 @@ test_r_environment() {
   # Test that PPM is configured with correct Ubuntu codename
   TEST_TOTAL=$((TEST_TOTAL + 1))
   local ppm_repo
-  ppm_repo=$(Rscript -e "cat(getOption('repos')[['PPM']])")
+  ppm_repo=$(Rscript -e "cat(getOption('repos')[['CRAN']])")
   if [[ -n "$ppm_repo" ]]; then
     # Extract Ubuntu codename from system
     local ubuntu_codename
@@ -97,29 +97,19 @@ test_r_environment() {
     error "PPM repository not configured"
   fi
 
-  # Test that CRAN is configured
+  # Test that repos is exactly one repository, named CRAN
   TEST_TOTAL=$((TEST_TOTAL + 1))
-  local cran_repo
-  cran_repo=$(Rscript -e "cat(getOption('repos')[['CRAN']])")
-  if [[ -n "$cran_repo" ]] && [[ "$cran_repo" != "@CRAN@" ]]; then
+  local repos_count repos_names
+  # Ask pak what it resolved against, not getOption('repos') — pkgcache injects
+  # its own rolling CRAN and Bioconductor repos that never appear in the option.
+  repos_count=$(Rscript -e "cat(nrow(pak::repo_get()))")
+  repos_names=$(Rscript -e "cat(unique(pak::repo_get()\$name))")
+  if [[ "$repos_count" == "1" ]] && [[ "$repos_names" == "CRAN" ]]; then
     TEST_PASSED=$((TEST_PASSED + 1))
-    success "CRAN repository is configured: $cran_repo"
+    success "pak resolves against a single rolling repo: $ppm_repo"
   else
     TEST_FAILED=$((TEST_FAILED + 1))
-    error "CRAN repository not configured"
-  fi
-
-  # Test that PPM is prioritized over CRAN in repository order
-  TEST_TOTAL=$((TEST_TOTAL + 1))
-  local ppm_index cran_index
-  ppm_index=$(Rscript -e "cat(which(names(getOption('repos')) == 'PPM'))")
-  cran_index=$(Rscript -e "cat(which(names(getOption('repos')) == 'CRAN'))")
-  if [[ -n "$ppm_index" ]] && [[ -n "$cran_index" ]] && [[ "$ppm_index" -lt "$cran_index" ]]; then
-    TEST_PASSED=$((TEST_PASSED + 1))
-    success "PPM is prioritized over CRAN (PPM at position $ppm_index, CRAN at position $cran_index)"
-  else
-    TEST_FAILED=$((TEST_FAILED + 1))
-    error "PPM is not prioritized over CRAN in repository order"
+    error "pak does not resolve against a single repo (count=$repos_count, names=$repos_names, url=$ppm_repo)"
   fi
 
   # Test R can create plots
