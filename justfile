@@ -41,17 +41,15 @@ _test image arch:
 _shell image arch: (_build image arch)
     #!/usr/bin/env bash
     set -euo pipefail
-    platform="linux/{{ arch }}"
     suffix=$(just _tag_suffix "{{ arch }}")
-    ./scripts/run-shell.sh --image "{{ DS_OWNER }}/{{ image }}${suffix}" --platform "$platform"
+    docker run -it --rm --platform="linux/{{ arch }}" "{{ DS_OWNER }}/{{ image }}${suffix}" bash
 
 [private]
 _run image arch:
     #!/usr/bin/env bash
     set -euo pipefail
-    platform="linux/{{ arch }}"
     suffix=$(just _tag_suffix "{{ arch }}")
-    ./scripts/run-container.sh --image "{{ DS_OWNER }}/{{ image }}${suffix}" --platform "$platform"
+    docker run -it --rm --platform="linux/{{ arch }}" -p "${PORT:-8888}:8888" "{{ DS_OWNER }}/{{ image }}${suffix}"
 
 # --- Build ---
 
@@ -89,7 +87,7 @@ test-all arch=CURRENT_ARCH:
 [group('run')]
 shell image arch=CURRENT_ARCH: (_shell image arch)
 
-# Run container with Jupyter (arch: amd64, arm64; default: native)
+# Run container with Jupyter (PORT env overrides 8888; arch: amd64, arm64)
 [group('run')]
 run image arch=CURRENT_ARCH: (_run image arch)
 

@@ -70,18 +70,15 @@ just run datascience-notebook
 
 ### Direct Script Usage
 
-You can also use the scripts directly:
+`just` wraps `scripts/build-image.sh`, which takes more than the recipes expose:
 
 ```bash
-# Build
 ./scripts/build-image.sh --image r-notebook --platform linux/amd64 --tag my-tag
-
-# Run shell
-./scripts/run-shell.sh --image my-tag --platform linux/amd64
-
-# Run Jupyter
-./scripts/run-container.sh --image my-tag --platform linux/amd64
+./scripts/build-image.sh --image r-notebook --platform linux/amd64 --target test
 ```
+
+Testing, shelling in, and running Jupyter are `docker run` against a built tag,
+so they stay in the justfile rather than in scripts of their own.
 
 ## Testing
 
