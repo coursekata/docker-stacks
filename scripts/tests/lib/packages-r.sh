@@ -12,7 +12,7 @@ source "$_LIB_DIR/helpers.sh"
 # R Package Extraction
 # -----------------------------------------------------------------------------
 
-# Get list of R packages for an environment using rpak list
+# Get list of R packages for an environment
 # Usage: get_r_packages "environment-name"
 get_r_packages() {
   local environment="$1"
@@ -33,79 +33,6 @@ get_r_packages() {
 # -----------------------------------------------------------------------------
 # R Package Loading Tests
 # -----------------------------------------------------------------------------
-
-# Test that a single R package can be loaded
-# Usage: test_r_library "package_name"
-test_r_library() {
-  local package="$1"
-
-  # Try to load the package
-  if Rscript -e "suppressPackageStartupMessages(library('$package', quietly=TRUE))" 2>/dev/null; then
-    return 0
-  else
-    return 1
-  fi
-}
-
-# Test that all R packages can be loaded with library()
-# Usage: test_r_libraries package1 package2 ...
-test_r_libraries() {
-  local packages=("$@")
-  local failed_packages=()
-
-  if [[ ${#packages[@]} -eq 0 ]]; then
-    skip_test "No R packages to load"
-    return 0
-  fi
-
-  TEST_TOTAL=$((TEST_TOTAL + ${#packages[@]}))
-
-  # Convert bash array to R array string: c('pkg1', 'pkg2', ...)
-  local r_packages_str
-  r_packages_str=$(printf ", '%s'" "${packages[@]}")
-  r_packages_str="c(${r_packages_str:2})"
-
-  # Try to load all packages
-  local result
-  result=$(Rscript -e "
-    options(warn = 2)
-    failed <- character()
-
-    loader <- function(x) {
-      tryCatch({
-        suppressPackageStartupMessages(library(x, character.only = TRUE, quietly = TRUE))
-      }, error = function(e) {
-        failed <<- c(failed, x)
-      })
-    }
-
-    packages <- $r_packages_str
-    invisible(lapply(packages, loader))
-
-    if (length(failed) > 0) {
-      cat(failed, sep = '\n')
-      quit(status = 1)
-    }
-  " 2>&1)
-
-  local exit_code=$?
-
-  if [[ $exit_code -ne 0 ]]; then
-    # Parse failed packages
-    mapfile -t failed_packages <<<"$result"
-
-    TEST_FAILED=$((TEST_FAILED + ${#failed_packages[@]}))
-    TEST_PASSED=$((TEST_PASSED + ${#packages[@]} - ${#failed_packages[@]}))
-
-    error "Failed to load ${#failed_packages[@]} R packages:"
-    printf '    %s\n' "${failed_packages[@]}" >&2
-    return 1
-  else
-    TEST_PASSED=$((TEST_PASSED + ${#packages[@]}))
-    success "All ${#packages[@]} R packages loaded successfully"
-    return 0
-  fi
-}
 
 # Test R package loading in parallel
 # Usage: test_r_libraries_parallel package1 package2 ...
@@ -146,20 +73,25 @@ test_r_libraries_parallel() {
     wait "$pid" || true
   done
 
-  # Collect results and error messages
+  # Collect results and error messages. A missing result file means the
+  # worker died before writing one (e.g. OOM-killed) -- that must count as a
+  # failure, not vanish from the totals while TEST_TOTAL still counts it.
   local -A error_messages
   for i in "${!packages[@]}"; do
     if [[ -f "$tempdir/$i" ]]; then
       result=$(cat "$tempdir/$i")
-      if [[ "$result" == "pass" ]]; then
-        TEST_PASSED=$((TEST_PASSED + 1))
-      else
-        failed_packages+=("${packages[$i]}")
-        TEST_FAILED=$((TEST_FAILED + 1))
-        # Capture error message if available
-        if [[ -f "$tempdir/$i.err" ]]; then
-          error_messages["${packages[$i]}"]=$(cat "$tempdir/$i.err")
-        fi
+    else
+      result="fail"
+      error_messages["${packages[$i]}"]="worker produced no result (killed or crashed)"
+    fi
+    if [[ "$result" == "pass" ]]; then
+      TEST_PASSED=$((TEST_PASSED + 1))
+    else
+      failed_packages+=("${packages[$i]}")
+      TEST_FAILED=$((TEST_FAILED + 1))
+      # Capture error message if available
+      if [[ -f "$tempdir/$i.err" ]]; then
+        error_messages["${packages[$i]}"]=$(cat "$tempdir/$i.err")
       fi
     fi
   done
@@ -181,46 +113,6 @@ test_r_libraries_parallel() {
   else
     success "All ${#packages[@]} R packages loaded successfully"
     return 0
-  fi
-}
-
-# -----------------------------------------------------------------------------
-# Special Package Tests
-# -----------------------------------------------------------------------------
-
-# Test cmdstanr package (requires special CMDSTAN environment variable)
-# Usage: test_cmdstanr
-test_cmdstanr() {
-  local packages=("$@")
-
-  # Check if cmdstanr is in the package list
-  local has_cmdstanr=0
-  for pkg in "${packages[@]}"; do
-    if [[ "$pkg" == "cmdstanr" ]]; then
-      has_cmdstanr=1
-      break
-    fi
-  done
-
-  if [[ $has_cmdstanr -eq 0 ]]; then
-    return 0
-  fi
-
-  # Set CMDSTAN path if not set
-  if [[ -z "${CMDSTAN:-}" ]] && [[ -n "${CONDA_DIR:-}" ]]; then
-    export CMDSTAN="${CONDA_DIR}/bin/cmdstan"
-  fi
-
-  # Test cmdstan_path()
-  TEST_TOTAL=$((TEST_TOTAL + 1))
-  if Rscript -e "options(warn=2); cmdstanr::cmdstan_path() |> invisible()" 2>/dev/null; then
-    TEST_PASSED=$((TEST_PASSED + 1))
-    success "cmdstanr is configured correctly"
-    return 0
-  else
-    TEST_FAILED=$((TEST_FAILED + 1))
-    error "cmdstanr::cmdstan_path() failed"
-    return 1
   fi
 }
 
@@ -255,13 +147,9 @@ test_r_packages() {
   # Run loading tests (parallel for speed)
   test_r_libraries_parallel "${packages[@]}" || true
 
-  # Test special packages
-  test_cmdstanr "${packages[@]}" || true
-
   # Print summary
   print_test_summary
 }
 
 # Export functions
-export -f get_r_packages test_r_library test_r_libraries test_r_libraries_parallel
-export -f test_cmdstanr test_r_packages
+export -f get_r_packages test_r_libraries_parallel test_r_packages

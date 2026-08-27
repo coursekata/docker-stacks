@@ -46,6 +46,11 @@ scipy = ">=1.14.1,<2"
 seaborn = ">=0.13.2,<0.14"
 statsmodels = ">=0.14.4,<0.15"
 
+# these carry no conda packages; they exist so the R side can name the tier
+[feature.instructor-9e09470c-489b-4f9b-af4c-ffc524e10637.dependencies]
+
+[feature.instructor-e668a15b-3c9f-4ab0-b479-ff2db8404eff.dependencies]
+
 [environments.base-r-notebook]
 features = ["notebook", "base-r"]
 solve-group = "main"
@@ -59,11 +64,11 @@ features = ["notebook", "base-r", "essentials", "r"]
 solve-group = "main"
 
 [environments.datascience-notebook]
-features = ["notebook", "base-r", "essentials", "r", "datascience"]
+features = ["notebook", "base-r", "essentials", "r", "datascience", "instructor-9e09470c-489b-4f9b-af4c-ffc524e10637", "instructor-e668a15b-3c9f-4ab0-b479-ff2db8404eff"]
 solve-group = "main"
 
 [environments.datascience-core]
-features = ["base-r", "essentials", "r", "datascience"]
+features = ["base-r", "essentials", "r", "datascience", "instructor-9e09470c-489b-4f9b-af4c-ffc524e10637", "instructor-e668a15b-3c9f-4ab0-b479-ff2db8404eff"]
 solve-group = "main"
 
 [environments.exercises-notebook]

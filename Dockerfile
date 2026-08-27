@@ -227,14 +227,19 @@ RUN if command -v jupyter-lab >/dev/null 2>&1; then \
 # install R packages and their system dependencies
 USER root
 # hadolint ignore=SC1008
-RUN --mount=type=bind,source="pak-scripts",target=/tmp/pak-scripts \
+RUN --mount=type=bind,source="r",target=/tmp/r \
+    --mount=type=bind,source="scripts/get-refs.py",target=/tmp/get-refs.py \
+    --mount=type=bind,source="pixi.toml",target=/tmp/pixi.toml \
+    --mount=type=bind,source="pixi.lock",target=/tmp/pixi.lock \
+    --mount=type=bind,from=pixi,source=/usr/local/bin/pixi,target=/usr/local/bin/pixi \
     --mount=type=secret,id=github_token,uid=0 \
     GITHUB_PAT=$(cat /run/secrets/github_token) && \
     export GITHUB_PAT && \
+    python3 /tmp/get-refs.py "${PIXI_ENV}" --manifest /tmp/pixi.toml --specs /tmp/r > /tmp/refs.txt && \
     apt-get update && \
-    Rscript "/tmp/pak-scripts/${PIXI_ENV}.R" && \
+    Rscript -e 'options(warn = 2); if (!requireNamespace("pak", quietly = TRUE)) install.packages("pak"); options(pkg.sysreqs = TRUE, pkg.sysreqs_platform = "ubuntu-24.04"); pak::pkg_install(readLines("/tmp/refs.txt"), upgrade = FALSE, ask = FALSE)' && \
     Rscript -e 'IRkernel::installspec(user = FALSE, prefix = Sys.getenv("CONDA_DIR"))' && \
-    apt-get clean && rm -rf /var/lib/apt/lists/* && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/refs.txt && \
     fix-permissions "${CONDA_DIR}" && \
     test -d "$R_LIBS_SITE" && test -d "$CK_SITE_PACKAGES" && test -d /opt/ck/env/lib/R
 

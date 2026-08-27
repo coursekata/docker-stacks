@@ -42,10 +42,6 @@ on:
         description: Name of a workflow artifact containing an updated pixi.lock file to use instead of the checked-in version
         type: string
         required: false
-      snapshot:
-        description: CRAN snapshot date (YYYY-MM-DD) to bake into Rprofile.site before building
-        type: string
-        required: false
 
     outputs:
       cache-from:
@@ -68,7 +64,6 @@ jobs:
       free-disk-space: ${{ inputs.free-disk-space }}
       skip-tests: ${{ inputs.skip-tests }}
       lock-artifact: ${{ inputs.lock-artifact }}
-      snapshot: ${{ inputs.snapshot }}
 
   build-arm64:
     name: Build (ARM64)
@@ -85,7 +80,6 @@ jobs:
       free-disk-space: ${{ inputs.free-disk-space }}
       skip-tests: ${{ inputs.skip-tests }}
       lock-artifact: ${{ inputs.lock-artifact }}
-      snapshot: ${{ inputs.snapshot }}
 
   manifest:
     name: Create Multi-Arch Manifest

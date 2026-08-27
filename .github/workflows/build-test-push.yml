@@ -46,10 +46,6 @@ on:
         description: Name of a workflow artifact containing an updated pixi.lock file to use instead of the checked-in version
         type: string
         required: false
-      snapshot:
-        description: CRAN snapshot date (YYYY-MM-DD) to bake into Rprofile.site before building
-        type: string
-        required: false
 
     outputs:
       image:
@@ -101,6 +97,8 @@ jobs:
           echo "cache-tag=$CACHE_TAG" >> "$GITHUB_OUTPUT"
           echo "::notice::Cache tag: $CACHE_TAG"
 
+          echo "secret-files=" >> "$GITHUB_OUTPUT"
+
           # Construct cache-from list
           {
             echo 'cache-from<<EOF'
@@ -149,13 +147,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Bake CRAN snapshot
-        if: inputs.snapshot != ''
-        shell: bash
-        run: |
-          ./scripts/set-snapshot.sh "${{ inputs.snapshot }}"
-          echo "CRAN snapshot: ${{ inputs.snapshot }}" >> "$GITHUB_STEP_SUMMARY"
-
       - name: Build and push
         id: build
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
@@ -166,6 +157,7 @@ jobs:
           build-args: ${{ inputs.build-args }}
           secrets: |
             github_token=${{ secrets.GITHUB_TOKEN }}
+          secret-files: ${{ steps.context.outputs.secret-files }}
           cache-to: |
             type=registry,ref=${{ steps.context.outputs.cache-tag }},mode=max
           cache-from: ${{ steps.context.outputs.cache-from }}
@@ -185,20 +177,41 @@ jobs:
           # Generate Python package list for testing
           ./scripts/list-python-packages.sh "$IMAGE_NAME" > python-packages.txt
 
-          R_PKG_LIST="pak-scripts/${IMAGE_NAME}.packages.txt"
-          if [ ! -s "$R_PKG_LIST" ]; then
-            echo "::error::$R_PKG_LIST is missing or empty; run ./scripts/update-pak-scripts.sh"
-            exit 1
-          fi
+          # Test against the composed direct names, not the ~450-entry
+          # resolved closure: the point is that the packages an image
+          # advertises load, not the whole dependency tree.
+          python3 scripts/r-refs.py "$IMAGE_NAME" --names > r-packages.txt
 
           # Run tests in the built image
           docker run --rm --platform="$PLATFORM" \
             --mount=type=bind,source="./scripts",target=/tmp/scripts \
             --mount=type=bind,source="./pixi.toml",target=/home/jovyan/pixi.toml \
-            --mount=type=bind,source="./rpixi.toml",target=/home/jovyan/rpixi.toml \
             --mount=type=bind,source="./python-packages.txt",target=/tmp/python-packages.txt,readonly \
             -e PYTHON_PACKAGES_FILE=/tmp/python-packages.txt \
-            --mount=type=bind,source="./$R_PKG_LIST",target=/tmp/r-packages.txt,readonly \
+            --mount=type=bind,source="./r-packages.txt",target=/tmp/r-packages.txt,readonly \
             -e R_PACKAGES_FILE=/tmp/r-packages.txt \
             "ghcr.io/${REPO_OWNER}/next/${IMAGE_NAME}@${DIGEST}" \
             bash /tmp/scripts/tests/run-tests.sh "$IMAGE_NAME"
+
+      # A record of what this image actually contains, not a prediction made
+      # before it existed. Nothing gates on it; the two architectures may
+      # legitimately resolve different versions of an unconstrained package.
+      - name: Record installed R packages
+        shell: bash
+        env:
+          IMAGE_NAME: ${{ inputs.image }}
+          PLATFORM: ${{ inputs.platform }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+          REPO_OWNER: ${{ github.repository_owner }}
+        run: |
+          docker run --rm --platform="$PLATFORM" \
+            "ghcr.io/${REPO_OWNER}/next/${IMAGE_NAME}@${DIGEST}" \
+            Rscript -e 'ip <- installed.packages()[, c("Package", "Version")]; cat(sprintf("%s@%s", ip[, 1], ip[, 2]), sep = "\n")' \
+            | LC_ALL=C sort > "r-${IMAGE_NAME}.txt"
+          wc -l < "r-${IMAGE_NAME}.txt" | xargs -I{} echo "r-${IMAGE_NAME}.txt: {} packages" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload R package record
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: r-packages-${{ inputs.image }}-${{ inputs.platform == 'linux/arm64' && 'arm64' || 'amd64' }}
+          path: r-${{ inputs.image }}.txt

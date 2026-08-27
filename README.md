@@ -19,29 +19,14 @@ There are six images published from this repository. Four form a ladder — each
 
 - [base-r-notebook](https://ghcr.io/coursekata/base-r-notebook): an image with Python and R installed, and that's it. R is configured to be the default notebook, but both R and Python notebooks are supported. This is a good image to use if you are building your own image from scratch.
 - [essentials-notebook](https://ghcr.io/coursekata/essentials-notebook): an image with all of the R packages used in CourseKata books and CourseKata's curated Jupyter Notebooks. If you are coming from the CourseKata book this is a great starting place: you will be able to do everything you did in the books and more!
-  - You can see specifically what R packages are installed by looking at [pak-scripts/essentials-notebook.R](pak-scripts/essentials-notebook.R).
 - [r-notebook](https://ghcr.io/coursekata/r-notebook): this image has all of the contents of the _essentials-notebook_ with the addition of other R packages that instructors have requested that we install for data science and statistics.
-  - You can see specifically what R packages are installed by looking at [pak-scripts/r-notebook.R](pak-scripts/r-notebook.R).
   - If you have a specific package you think would be useful to install here, please [submit an issue describing your use case](https://github.com/coursekata/docker-stacks/issues).
 - [datascience-notebook](https://ghcr.io/coursekata/datascience-notebook): this image builds on _r-notebook_ by adding a variety of R and Python packages for data science and statistics.
-  - You can see specifically what R packages are installed by looking at [pak-scripts/datascience-notebook.R](pak-scripts/datascience-notebook.R).
   - If you have a specific package you think would be useful to install here, please [submit an issue describing your use-case](https://github.com/coursekata/docker-stacks/issues).
 - [datascience-core](https://ghcr.io/coursekata/datascience-core): everything in _datascience-notebook_ except the Jupyter front end (JupyterLab, classic Notebook, `jupyterhub-singleuser`). Meant for embedding under a different notebook server, not for running directly — if you're not sure you need this one, you don't.
-  - You can see specifically what R packages are installed by looking at [pak-scripts/datascience-core.R](pak-scripts/datascience-core.R).
 - [exercises-notebook](https://ghcr.io/coursekata/exercises-notebook): _essentials-notebook_ plus the exercise-checking machinery (`pythonwhat`, `testwhat`) that grades the CourseKata books' inline exercises. Not part of the ladder above, and not meant for general use — it exists to run book exercises.
-  - You can see specifically what R packages are installed by looking at [pak-scripts/exercises-notebook.R](pak-scripts/exercises-notebook.R).
 
-### Installing R Packages Locally
-
-If you want to install the same R packages on your local machine (without using Docker), you can run the installer scripts in the [pak-scripts/](pak-scripts/) directory. These scripts use the [pak](https://pak.r-lib.org/) package manager for fast, reliable installation.
-
-```r
-# From R, run the script for your desired environment:
-source("https://raw.githubusercontent.com/coursekata/docker-stacks/main/pak-scripts/essentials-notebook.R")
-
-# Or download and run locally:
-# Rscript pak-scripts/r-notebook.R
-```
+An image's R packages are the union of the [`r/<feature>.txt`](r/) files named by its environment's `features` list in [`pixi.toml`](pixi.toml).
 
 ### `next/*` is not a product
 
@@ -49,15 +34,14 @@ You may see a `ghcr.io/coursekata/next/<image>` namespace in this organization's
 
 ### Installing R Packages Locally
 
-If you want to install the same R packages on your local machine (without using Docker), you can run the installer scripts in the [pak-scripts/](pak-scripts/) directory. These scripts use the [pak](https://pak.r-lib.org/) package manager for fast, reliable installation.
+If you want to install the same R packages on your local machine (without using Docker), generate the ref list for your desired image and install it with pak:
 
-```r
-# From R, run the script for your desired environment:
-source("https://raw.githubusercontent.com/coursekata/docker-stacks/main/pak-scripts/essentials-notebook.R")
-
-# Or download and run locally:
-# Rscript pak-scripts/r-notebook.R
+```sh
+python3 scripts/get-refs.py essentials-notebook > refs.txt
+Rscript -e 'pak::pkg_install(readLines("refs.txt"))'
 ```
+
+Each build also produces a version-pinned `r-<image>.txt` with the exact resolved versions, installable the same way; it will be attached to releases once the release contract mentioned below lands.
 
 ## Tagging
 

@@ -91,28 +91,22 @@ fi
 
 # Generate Python package list on host for testing
 PYTHON_PKG_LIST=$(mktemp)
-trap 'rm -f "$PYTHON_PKG_LIST"' EXIT
-"$SCRIPT_DIR/list-python-packages.sh" "$IMAGE" >"$PYTHON_PKG_LIST" 2>/dev/null || true
-
-R_PKG_LIST="pak-scripts/${IMAGE}.packages.txt"
-if [[ ! -s "$R_PKG_LIST" ]]; then
-  echo "Error: $R_PKG_LIST is missing or empty"
-  echo "Run ./scripts/update-pak-scripts.sh to regenerate it from rpixi.toml"
-  exit 1
-fi
+R_PKG_LIST=$(mktemp)
+trap 'rm -f "$PYTHON_PKG_LIST" "$R_PKG_LIST"' EXIT
+# Not `|| true`: an empty list makes every Python package assertion vacuously
+# pass, so a failure here has to stop the run rather than quietly hollow it out.
+pixi_platform="${PIXI_PLATFORM:-$(case "$PLATFORM" in *arm64) echo linux-aarch64;; *) echo linux-64;; esac)}"
+python3 "$SCRIPT_DIR/get-refs.py" "$IMAGE" --lang python --platform "$pixi_platform" >"$PYTHON_PKG_LIST"
+python3 "$SCRIPT_DIR/get-refs.py" "$IMAGE" --lang r --names >"$R_PKG_LIST"
 
 # Run tests
 echo "Running tests for $IMAGE on $PLATFORM..."
 
-# IMAGE is a validated pixi environment name (no spaces/special chars)
-# shellcheck disable=SC2086
 docker run --rm --platform="$PLATFORM" \
   --mount=type=bind,source="./scripts",target=/tmp/scripts \
-  --mount=type=bind,source="./pixi.toml",target=/home/jovyan/pixi.toml \
-  --mount=type=bind,source="./rpixi.toml",target=/home/jovyan/rpixi.toml \
   --mount=type=bind,source="$PYTHON_PKG_LIST",target=/tmp/python-packages.txt,readonly \
   -e PYTHON_PACKAGES_FILE=/tmp/python-packages.txt \
-  --mount=type=bind,source="./$R_PKG_LIST",target=/tmp/r-packages.txt,readonly \
+  --mount=type=bind,source="$R_PKG_LIST",target=/tmp/r-packages.txt,readonly \
   -e R_PACKAGES_FILE=/tmp/r-packages.txt \
   "${TAG:-docker-stacks-${IMAGE}}" \
   bash /tmp/scripts/tests/run-tests.sh "$IMAGE"
