@@ -82,7 +82,7 @@ env_packages <- function(manifest, env) {
 #'
 #' A bare string ("*" or a version) means CRAN. Versions are informational:
 #' pak resolves to current, matching the previous behaviour.
-SPEC_KEYS <- c("github", "tag", "repos", "force")
+SPEC_KEYS <- c("github", "tag", "commit", "repos", "force")
 
 as_ref <- function(name, spec) {
   repo <- NULL
@@ -95,13 +95,17 @@ as_ref <- function(name, spec) {
         name, paste(unknown, collapse = ", "), name, unknown[1], name, unknown[1]
       ), call. = FALSE)
     }
+    if (!is.null(spec$tag) && !is.null(spec$commit)) {
+      stop(sprintf("%s: specify either \"tag\" or \"commit\", not both", name), call. = FALSE)
+    }
   }
 
   if (is.character(spec)) {
     ref <- name
   } else if (!is.null(spec$github)) {
     ref <- spec$github
-    if (!is.null(spec$tag)) ref <- paste0(ref, "@", spec$tag)
+    if (!is.null(spec$commit)) ref <- paste0(ref, "@", spec$commit)
+    else if (!is.null(spec$tag)) ref <- paste0(ref, "@", spec$tag)
   } else {
     ref <- name
     repo <- spec$repos
@@ -230,6 +234,33 @@ cmd_validate <- function() {
       if (grepl("^[A-Za-z0-9.]+$", sub("\\?.*$", "", r$ref)) && is.null(r$repo)) next
     }
   }
+
+  # A GitHub ref must be pinned to a full commit SHA. A bare "github" key floats
+  # on the default branch and a "tag" is movable — either way the same ref can
+  # resolve to different code tomorrow. Two of these are dataset packages: a
+  # default-branch move changes a column name and every worked example in a
+  # chapter becomes wrong with no error anywhere.
+  groups <- c(list(`(base)` = m$dependencies %||% list()),
+              setNames(lapply(m$feature, `[[`, "dependencies"), names(m$feature)))
+  for (group in names(groups)) {
+    pkgs <- groups[[group]]
+    for (name in names(pkgs)) {
+      spec <- pkgs[[name]]
+      if (!is.list(spec) || is.null(spec$github)) next
+      if (is.null(spec$commit)) {
+        problems <- c(problems, sprintf(
+          "%s.%s: github ref \"%s\" has no \"commit\" — a tag is movable and a bare github key floats on the default branch; pin a 40-char commit SHA",
+          group, name, spec$github
+        ))
+      } else if (!grepl("^[0-9a-f]{40}$", spec$commit)) {
+        problems <- c(problems, sprintf(
+          "%s.%s: \"commit\" = \"%s\" is not a 40-char lowercase hex SHA",
+          group, name, spec$commit
+        ))
+      }
+    }
+  }
+
   if (length(problems)) {
     cat("INVALID:\n", paste0(" - ", problems, collapse = "\n"), "\n", sep = "")
     quit(status = 1)

@@ -15,4 +15,4 @@ cd "$REPO_ROOT"
 Rscript ./scripts/rpak.R pakgen
 
 # Stage the generated files if any changed
-git add pak-scripts/*.R 2>/dev/null || true
+git add pak-scripts/*.R pak-scripts/*.packages.txt 2>/dev/null || true
