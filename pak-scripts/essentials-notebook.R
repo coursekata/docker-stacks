@@ -22,7 +22,7 @@ options(
   pkg.sysreqs_platform = "ubuntu-24.04"
 )
 
-message("Installing 12 R packages for essentials-notebook ...")
+message("Installing 11 R packages for essentials-notebook ...")
 pak::pkg_install(
   c(
     "IRkernel",
@@ -35,8 +35,7 @@ pak::pkg_install(
     "gridExtra",
     "lme4",
     "plotly",
-    "statmod",
-    "coursekata/testwhat@56502e3291c11a31301b15d63e227b4918d5d634"
+    "statmod"
   ),
   upgrade = FALSE,
   ask = FALSE

@@ -17,17 +17,18 @@ source "$_LIB_DIR/helpers.sh"
 test_jupyter_installed() {
   init_tests "Jupyter Installation"
 
-  # Test jupyter command and versions
-  assert_success "jupyter command is available" command -v jupyter
-  assert_success "jupyter --version works" jupyter --version
-  assert_success "jupyter notebook --version works" jupyter notebook --version
-
-  # Test jupyter-lab command and version
-  assert_success "jupyter-lab command is available" command -v jupyter-lab
-  assert_success "jupyter lab --version works" jupyter lab --version
-
-  # Check if config file exists
-  assert_file_exists "Jupyter config exists" "${HOME}/.jupyter/jupyter_server_config.py"
+  # Front end (JupyterLab/notebook server): absent on headless tiers like
+  # datascience-core, so self-skip rather than fail
+  if command -v jupyter-lab >/dev/null 2>&1; then
+    assert_success "jupyter command is available" command -v jupyter
+    assert_success "jupyter --version works" jupyter --version
+    assert_success "jupyter notebook --version works" jupyter notebook --version
+    assert_success "jupyter-lab command is available" command -v jupyter-lab
+    assert_success "jupyter lab --version works" jupyter lab --version
+    assert_file_exists "Jupyter config exists" "${HOME}/.jupyter/jupyter_server_config.py"
+  else
+    skip_test "Jupyter front end not installed on this tier"
+  fi
 
   print_test_summary
 }

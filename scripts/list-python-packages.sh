@@ -59,7 +59,7 @@ pixi_json=$(pixi list -e "$ENVIRONMENT" --json) || exit 1
 packages=$(
   echo "$pixi_json" \
     | jq -r --arg regex "$exclude_regex" '.[] | select(.requested_spec != null) | select(.name | test($regex) | not) | .name' \
-    | sed 's/^jupyterhub-singleuser$/jupyterhub/' \
+    | sed -e 's/^jupyterhub-singleuser$/jupyterhub/' -e 's/^matplotlib-base$/matplotlib/' \
     | sort -u
 )
 

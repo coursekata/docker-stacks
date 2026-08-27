@@ -3,13 +3,16 @@ authors = ["Adam Blake <adam@ablake.dev>"]
 channels = ["conda-forge", "default"]
 description = "CourseKata Jupyter environments"
 name = "coursekata"
-platforms = ["linux-aarch64", "linux-64", "osx-64"]
+platforms = ["linux-aarch64", "linux-64"]
 requires-pixi = ">=0.63.2"
 
 [dependencies]
 python = ">=3.13.0,<3.14"
 pip = ">=24.3.1,<25"
 jupyter_core = ">=5.7.2,<6"
+ipykernel = ">=6.29.5,<8"
+
+[feature.notebook.dependencies]
 jupyterhub-singleuser = ">=5.2.1,<6"
 jupyterlab = ">=4.5.10,<5"
 notebook = ">=7.3.1,<8"
@@ -19,10 +22,12 @@ nbclassic = ">=1.1.0,<2"
 r-base = ">=4.6,<5"
 
 [feature.essentials.dependencies]
+
+[feature.exercises.dependencies]
 # for pythonwhat, not on conda
 asttokens = "<3"
 
-[feature.essentials.pypi-dependencies]
+[feature.exercises.pypi-dependencies]
 pythonwhat = ">=2.3.0,<3"
 
 [feature.r.dependencies]
@@ -30,7 +35,7 @@ pythonwhat = ">=2.3.0,<3"
 [feature.datascience.dependencies]
 gensim = ">=4.4.0,<5"
 ipywidgets = ">=8.1.5,<9"
-matplotlib = ">=3.9.4,<4"
+matplotlib-base = ">=3.9.4,<4"
 nltk = ">=3.9.4,<4"
 openpyxl = ">=3.1.5,<4"
 pillow = ">=12.3.0,<13"
@@ -42,17 +47,24 @@ seaborn = ">=0.13.2,<0.14"
 statsmodels = ">=0.14.4,<0.15"
 
 [environments.base-r-notebook]
-features = ["base-r"]
+features = ["notebook", "base-r"]
 solve-group = "main"
 
 [environments.essentials-notebook]
-features = ["base-r", "essentials"]
+features = ["notebook", "base-r", "essentials"]
 solve-group = "main"
 
 [environments.r-notebook]
-features = ["base-r", "essentials", "r"]
+features = ["notebook", "base-r", "essentials", "r"]
 solve-group = "main"
 
 [environments.datascience-notebook]
+features = ["notebook", "base-r", "essentials", "r", "datascience"]
+solve-group = "main"
+
+[environments.datascience-core]
 features = ["base-r", "essentials", "r", "datascience"]
 solve-group = "main"
+
+[environments.exercises-notebook]
+features = ["notebook", "base-r", "essentials", "exercises"]

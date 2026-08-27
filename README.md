@@ -4,8 +4,10 @@
 [![essentials-notebook](https://img.shields.io/docker/image-size/coursekata/essentials-notebook/latest?label=essentials-notebook)](https://ghcr.io/coursekata/essentials-notebook)
 [![r-notebook](https://img.shields.io/docker/image-size/coursekata/r-notebook/latest?label=r-notebook)](https://ghcr.io/coursekata/r-notebook)
 [![datascience-notebook](https://img.shields.io/docker/image-size/coursekata/datascience-notebook/latest?label=datascience-notebook)](https://ghcr.io/coursekata/datascience-notebook)
+[![datascience-core](https://img.shields.io/docker/image-size/coursekata/datascience-core/latest?label=datascience-core)](https://ghcr.io/coursekata/datascience-core)
+[![exercises-notebook](https://img.shields.io/docker/image-size/coursekata/exercises-notebook/latest?label=exercises-notebook)](https://ghcr.io/coursekata/exercises-notebook)
 
-This is a collection of Docker images that build on one another for different purposes. Read the [Contents](#contents) section for a description of what is in each image. Additionally, each of the images has a tag indicating something about how the image was built. Read the [Tagging](#tagging) section to get an idea of how the images are built and what the tags mean.
+This is a collection of Docker images published for different purposes.. Read the [Contents](#contents) section for a description of what is in each image. Additionally, each of the images has a tag indicating something about how the image was built. Read the [Tagging](#tagging) section to get an idea of how the images are built and what the tags mean.
 
 You will eventually need a link structured as [Contents](#contents):[Tag](#tagging).
 
@@ -13,7 +15,7 @@ For example, in this link `coursekata/essentials-notebook:latest`, the `essentia
 
 ## Contents
 
-There are currently four different images that you can choose from, as listed below. Each successive image builds on the one before it and contains everything in the previous image. Both ARM64- and AMD64-compatible images are built for each of these.
+There are six images published from this repository. Four form a ladder — each contains everything in the one before it, package for package, though they are not literally built on top of one another (one `Dockerfile`, one build per image). Two more exist for specific consumers and sit outside the ladder. Both ARM64- and AMD64-compatible images are built for each of these. Both ARM64- and AMD64-compatible images are built for each of these.
 
 - [base-r-notebook](https://ghcr.io/coursekata/base-r-notebook): an image with Python and R installed, and that's it. R is configured to be the default notebook, but both R and Python notebooks are supported. This is a good image to use if you are building your own image from scratch.
 - [essentials-notebook](https://ghcr.io/coursekata/essentials-notebook): an image with all of the R packages used in CourseKata books and CourseKata's curated Jupyter Notebooks. If you are coming from the CourseKata book this is a great starting place: you will be able to do everything you did in the books and more!
@@ -24,6 +26,10 @@ There are currently four different images that you can choose from, as listed be
 - [datascience-notebook](https://ghcr.io/coursekata/datascience-notebook): this image builds on _r-notebook_ by adding a variety of R and Python packages for data science and statistics.
   - You can see specifically what R packages are installed by looking at [pak-scripts/datascience-notebook.R](pak-scripts/datascience-notebook.R).
   - If you have a specific package you think would be useful to install here, please [submit an issue describing your use-case](https://github.com/coursekata/docker-stacks/issues).
+- [datascience-core](https://ghcr.io/coursekata/datascience-core): everything in _datascience-notebook_ except the Jupyter front end (JupyterLab, classic Notebook, `jupyterhub-singleuser`). Meant for embedding under a different notebook server, not for running directly — if you're not sure you need this one, you don't.
+  - You can see specifically what R packages are installed by looking at [pak-scripts/datascience-core.R](pak-scripts/datascience-core.R).
+- [exercises-notebook](https://ghcr.io/coursekata/exercises-notebook): _essentials-notebook_ plus the exercise-checking machinery (`pythonwhat`, `testwhat`) that grades the CourseKata books' inline exercises. Not part of the ladder above, and not meant for general use — it exists to run book exercises.
+  - You can see specifically what R packages are installed by looking at [pak-scripts/exercises-notebook.R](pak-scripts/exercises-notebook.R).
 
 ### Installing R Packages Locally
 

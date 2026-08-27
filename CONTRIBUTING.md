@@ -217,16 +217,50 @@ testwhat = { github = "coursekata/testwhat", tag = "v4.11.3.2" }
 
 See `rpixi.toml` for package source examples (CRAN, GitHub, custom repos).
 
-## Image Hierarchy
+## The Six Images
 
-Images build on one another in this order:
+One `Dockerfile` builds all six images; a `PIXI_ENV` build arg selects
+which Pixi environment gets installed into it. The images are **not**
+`FROM`-chained — nothing is built on top of anything else here.
+"Downstream" describes cumulative *manifest features* (a package present
+in `r-notebook` and everything above it), not an inherited image layer.
+Containment is proven statically, from the committed `pixi.lock` and
+`rpixi.toml`, before any image is built — that's what `just gate static`
+does — not by rebuilding and diffing, and not by inheritance.
 
-1. **base-r-notebook**: Python + R + Jupyter
-2. **essentials-notebook**: + CourseKata packages
-3. **r-notebook**: + Extended R packages
-4. **datascience-notebook**: + Python data science packages
+Four tiers form a ladder, each a superset of the one before:
 
-**Important**: Changes to a base image affect all downstream images. When modifying `base-r-notebook`, rebuild and test all dependent images.
+1. **`base-r-notebook`** — R and Jupyter, and that's it.
+2. **`essentials-notebook`** — + the `coursekata` teaching stack: everything
+   used in the CourseKata books.
+3. **`r-notebook`** — + the modelling/tidyverse stack: extended R packages
+   instructors have asked for.
+4. **`datascience-notebook`** — + Bayesian modelling, machine learning, and
+   further instructor-requested Python and R packages.
+
+Two more images exist for specific consumers and sit outside the ladder:
+
+- **`datascience-core`** — everything in `datascience-notebook` except the
+  Jupyter front end (`jupyterlab`, `notebook`, `nbclassic`,
+  `jupyterhub-singleuser`). For a consumer that brings its own notebook
+  server — CKHub, which is pinned to classic Notebook 6 and would otherwise
+  inherit an unused JupyterLab install it has to overwrite. Nothing in this
+  repository builds on it; it's a fifth environment in the same Pixi
+  solve group as the ladder, so it stays version-identical with
+  `datascience-notebook` on every package they share.
+- **`exercises-notebook`** — `essentials-notebook` + the exercise-checking
+  machinery (`pythonwhat`, `testwhat`) that grades the book's inline
+  exercises. A **leaf**: nothing is built on top of it. It lives in its
+  **own Pixi solve group**, separate from the ladder, because `pythonwhat`
+  declares a hard `asttokens<3` ceiling that only it needs — inside a
+  shared solve group that ceiling would reach every tier, including
+  `base-r-notebook`, which contains no Python teaching stack at all.
+
+**Important**: a change to a feature multiple environments share — anything
+in `pixi.toml`'s `[dependencies]` or `[feature.notebook]`, or the
+base/essentials/r features in `rpixi.toml` — affects every tier that
+includes it. Rebuild and test every affected tier, not just the one you
+were editing.
 
 ## The CRAN Repository
 
