@@ -247,3 +247,43 @@ USER ${NB_UID}
 
 ARG DEFAULT_KERNEL
 ENV DEFAULT_KERNEL="${DEFAULT_KERNEL}"
+
+# Test-only layer, never published: the images job targets `final` explicitly
+# and the static gate asserts no published target installs bats.
+#
+# Self-contained on purpose. The suite and the package lists it asserts against
+# are baked in, so running the tests is `docker run <image>` with no mounts and
+# no host-side setup, and CI exercises the same image a developer does.
+FROM final AS test
+ARG PIXI_ENV
+ARG BATS_VERSION=1.14.0
+ARG BATS_SHA256=bb537b70b15b732f6d8827dd6578e3d8ce166636ce1f18ea9a074184fcce9177
+USER root
+RUN curl -fsSL "https://github.com/bats-core/bats-core/archive/refs/tags/v${BATS_VERSION}.tar.gz" -o /tmp/bats.tgz && \
+    printf '%s  /tmp/bats.tgz' "${BATS_SHA256}" > /tmp/bats.sha && \
+    sha256sum -c /tmp/bats.sha && \
+    mkdir -p /opt/bats && tar -xz -C /opt/bats --strip-components=1 -f /tmp/bats.tgz && \
+    ln -s /opt/bats/bin/bats /usr/local/bin/bats && \
+    rm /tmp/bats.tgz /tmp/bats.sha
+
+COPY scripts/tests /opt/tests
+
+# Resolve the expected packages now, while the manifests and pixi are still
+# reachable. pixi is bind-mounted from the pinned stage rather than installed:
+# it is needed to answer the question, not to run the tests.
+RUN --mount=type=bind,source="pixi.toml",target=/tmp/pixi.toml \
+    --mount=type=bind,source="pixi.lock",target=/tmp/pixi.lock \
+    --mount=type=bind,source="r",target=/tmp/r \
+    --mount=type=bind,source="scripts",target=/tmp/scripts \
+    --mount=type=bind,from=pixi,source=/usr/local/bin/pixi,target=/usr/local/bin/pixi \
+    python3 /tmp/scripts/get-refs.py "${PIXI_ENV}" --lang python \
+      --manifest /tmp/pixi.toml > /opt/tests/python-packages.txt && \
+    python3 /tmp/scripts/get-refs.py "${PIXI_ENV}" --lang r --names \
+      --manifest /tmp/pixi.toml --specs /tmp/r > /opt/tests/r-packages.txt
+
+ENV ENV_NAME="${PIXI_ENV}" \
+    PYTHON_PACKAGES_FILE=/opt/tests/python-packages.txt \
+    R_PACKAGES_FILE=/opt/tests/r-packages.txt
+
+USER ${NB_UID}
+CMD ["bash", "/opt/tests/run-tests.sh"]

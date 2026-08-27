@@ -6,7 +6,8 @@ exists: pixi.lock containment across the ladder, the solve-group split that
 keeps exercises-notebook's asttokens ceiling off the ladder, cross-arch
 version equality over the packages we actually name, the CRAN repository
 configuration, the R refs in r/, the feature ladder pixi.toml defines for
-both languages, and CI Action pinning.
+both languages, the test layer staying out of published images, and CI Action
+pinning.
 
 python3 + PyYAML rather than bash/yq because pixi.lock is 632KB of YAML and
 the repo carries no other YAML tooling; both are present on ubuntu-24.04
@@ -338,6 +339,57 @@ def check_environment_features(failures: list[str], pixi: dict) -> None:
             )
 
 
+def check_test_layer_unpublished(failures: list[str]) -> None:
+    # `test` is the Dockerfile's last stage, so a publish job that omits
+    # `target` builds it by default and ships bats into a product image. The
+    # explicit target is the only thing preventing that, which makes it worth
+    # asserting rather than trusting.
+    text = (ROOT / "Dockerfile").read_text()
+    parents: dict[str, str] = {}
+    installs_bats: set[str] = set()
+    stage = None
+    for line in text.splitlines():
+        m = re.match(r"\s*FROM\s+(\S+)(?:\s+AS\s+(\S+))?", line, re.IGNORECASE)
+        if m:
+            base, name = m.group(1), m.group(2)
+            stage = name or base
+            parents[stage] = base
+            continue
+        if line.lstrip().startswith("#"):
+            continue  # a comment mentioning bats installs nothing
+        if stage and "bats" in line.lower():
+            installs_bats.add(stage)
+
+    # Without this the check passes vacuously the moment bats moves or is
+    # renamed, which is exactly when it would be needed.
+    if "test" not in installs_bats:
+        failures.append("test layer: no stage named `test` installs bats — this check can no longer see what it guards")
+
+    def ancestry(target: str) -> list[str]:
+        chain: list[str] = []
+        while target in parents and target not in chain:
+            chain.append(target)
+            target = parents[target]
+        return chain
+
+    workflow = yaml.safe_load((ROOT / ".github" / "workflows" / "publish.yml").read_text())
+    for job_name, job in workflow.get("jobs", {}).items():
+        if "build-test-push" not in job.get("uses", ""):
+            continue
+        target = (job.get("with") or {}).get("target")
+        if not target:
+            failures.append(
+                f"test layer: publish.yml job {job_name!r} sets no `target`; the Dockerfile's "
+                "last stage is `test`, so an unset target publishes bats"
+            )
+            continue
+        leaked = sorted(set(ancestry(target)) & installs_bats)
+        if leaked:
+            failures.append(
+                f"test layer: publish.yml job {job_name!r} publishes {target!r}, which installs bats in {leaked}"
+            )
+
+
 def check_workflow_pins(failures: list[str]) -> None:
     # Composite-action steps conventionally lead with "- uses: ..." (no
     # separate "- name:" line first, unlike this repo's workflow style), so
@@ -347,7 +399,7 @@ def check_workflow_pins(failures: list[str]) -> None:
 
     # .yaml is a valid GitHub Actions extension too, and a composite action
     # under .github/actions/**/action.yml is just as capable of a `uses:` as
-    # a workflow file — both are part of the surface this check exists for.
+    # a workflow file: both are part of the surface this check exists for.
     workflows = sorted(
         p for ext in ("*.yml", "*.yaml") for p in (ROOT / ".github" / "workflows").glob(ext)
     )
@@ -393,6 +445,7 @@ def main() -> int:
     check_r_specs(failures, pixi)
     check_ladder(failures, pixi)
     check_environment_features(failures, pixi)
+    check_test_layer_unpublished(failures)
     check_workflow_pins(failures)
 
     elapsed = time.time() - start
