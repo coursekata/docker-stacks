@@ -282,12 +282,14 @@ of building from source: 5.5s versus 1m49s for the same resolve.
 Bioconductor repositories pak would otherwise add; no package in any tier
 is of Bioconductor origin.
 
-Determinism doesn't come from a frozen date here — it comes from CI
-resolving the package list once and handing that same resolution to both
-architecture builds, so they can't drift from each other. `PPM` is still
-the escape hatch: set it, before starting R or when running the
-container, to pin a dated snapshot for reproducible local testing. The
-shipped default never does this for you.
+Nothing here freezes a date, and the two architectures resolve R
+independently, so they may land on different versions of an unconstrained
+package. That is accepted rather than prevented: what each image actually
+got is recorded as a build artifact after the fact. Determinism where it
+matters comes from the refs themselves — every GitHub package is pinned to
+a commit SHA. `PPM` is the escape hatch: set it, before starting R or when
+running the container, to pin a dated snapshot for reproducible local
+testing. The shipped default never does this for you.
 
 **Testing gotcha.** pak resolves in a subprocess that re-reads
 `Rprofile.site` from disk, so `options(repos = ...)` typed at an R prompt
