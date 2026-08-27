@@ -215,11 +215,12 @@ RUN jupyter server --generate-config && \
     fix-permissions "${HOME}"
 
 # install R packages and their system dependencies
-# hadolint ignore=SC1008,SC2155
 USER root
+# hadolint ignore=SC1008
 RUN --mount=type=bind,source="pak-scripts",target=/tmp/pak-scripts \
     --mount=type=secret,id=github_token,uid=0 \
-    export GITHUB_PAT=$(cat /run/secrets/github_token) && \
+    GITHUB_PAT=$(cat /run/secrets/github_token) && \
+    export GITHUB_PAT && \
     apt-get update && \
     Rscript "/tmp/pak-scripts/${PIXI_ENV}.R" && \
     Rscript -e 'IRkernel::installspec(user = FALSE, prefix = Sys.getenv("CONDA_DIR"))' && \
