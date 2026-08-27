@@ -197,6 +197,7 @@ jobs:
       # before it existed. Nothing gates on it; the two architectures may
       # legitimately resolve different versions of an unconstrained package.
       - name: Record installed R packages
+        if: inputs.target != 'base'
         shell: bash
         env:
           IMAGE_NAME: ${{ inputs.image }}
@@ -211,6 +212,7 @@ jobs:
           wc -l < "r-${IMAGE_NAME}.txt" | xargs -I{} echo "r-${IMAGE_NAME}.txt: {} packages" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload R package record
+        if: inputs.target != 'base'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: r-packages-${{ inputs.image }}-${{ inputs.platform == 'linux/arm64' && 'arm64' || 'amd64' }}
