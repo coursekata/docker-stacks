@@ -121,5 +121,5 @@ img-clean: img-rm-dang img-rm
 [group('lint')]
 lint:
     shellcheck -S warning scripts/*.sh scripts/tests/*.sh scripts/tests/*.bats
-    zizmor .github/workflows/
+    zizmor .
 

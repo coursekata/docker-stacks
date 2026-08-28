@@ -54,6 +54,8 @@ jobs:
   lint:
     permissions:
       contents: read
+      # zizmor uploads its findings to code scanning
+      security-events: write
     name: Lint
     runs-on: ubuntu-latest
     steps:
