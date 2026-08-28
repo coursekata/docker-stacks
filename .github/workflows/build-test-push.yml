@@ -177,10 +177,7 @@ jobs:
           provenance: false
           outputs: type=image,name=ghcr.io/${{ github.repository_owner }}/next/${{ inputs.image }},push-by-digest=true,name-canonical=true,push=true
 
-      # Builds `final` plus bats and the suite. Every layer below the test
-      # stage is already in the local build cache from the push above, so this
-      # adds the test layers and nothing else, and what runs is byte-identical
-      # to what was pushed.
+      # Cached down to the test layers, so this runs what was just pushed.
       - name: Build test image
         if: inputs.skip-tests != true
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
@@ -205,9 +202,7 @@ jobs:
           TEST_IMAGE: ${{ inputs.image }}:test
         run: docker run --rm --platform="$PLATFORM" "$TEST_IMAGE"
 
-      # A record of what this image actually contains, not a prediction made
-      # before it existed. Nothing gates on it; the two architectures may
-      # legitimately resolve different versions of an unconstrained package.
+      # A record, not a gate: the two architectures may legitimately differ.
       - name: Record installed R packages
         if: inputs.target != 'base'
         shell: bash

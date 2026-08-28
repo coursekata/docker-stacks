@@ -156,13 +156,7 @@ jobs:
               } ]')
           echo "images=$include" >> "$GITHUB_OUTPUT"
 
-  # Resolve every environment's R refs to pinned versions once, so both
-  # architecture builds install the exact same package set. Runs on
-  # ubuntu-24.04 (not ubuntu-latest): the sysreqs platform and the lock's
-  # recorded os must be noble to match the image.
-  # Build foundation base layer for both architectures
-  # The base target doesn't use pixi at all. It runs first because every image
-  # build reads its layers from the registry cache, not because of the lock.
+  # Runs first because every image build reads its layers from the registry cache.
   foundation:
     permissions:
       contents: read

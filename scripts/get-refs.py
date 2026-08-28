@@ -1,17 +1,8 @@
 #!/usr/bin/env python3
 """List the packages a pixi environment declares, for one language.
 
-The declared set, not the resolved closure: what these feed is the assertion
-that every package an image advertises loads, not that its whole dependency
-tree is intact.
-
-Composition comes from pixi itself rather than a hand parse of pixi.toml.
-pixi already resolves feature ordering, the implicit `default` feature,
-`no-default-feature`, and per-target tables — so a package declared only for
-one architecture is reported for that architecture and not the other. A parser
-here would answer those cases silently and wrongly. pixi needs no network and
-no writable cache for either query; the Dockerfile bind-mounts the binary from
-the pinned pixi stage for exactly this.
+Asks pixi rather than parsing pixi.toml, so per-target tables resolve correctly:
+a package declared for one architecture is not reported for the other.
 """
 
 import argparse
@@ -21,9 +12,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-# Declared in pixi.toml but not importable Python packages: the interpreter and
-# installer themselves, and system libraries pulled in for other packages to
-# link against. R packages are excluded by the r- prefix instead.
+# Declared but not importable: the interpreter, the installer, and system
+# libraries other packages link against.
 NOT_IMPORTABLE = {
     "python", "pip",
     "cmdstan", "ocl-icd-system", "pkg-config", "unixodbc", "xorg-xorgproto",
@@ -66,9 +56,7 @@ def features_for(manifest, env):
 
 
 def resolve_platform(manifest, env, requested):
-    """Inside the image the platform pixi reports is the one being built. On a
-    macOS host it is not one the manifest targets: that has to be an error, not
-    an empty list that makes every downstream assertion vacuously true."""
+    """Erroring beats an empty list, which makes every assertion vacuously true."""
     # pixi >=0.77 reports platforms as objects, older as strings.
     supported = [p["name"] if isinstance(p, dict) else p
                  for p in environment(manifest, env)["platforms"]]
@@ -98,9 +86,7 @@ def r_refs(manifest, env, specs_dir):
 def python_refs(manifest, env, platform):
     """Importable package names, sorted. `requested_spec` is what separates the
     packages this environment asks for from the closure pulled in beneath them."""
-    # --locked, not a bare list: pixi re-solves and REWRITES pixi.lock when the
-    # manifest has moved ahead of it, so without this a read turns into a write.
-    # --no-install keeps it from materializing the environment to answer.
+    # --locked because a bare `pixi list` re-solves and rewrites pixi.lock.
     listing = pixi(
         manifest, "list", "-e", env, "--platform", platform,
         "--json", "--locked", "--no-install",

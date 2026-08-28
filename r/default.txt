@@ -1,7 +1,5 @@
 # repr renders notebook plots through Cairo when it is installed and falls back
-# to grDevices::svg otherwise; Cairo's SVG is about a third smaller for the same
-# plot. Neither emits real <text>, so this is a size choice, not an
-# accessibility one.
+# to grDevices::svg otherwise; Cairo's SVG is about a third smaller
 Cairo
 IRkernel
 rlang

@@ -12,7 +12,7 @@ This guide covers development workflows, testing, CI/CD, and contribution guidel
 - Pixi (optional, for local dependency management)
 - [lefthook](https://github.com/evilmartians/lefthook) for git hooks
 
-### Setting Up Pre-commit Hooks
+### Setting Up Git Hooks
 
 `lefthook.yml` runs `just lint` before a commit that touches scripts or
 workflows. Enable it once per clone:
