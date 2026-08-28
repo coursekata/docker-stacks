@@ -189,9 +189,9 @@ USER ${NB_UID}
 
 
 # -----------------------------------------------------------------------------
-# Final image
+# Image contents. `final` and `test` both derive from this.
 # -----------------------------------------------------------------------------
-FROM base AS final
+FROM base AS notebook
 
 ARG PIXI_ENV
 LABEL org.coursekata.image.authors="tech@coursekata.org"
@@ -248,13 +248,9 @@ USER ${NB_UID}
 ARG DEFAULT_KERNEL
 ENV DEFAULT_KERNEL="${DEFAULT_KERNEL}"
 
-# Test-only layer, never published: the images job targets `final` explicitly
-# and the static gate asserts no published target installs bats.
-#
-# Self-contained on purpose. The suite and the package lists it asserts against
-# are baked in, so running the tests is `docker run <image>` with no mounts and
-# no host-side setup, and CI exercises the same image a developer does.
-FROM final AS test
+# Before `final` so that the default target (the last stage) is publishable.
+# Self-contained: suite and package lists baked in, so testing is `docker run`.
+FROM notebook AS test
 ARG PIXI_ENV
 ARG BATS_VERSION=1.14.0
 ARG BATS_SHA256=bb537b70b15b732f6d8827dd6578e3d8ce166636ce1f18ea9a074184fcce9177
@@ -268,9 +264,7 @@ RUN curl -fsSL "https://github.com/bats-core/bats-core/archive/refs/tags/v${BATS
 
 COPY scripts/tests /opt/tests
 
-# Resolve the expected packages now, while the manifests and pixi are still
-# reachable. pixi is bind-mounted from the pinned stage rather than installed:
-# it is needed to answer the question, not to run the tests.
+# pixi is bind-mounted, not installed: needed to resolve, not to run tests.
 RUN --mount=type=bind,source="pixi.toml",target=/tmp/pixi.toml \
     --mount=type=bind,source="pixi.lock",target=/tmp/pixi.lock \
     --mount=type=bind,source="r",target=/tmp/r \
@@ -287,3 +281,9 @@ ENV ENV_NAME="${PIXI_ENV}" \
 
 USER ${NB_UID}
 CMD ["bash", "/opt/tests/run-tests.sh"]
+
+
+# -----------------------------------------------------------------------------
+# The published image. Adds nothing; its job is to be the last stage.
+# -----------------------------------------------------------------------------
+FROM notebook AS final

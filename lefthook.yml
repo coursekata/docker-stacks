@@ -1,0 +1,5 @@
+pre-commit:
+  commands:
+    lint:
+      glob: "{scripts/**,.github/workflows/**,justfile}"
+      run: just lint

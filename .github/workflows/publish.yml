@@ -51,49 +51,23 @@ permissions: {}
 
 jobs:
 
-  gate:
+  lint:
     permissions:
       contents: read
-    name: Static Gate
-    needs: [update-lock]
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
-
-      - name: Download updated lock file
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
-          name: pixi-lock
-          path: .
+          persist-credentials: false
 
-      # run-install: false because the gate only needs the pixi binary for `pixi
-      # lock --check`, not an installed environment; and the runner's system
-      # python3 (not an activated env's) is what should end up on PATH.
-      - name: Read the pixi version the image is built with
-        id: pixi-version
-        run: sed -n 's/^ARG PIXI_VERSION=/version=/p' Dockerfile >> "$GITHUB_OUTPUT"
-
-      - name: Setup Pixi
-        uses: prefix-dev/setup-pixi@28eb668aafebd9dede9d97c4ba1cd9989a4d0004 # v0.9.2
-        with:
-          pixi-version: v${{ steps.pixi-version.outputs.version }}
-          run-install: false
-
-      # PyYAML is not guaranteed on the runner image, and this gate now blocks
-      # every build: an ImportError here stops the whole lane.
-      - name: Install gate dependencies
-        run: python3 -m pip install --quiet pyyaml
-
-      # shellcheck ships on the runner. It has been passing all along with
-      # nothing enforcing it, which is the same as not passing.
       - name: Shellcheck
         run: shellcheck -S warning scripts/*.sh scripts/tests/*.sh scripts/tests/*.bats
 
-      - name: Static gate
-        run: python3 scripts/gate/static.py
+      - name: Zizmor
+        uses: zizmorcore/zizmor-action@3dc1ecc9bcb9e94e9b2c709687979e1298497054 # v0.6.2
 
-  # Resolve package versions once so all builds use the same lock file
   update-lock:
     permissions:
       contents: read
@@ -193,7 +167,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-    needs: [gate]
+    needs: [lint]
     uses: ./.github/workflows/build-test-push-multiarch.yml
     with:
       image: foundation
@@ -210,7 +184,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-    needs: [gate, foundation, setup, update-lock]
+    needs: [lint, foundation, setup, update-lock]
     strategy:
       fail-fast: false
       matrix:

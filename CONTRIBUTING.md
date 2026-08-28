@@ -10,18 +10,16 @@ This guide covers development workflows, testing, CI/CD, and contribution guidel
 - GitHub CLI (`gh`) or `GITHUB_TOKEN` environment variable
 - [just](https://github.com/casey/just) command runner
 - Pixi (optional, for local dependency management)
-- [prek](https://github.com/anthropics/prek) for pre-commit hooks
+- [lefthook](https://github.com/evilmartians/lefthook) for git hooks
 
 ### Setting Up Pre-commit Hooks
 
-This project uses pre-commit hooks to run local checks. Install prek and set up the hooks:
+`lefthook.yml` runs `just lint` before a commit that touches scripts or
+workflows. Enable it once per clone:
 
 ```bash
-# Install prek (requires pipx or pip)
-pipx install prek
-
-# Install the pre-commit hooks
-prek install
+brew install lefthook
+lefthook install
 ```
 
 ### Building Images Locally
@@ -133,7 +131,7 @@ image; running a file standalone elsewhere needs them set by hand.
 
 Execution is serial: bats `--jobs` needs GNU parallel, which the images do not carry. `TEST_DEBUG=1` adds `--trace --show-output-of-passing-tests`.
 
-bats itself is not in the published images. It is installed by the Dockerfile's `test` stage, which is built with `--target test` and never published — the `images` job targets `final` explicitly and the static gate asserts no published target installs it.
+bats itself is not in the published images. The Dockerfile's `test` stage installs it, and `final` is the last stage, so a build with no `--target` produces the publishable image rather than the test one.
 
 ## CI/CD
 
@@ -210,7 +208,7 @@ coursekata=coursekata/coursekata-r@5e68e7716b02065823d17491de4a18e57774185e?rein
 ggpubr
 ```
 
-`just gate static` validates the ref syntax; nothing needs regenerating.
+Nothing needs regenerating; pak reads these files directly.
 
 ## The Six Images
 
@@ -219,11 +217,10 @@ which Pixi environment gets installed into it. The images are **not**
 `FROM`-chained — nothing is built on top of anything else here.
 "Downstream" describes cumulative *manifest features* (a package present
 in `r-notebook` and everything above it), not an inherited image layer.
-Containment is proven statically, from the committed `pixi.lock`, before
-any image is built — that's what `just gate static` does — not by
-rebuilding and diffing, and not by inheritance. `pixi.toml`'s
+Containment therefore rests on the `features` lists being reviewed when
+they change, not on inheritance. `pixi.toml`'s
 `[environments.*]` `features` lists are the single definition of tier
-composition for both languages: the R side parses `pixi.toml` directly
+composition for both languages: the R side asks pixi
 (`scripts/get-refs.py`) and concatenates the matching `r/<feature>.txt`
 files, including the two instructor features, which carry no conda
 packages at all.

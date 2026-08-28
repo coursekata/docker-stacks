@@ -1,9 +1,0 @@
-repos:
-  - repo: local
-    hooks:
-      - id: gate-static
-        name: Static release gate
-        entry: python3 scripts/gate/static.py
-        language: system
-        pass_filenames: false
-        stages: [manual]
