@@ -1,15 +1,15 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "Actions are Dependabot's; this covers only what Dependabot cannot see. Must run as the hosted GitHub App: a self-hosted instance on a PAT cannot produce signed commits, and required_signatures rejects unsigned ones.",
+  "extends": [
+    "github>coursekata/ck-tf-modules//renovate/default.json"
+  ],
+  "description": "Actions are Dependabot's; this covers what Dependabot cannot see. platformCommit routes commits through the GitHub API so they carry GitHub's signature, which main's required_signatures rejects them without.",
   "enabledManagers": [
     "dockerfile",
     "custom.regex"
   ],
   "pinDigests": true,
-  "schedule": [
-    "before 3am on monday"
-  ],
-  "prConcurrentLimit": 2,
+  "platformCommit": true,
   "packageRules": [
     {
       "matchUpdateTypes": [
@@ -27,15 +27,15 @@
     {
       "description": "PIXI_VERSION is an ARG; the FROM tag interpolates two variables so the dockerfile manager cannot see it.",
       "customType": "regex",
-      "managerFilePatterns": [
-        "/(^|/)Dockerfile$/"
-      ],
       "matchStrings": [
         "ARG PIXI_VERSION=(?<currentValue>\\S+)"
       ],
       "depNameTemplate": "prefix-dev/pixi",
       "datasourceTemplate": "github-releases",
-      "extractVersionTemplate": "^v(?<version>.*)$"
+      "extractVersionTemplate": "^v(?<version>.*)$",
+      "fileMatch": [
+        "(^|/)Dockerfile$"
+      ]
     }
   ]
 }
