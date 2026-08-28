@@ -47,12 +47,13 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions: {}
+
 jobs:
-  # A static proof that fails before any image exists beats a build-time one.
-  # Gates the lock `update-lock` just regenerated, not the committed one, so
-  # a `pixi update` that breaks containment or cross-arch identity is caught
-  # before the matrix burns 40 minutes building it.
+
   gate:
+    permissions:
+      contents: read
     name: Static Gate
     needs: [update-lock]
     runs-on: ubuntu-latest
@@ -94,11 +95,15 @@ jobs:
 
   # Resolve package versions once so all builds use the same lock file
   update-lock:
+    permissions:
+      contents: read
     name: Update Lock File
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
 
       - name: Read the pixi version the image is built with
         id: pixi-version
@@ -122,6 +127,8 @@ jobs:
   # Derive the build matrix from the manifest so adding an environment never
   # needs a workflow edit
   setup:
+    permissions:
+      contents: read
     name: Derive Build Matrix
     needs: [update-lock]
     runs-on: ubuntu-latest
@@ -130,6 +137,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
 
       - name: Download updated lock file
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
@@ -181,9 +190,11 @@ jobs:
   # The base target doesn't use pixi at all. It runs first because every image
   # build reads its layers from the registry cache, not because of the lock.
   foundation:
+    permissions:
+      contents: read
+      packages: write
     needs: [gate]
     uses: ./.github/workflows/build-test-push-multiarch.yml
-    secrets: inherit
     with:
       image: foundation
       target: base
@@ -196,6 +207,9 @@ jobs:
 
   # Build all notebook images (each builds both architectures internally)
   images:
+    permissions:
+      contents: read
+      packages: write
     needs: [gate, foundation, setup, update-lock]
     strategy:
       fail-fast: false
@@ -203,7 +217,6 @@ jobs:
         include: ${{ fromJson(needs.setup.outputs.images) }}
 
     uses: ./.github/workflows/build-test-push-multiarch.yml
-    secrets: inherit
     with:
       image: ${{ matrix.image }}
       target: final

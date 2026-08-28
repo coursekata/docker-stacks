@@ -55,9 +55,11 @@ on:
 
 jobs:
   build-amd64:
+    permissions:
+      contents: read
+      packages: write
     name: Build (AMD64)
     uses: ./.github/workflows/build-test-push.yml
-    secrets: inherit
     with:
       image: ${{ inputs.image }}
       platform: linux/amd64
@@ -71,9 +73,11 @@ jobs:
       lock-artifact: ${{ inputs.lock-artifact }}
 
   build-arm64:
+    permissions:
+      contents: read
+      packages: write
     name: Build (ARM64)
     uses: ./.github/workflows/build-test-push.yml
-    secrets: inherit
     with:
       image: ${{ inputs.image }}
       platform: linux/arm64
@@ -87,6 +91,9 @@ jobs:
       lock-artifact: ${{ inputs.lock-artifact }}
 
   manifest:
+    permissions:
+      contents: read
+      packages: write
     name: Create Multi-Arch Manifest
     if: inputs.publish
     needs: [build-amd64, build-arm64]
@@ -123,45 +130,54 @@ jobs:
 
       - name: Create and push multi-arch manifest
         shell: bash
+        env:
+          ANNOTATIONS: ${{ steps.meta.outputs.annotations }}
+          TAGS: ${{ steps.meta.outputs.tags }}
+          OWNER: ${{ github.repository_owner }}
+          IMAGE: ${{ inputs.image }}
+          AMD64_DIGEST: ${{ needs.build-amd64.outputs.digest }}
+          ARM64_DIGEST: ${{ needs.build-arm64.outputs.digest }}
         run: |
-          # Build annotation flags array from metadata-action output
-          # Docker requires: --annotation index:key="value" (quotes only around value)
+          # docker wants --annotation index:key="value", quotes around the value only
           ANNOTATION_FLAGS=()
           while IFS= read -r annotation; do
             if [[ -n "$annotation" ]]; then
-              # Split annotation at first = sign
               key="${annotation%%=*}"
               value="${annotation#*=}"
-              # Add as: --annotation index:key="value"
               ANNOTATION_FLAGS+=(--annotation)
               ANNOTATION_FLAGS+=("${key}=\"${value}\"")
             fi
-          done <<< "${{ steps.meta.outputs.annotations }}"
+          done <<< "$ANNOTATIONS"
 
-          # Create manifest for each tag with annotations
-          echo "${{ steps.meta.outputs.tags }}" | while IFS= read -r tag; do
+          echo "$TAGS" | while IFS= read -r tag; do
             echo "Creating manifest for $tag"
             docker buildx imagetools create "${ANNOTATION_FLAGS[@]}" -t "$tag" \
-              ghcr.io/${{ github.repository_owner }}/next/${{ inputs.image }}@${{ needs.build-amd64.outputs.digest }} \
-              ghcr.io/${{ github.repository_owner }}/next/${{ inputs.image }}@${{ needs.build-arm64.outputs.digest }}
+              "ghcr.io/${OWNER}/next/${IMAGE}@${AMD64_DIGEST}" \
+              "ghcr.io/${OWNER}/next/${IMAGE}@${ARM64_DIGEST}"
           done
 
       - name: Inspect manifest
         shell: bash
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
         run: |
-          # Inspect the first tag to verify multi-arch
-          FIRST_TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n1)
+          FIRST_TAG=$(echo "$TAGS" | head -n1)
           echo "Inspecting $FIRST_TAG"
           docker buildx imagetools inspect "$FIRST_TAG"
 
       - name: Set cache output
         id: set-cache-output
         shell: bash
+        env:
+          OWNER: ${{ github.repository_owner }}
+          IMAGE: ${{ inputs.image }}
+          AMD64_CACHE: ${{ needs.build-amd64.outputs.cache-tag }}
+          ARM64_CACHE: ${{ needs.build-arm64.outputs.cache-tag }}
         run: |
           {
             echo 'cache-from<<EOF'
-            echo "type=registry,ref=ghcr.io/${{ github.repository_owner }}/next/${{ inputs.image }}:weekly"
-            echo "type=registry,ref=${{ needs.build-amd64.outputs.cache-tag }}"
-            echo "type=registry,ref=${{ needs.build-arm64.outputs.cache-tag }}"
+            echo "type=registry,ref=ghcr.io/${OWNER}/next/${IMAGE}:weekly"
+            echo "type=registry,ref=${AMD64_CACHE}"
+            echo "type=registry,ref=${ARM64_CACHE}"
             echo EOF
           } >> "$GITHUB_OUTPUT"

@@ -66,6 +66,9 @@ on:
 
 jobs:
   build:
+    permissions:
+      contents: read
+      packages: write
     runs-on: ${{ inputs.platform == 'linux/arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
 
     outputs:
@@ -79,33 +82,35 @@ jobs:
       - name: Setup build context
         id: context
         shell: bash
+        env:
+          PLATFORM: ${{ inputs.platform }}
+          IMAGE: ${{ inputs.image }}
+          OWNER: ${{ github.repository_owner }}
+          EXTRA_CACHE_FROM: ${{ inputs.extra-cache-from }}
         run: |
-          # Validate platform
-          if [[ "${{ inputs.platform }}" != "linux/amd64" && "${{ inputs.platform }}" != "linux/arm64" ]]; then
-            echo "::error title=Unsupported Platform::Platform '${{ inputs.platform }}' is not supported. Only linux/amd64 and linux/arm64 are supported."
+          if [[ "$PLATFORM" != "linux/amd64" && "$PLATFORM" != "linux/arm64" ]]; then
+            echo "::error title=Unsupported Platform::Platform '$PLATFORM' is not supported. Only linux/amd64 and linux/arm64 are supported."
             exit 1
           fi
-          echo "::notice::Platform: ${{ inputs.platform }}"
+          echo "::notice::Platform: $PLATFORM"
 
-          # Determine platform tag and construct cache tag
-          if [[ "${{ inputs.platform }}" == "linux/amd64" ]]; then
+          if [[ "$PLATFORM" == "linux/amd64" ]]; then
             PLATFORM_TAG="amd64"
           else
             PLATFORM_TAG="arm64"
           fi
-          CACHE_TAG="ghcr.io/${{ github.repository_owner }}/next/${{ inputs.image }}:cache-$PLATFORM_TAG"
+          CACHE_TAG="ghcr.io/${OWNER}/next/${IMAGE}:cache-${PLATFORM_TAG}"
           echo "cache-tag=$CACHE_TAG" >> "$GITHUB_OUTPUT"
           echo "::notice::Cache tag: $CACHE_TAG"
 
           echo "secret-files=" >> "$GITHUB_OUTPUT"
 
-          # Construct cache-from list
           {
             echo 'cache-from<<EOF'
-            echo "type=registry,ref=ghcr.io/${{ github.repository_owner }}/next/${{ inputs.image }}:weekly"
+            echo "type=registry,ref=ghcr.io/${OWNER}/next/${IMAGE}:weekly"
             echo "type=registry,ref=$CACHE_TAG"
-            if [[ -n "${{ inputs.extra-cache-from }}" ]]; then
-              echo "${{ inputs.extra-cache-from }}"
+            if [[ -n "$EXTRA_CACHE_FROM" ]]; then
+              echo "$EXTRA_CACHE_FROM"
             fi
             echo EOF
           } >> "$GITHUB_OUTPUT"
@@ -123,6 +128,8 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
 
       - name: Download updated lock file
         if: inputs.lock-artifact
