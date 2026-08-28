@@ -1,11 +1,6 @@
 # CourseKata Docker Stacks
 
-[![base-r-notebook](https://img.shields.io/docker/image-size/coursekata/base-r-notebook/latest?label=base-r-notebook)](https://ghcr.io/coursekata/base-r-notebook)
-[![essentials-notebook](https://img.shields.io/docker/image-size/coursekata/essentials-notebook/latest?label=essentials-notebook)](https://ghcr.io/coursekata/essentials-notebook)
-[![r-notebook](https://img.shields.io/docker/image-size/coursekata/r-notebook/latest?label=r-notebook)](https://ghcr.io/coursekata/r-notebook)
-[![datascience-notebook](https://img.shields.io/docker/image-size/coursekata/datascience-notebook/latest?label=datascience-notebook)](https://ghcr.io/coursekata/datascience-notebook)
-[![datascience-core](https://img.shields.io/docker/image-size/coursekata/datascience-core/latest?label=datascience-core)](https://ghcr.io/coursekata/datascience-core)
-[![exercises-notebook](https://img.shields.io/docker/image-size/coursekata/exercises-notebook/latest?label=exercises-notebook)](https://ghcr.io/coursekata/exercises-notebook)
+[![base-r-notebook](https://img.shields.io/docker/image-size/coursekata/base-r-notebook/latest?label=base-r-notebook)](https://ghcr.io/coursekata/base-r-notebook) [![essentials-notebook](https://img.shields.io/docker/image-size/coursekata/essentials-notebook/latest?label=essentials-notebook)](https://ghcr.io/coursekata/essentials-notebook) [![r-notebook](https://img.shields.io/docker/image-size/coursekata/r-notebook/latest?label=r-notebook)](https://ghcr.io/coursekata/r-notebook) [![datascience-notebook](https://img.shields.io/docker/image-size/coursekata/datascience-notebook/latest?label=datascience-notebook)](https://ghcr.io/coursekata/datascience-notebook) [![datascience-core](https://img.shields.io/docker/image-size/coursekata/datascience-core/latest?label=datascience-core)](https://ghcr.io/coursekata/datascience-core) [![exercises-notebook](https://img.shields.io/docker/image-size/coursekata/exercises-notebook/latest?label=exercises-notebook)](https://ghcr.io/coursekata/exercises-notebook)
 
 This is a collection of Docker images published for different purposes.. Read the [Contents](#contents) section for a description of what is in each image. Additionally, each of the images has a tag indicating something about how the image was built. Read the [Tagging](#tagging) section to get an idea of how the images are built and what the tags mean.
 
@@ -20,9 +15,9 @@ There are six images published from this repository. Four form a ladder — each
 - [base-r-notebook](https://ghcr.io/coursekata/base-r-notebook): an image with Python and R installed, and that's it. R is configured to be the default notebook, but both R and Python notebooks are supported. This is a good image to use if you are building your own image from scratch.
 - [essentials-notebook](https://ghcr.io/coursekata/essentials-notebook): an image with all of the R packages used in CourseKata books and CourseKata's curated Jupyter Notebooks. If you are coming from the CourseKata book this is a great starting place: you will be able to do everything you did in the books and more!
 - [r-notebook](https://ghcr.io/coursekata/r-notebook): this image has all of the contents of the _essentials-notebook_ with the addition of other R packages that instructors have requested that we install for data science and statistics.
-  - If you have a specific package you think would be useful to install here, please [submit an issue describing your use case](https://github.com/coursekata/docker-stacks/issues).
+- If you have a specific package you think would be useful to install here, please [submit an issue describing your use case](https://github.com/coursekata/docker-stacks/issues).
 - [datascience-notebook](https://ghcr.io/coursekata/datascience-notebook): this image builds on _r-notebook_ by adding a variety of R and Python packages for data science and statistics.
-  - If you have a specific package you think would be useful to install here, please [submit an issue describing your use-case](https://github.com/coursekata/docker-stacks/issues).
+- If you have a specific package you think would be useful to install here, please [submit an issue describing your use-case](https://github.com/coursekata/docker-stacks/issues).
 - [datascience-core](https://ghcr.io/coursekata/datascience-core): everything in _datascience-notebook_ except the Jupyter front end (JupyterLab, classic Notebook, `jupyterhub-singleuser`). Meant for embedding under a different notebook server, not for running directly — if you're not sure you need this one, you don't.
 - [exercises-notebook](https://ghcr.io/coursekata/exercises-notebook): _essentials-notebook_ plus the exercise-checking machinery (`pythonwhat`, `testwhat`) that grades the CourseKata books' inline exercises. Not part of the ladder above, and not meant for general use — it exists to run book exercises.
 
@@ -45,13 +40,7 @@ Each build also produces a version-pinned `r-<image>.txt` with the exact resolve
 
 ## Tagging
 
-**This section is being replaced and does not describe the current build.**
-The weekly build now publishes only to the `next/*` namespace above — not
-to the six repositories this page covers — and none of the `sha-`, dated,
-or "most recent stable" behavior below is currently produced. A release
-contract describing what the six images above actually promise, and how
-they're tagged, is coming; until then, treat the rest of this section as
-historical.
+**This section is being replaced and does not describe the current build.** The weekly build now publishes only to the `next/*` namespace above — not to the six repositories this page covers — and none of the `sha-`, dated, or "most recent stable" behavior below is currently produced. A release contract describing what the six images above actually promise, and how they're tagged, is coming; until then, treat the rest of this section as historical.
 
 These images are built based on a variety of triggers, and each trigger results in a different tag. You will notice that some issues have multiple tags, this is because the tags are there to either help you keep up-to-date, or pin your image to a specific revision or timepoint. This section is structured based on why you might choose one tag compared to another.
 

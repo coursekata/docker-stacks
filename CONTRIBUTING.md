@@ -14,8 +14,7 @@ This guide covers development workflows, testing, CI/CD, and contribution guidel
 
 ### Setting Up Git Hooks
 
-`lefthook.yml` runs `just lint` before a commit that touches scripts or
-workflows. Enable it once per clone:
+`lefthook.yml` runs `just lint` before a commit that touches scripts or workflows. Enable it once per clone:
 
 ```bash
 brew install lefthook
@@ -75,59 +74,48 @@ just run datascience-notebook
 ./scripts/build-image.sh --image r-notebook --platform linux/amd64 --target test
 ```
 
-Testing, shelling in, and running Jupyter are `docker run` against a built tag,
-so they stay in the justfile rather than in scripts of their own.
+Testing, shelling in, and running Jupyter are `docker run` against a built tag, so they stay in the justfile rather than in scripts of their own.
 
 ## Testing
 
 ### Test Architecture
 
-Tests run inside the image they are testing, against the Dockerfile's `test`
-stage: `final` plus bats, the suite, and the package lists the suite asserts
-against. Nothing is mounted at run time and nothing is resolved on the host, so
-`docker run <test image>` is the whole invocation and CI exercises the same
-image a developer does.
+Tests run inside the image they are testing, against the Dockerfile's `test` stage: `final` plus bats, the suite, and the package lists the suite asserts against. Nothing is mounted at run time and nothing is resolved on the host, so `docker run <test image>` is the whole invocation and CI exercises the same image a developer does.
 
-Tests run in a fixed order: fast environment checks first, slow package
-validation last.
+Tests run in a fixed order: fast environment checks first, slow package validation last.
 
 ### Test Execution Flow
 
-`just test <image>` builds `--target test` and runs it. Building the test stage
-builds the image under test, so there is no separate build step to keep in sync.
+`just test <image>` builds `--target test` and runs it. Building the test stage builds the image under test, so there is no separate build step to keep in sync.
 
-CI does the same in two steps: it pushes `final` by digest, then builds `test`
-on top of the cache it just wrote, so the tested layers are the pushed ones.
+CI does the same in two steps: it pushes `final` by digest, then builds `test` on top of the cache it just wrote, so the tested layers are the pushed ones.
 
 ### What Gets Tested
 
 Each image is tested for:
 
 1. **System Configuration**:
-   - User setup (jovyan user, permissions)
-   - Environment variables (CONDA_DIR, R_HOME, etc.)
-   - Python environment (python3, pip3, versions)
-   - R environment (R version, CRAN/PPM repos, Rprofile)
+- User setup (jovyan user, permissions)
+- Environment variables (CONDA_DIR, R_HOME, etc.)
+- Python environment (python3, pip3, versions)
+- R environment (R version, CRAN/PPM repos, Rprofile)
 
 2. **Jupyter Setup**:
-   - Jupyter server installation and versions
-   - Kernel availability (IR, Python3)
-   - IRkernel registration
-   - Default kernel configuration
-   - Kernel execution (one cell through `ir` and `python3`)
+- Jupyter server installation and versions
+- Kernel availability (IR, Python3)
+- IRkernel registration
+- Default kernel configuration
+- Kernel execution (one cell through `ir` and `python3`)
 
 3. **Package Installation**:
-   - Python packages: installation check (`pip show`) and import validation
-   - R packages: loading via `library()` and special configurations (cmdstanr)
+- Python packages: installation check (`pip show`) and import validation
+- R packages: loading via `library()` and special configurations (cmdstanr)
 
 ### Adding Tests
 
 Tests are [bats-core](https://bats-core.readthedocs.io/) files under `scripts/tests/`. `run-tests.sh` hands bats the whole directory, so a new `.bats` file runs without being wired in anywhere.
 
-`packages-python.bats` and `packages-r.bats` generate one test per package from
-`PYTHON_PACKAGES_FILE` and `R_PACKAGES_FILE`. The test stage resolves both with
-`scripts/get-refs.py` and bakes them in, so they are already set inside the
-image; running a file standalone elsewhere needs them set by hand.
+`packages-python.bats` and `packages-r.bats` generate one test per package from `PYTHON_PACKAGES_FILE` and `R_PACKAGES_FILE`. The test stage resolves both with `scripts/get-refs.py` and bakes them in, so they are already set inside the image; running a file standalone elsewhere needs them set by hand.
 
 Execution is serial: bats `--jobs` needs GNU parallel, which the images do not carry. `TEST_DEBUG=1` adds `--trace --show-output-of-passing-tests`.
 
@@ -184,22 +172,16 @@ If tests fail in CI:
 ### Conda Packages (Python, R base, system packages)
 
 1. Run `pixi add --feature <feature-name> <package-name>` to add the package and update the lock file
-   - Note you can also scope it to a platform with `--platform linux-amd64` or `--platform linux-aarch64`
+- Note you can also scope it to a platform with `--platform linux-amd64` or `--platform linux-aarch64`
 2. Rebuild and test: `just build <image> && just test <image>`
 
 ### R Packages
 
-1. Edit the relevant `r/<feature>.txt` file — one pak ref per line, `#` comments
-   and blank lines allowed. The filename is the feature name.
-2. Do **not** add a matching `r-*` package via `pixi add`. conda-forge has no `r-*`
-   builds for R 4.6, so a single one pins the whole solve-group back to 4.5.x and
-   silently downgrades R for every image.
+1. Edit the relevant `r/<feature>.txt` file — one pak ref per line, `#` comments and blank lines allowed. The filename is the feature name.
+2. Do **not** add a matching `r-*` package via `pixi add`. conda-forge has no `r-*` builds for R 4.6, so a single one pins the whole solve-group back to 4.5.x and silently downgrades R for every image.
 3. Rebuild and test: `just build <image> && just test <image>`
 
-A bare name means CRAN. An off-CRAN package needs a pak ref pinned to a full
-40-hex commit SHA — `<package>=<owner>/<repo>@<sha>` — never a tag or branch,
-both of which can move out from under a resolved build. Append `?reinstall`
-to force a reinstall even when pak thinks the version is already satisfied.
+A bare name means CRAN. An off-CRAN package needs a pak ref pinned to a full 40-hex commit SHA — `<package>=<owner>/<repo>@<sha>` — never a tag or branch, both of which can move out from under a resolved build. Append `?reinstall` to force a reinstall even when pak thinks the version is already satisfied.
 
 Example:
 
@@ -212,90 +194,31 @@ Nothing needs regenerating; pak reads these files directly.
 
 ## The Six Images
 
-One `Dockerfile` builds all six images; a `PIXI_ENV` build arg selects
-which Pixi environment gets installed into it. The images are **not**
-`FROM`-chained — nothing is built on top of anything else here.
-"Downstream" describes cumulative *manifest features* (a package present
-in `r-notebook` and everything above it), not an inherited image layer.
-Containment therefore rests on the `features` lists being reviewed when
-they change, not on inheritance. `pixi.toml`'s
-`[environments.*]` `features` lists are the single definition of tier
-composition for both languages: the R side asks pixi
-(`scripts/get-refs.py`) and concatenates the matching `r/<feature>.txt`
-files, including the two instructor features, which carry no conda
-packages at all.
+One `Dockerfile` builds all six images; a `PIXI_ENV` build arg selects which Pixi environment gets installed into it. The images are **not** `FROM`-chained — nothing is built on top of anything else here. "Downstream" describes cumulative *manifest features* (a package present in `r-notebook` and everything above it), not an inherited image layer. Containment therefore rests on the `features` lists being reviewed when they change, not on inheritance. `pixi.toml`'s `[environments.*]` `features` lists are the single definition of tier composition for both languages: the R side asks pixi (`scripts/get-refs.py`) and concatenates the matching `r/<feature>.txt` files, including the two instructor features, which carry no conda packages at all.
 
 Four tiers form a ladder, each a superset of the one before:
 
 1. **`base-r-notebook`** — R and Jupyter, and that's it.
-2. **`essentials-notebook`** — + the `coursekata` teaching stack: everything
-   used in the CourseKata books.
-3. **`r-notebook`** — + the modelling/tidyverse stack: extended R packages
-   instructors have asked for.
-4. **`datascience-notebook`** — + Bayesian modelling, machine learning, and
-   further instructor-requested Python and R packages.
+2. **`essentials-notebook`** — + the `coursekata` teaching stack: everything used in the CourseKata books.
+3. **`r-notebook`** — + the modelling/tidyverse stack: extended R packages instructors have asked for.
+4. **`datascience-notebook`** — + Bayesian modelling, machine learning, and further instructor-requested Python and R packages.
 
 Two more images exist for specific consumers and sit outside the ladder:
 
-- **`datascience-core`** — everything in `datascience-notebook` except the
-  Jupyter front end (`jupyterlab`, `notebook`, `nbclassic`,
-  `jupyterhub-singleuser`). For a consumer that brings its own notebook
-  server — CKHub, which is pinned to classic Notebook 6 and would otherwise
-  inherit an unused JupyterLab install it has to overwrite. Nothing in this
-  repository builds on it; it's a fifth environment in the same Pixi
-  solve group as the ladder, so it stays version-identical with
-  `datascience-notebook` on every package they share.
-- **`exercises-notebook`** — `essentials-notebook` + the exercise-checking
-  machinery (`pythonwhat`, `testwhat`) that grades the book's inline
-  exercises. A **leaf**: nothing is built on top of it. It lives in its
-  **own Pixi solve group**, separate from the ladder, because `pythonwhat`
-  declares a hard `asttokens<3` ceiling that only it needs — inside a
-  shared solve group that ceiling would reach every tier, including
-  `base-r-notebook`, which contains no Python teaching stack at all.
+- **`datascience-core`** — everything in `datascience-notebook` except the Jupyter front end (`jupyterlab`, `notebook`, `nbclassic`, `jupyterhub-singleuser`). For a consumer that brings its own notebook server — CKHub, which is pinned to classic Notebook 6 and would otherwise inherit an unused JupyterLab install it has to overwrite. Nothing in this repository builds on it; it's a fifth environment in the same Pixi solve group as the ladder, so it stays version-identical with `datascience-notebook` on every package they share.
+- **`exercises-notebook`** — `essentials-notebook` + the exercise-checking machinery (`pythonwhat`, `testwhat`) that grades the book's inline exercises. A **leaf**: nothing is built on top of it. It lives in its **own Pixi solve group**, separate from the ladder, because `pythonwhat` declares a hard `asttokens<3` ceiling that only it needs — inside a shared solve group that ceiling would reach every tier, including `base-r-notebook`, which contains no Python teaching stack at all.
 
-**Important**: a change to a feature multiple environments share — anything
-in `pixi.toml`'s `[dependencies]` or `[feature.notebook]`, or a shared
-`r/<feature>.txt` spec file — affects every tier that includes it. Rebuild
-and test every affected tier, not just the one you were editing.
+**Important**: a change to a feature multiple environments share — anything in `pixi.toml`'s `[dependencies]` or `[feature.notebook]`, or a shared `r/<feature>.txt` spec file — affects every tier that includes it. Rebuild and test every affected tier, not just the one you were editing.
 
 ## The CRAN Repository
 
-`Rprofile.site` ships exactly one R repository — the rolling Posit
-Package Manager endpoint `.../noble/latest`. There is no second, no
-fallback: pak resolves across every configured repository and returns the
-newest version it finds anywhere, so a second repository wouldn't add
-redundancy, it would make resolution nondeterministic.
+`Rprofile.site` ships exactly one R repository — the rolling Posit Package Manager endpoint `.../noble/latest`. There is no second, no fallback: pak resolves across every configured repository and returns the newest version it finds anywhere, so a second repository wouldn't add redundancy, it would make resolution nondeterministic.
 
-**The repository must be named `CRAN`, and that name is load-bearing.**
-pkgcache injects its own rolling `cran.rstudio.com` whenever
-`getOption("repos")` contains no entry by that name — so configuring PPM
-under any other name leaves it inert while looking correct. Measured at
-snapshot `2026-06-01`, where that snapshot offers ggpubr 0.6.3: `c(PPM =
-snap)` resolves 1.0.0 from `cran.rstudio.com`, and `c(CRAN = snap)`
-resolves 0.6.3 from the snapshot instead. Separately, `Rprofile.site`
-also sets `HTTPUserAgent` — that's what makes PPM serve binaries instead
-of building from source: 5.5s versus 1m49s for the same resolve.
-`options(pkg.use_bioconductor = FALSE)` closes the same hole for the five
-Bioconductor repositories pak would otherwise add; no package in any tier
-is of Bioconductor origin.
+**The repository must be named `CRAN`, and that name is load-bearing.** pkgcache injects its own rolling `cran.rstudio.com` whenever `getOption("repos")` contains no entry by that name — so configuring PPM under any other name leaves it inert while looking correct. Measured at snapshot `2026-06-01`, where that snapshot offers ggpubr 0.6.3: `c(PPM = snap)` resolves 1.0.0 from `cran.rstudio.com`, and `c(CRAN = snap)` resolves 0.6.3 from the snapshot instead. Separately, `Rprofile.site` also sets `HTTPUserAgent` — that's what makes PPM serve binaries instead of building from source: 5.5s versus 1m49s for the same resolve. `options(pkg.use_bioconductor = FALSE)` closes the same hole for the five Bioconductor repositories pak would otherwise add; no package in any tier is of Bioconductor origin.
 
-Nothing here freezes a date, and the two architectures resolve R
-independently, so they may land on different versions of an unconstrained
-package. That is accepted rather than prevented: what each image actually
-got is recorded as a build artifact after the fact. Determinism where it
-matters comes from the refs themselves — every GitHub package is pinned to
-a commit SHA. `PPM` is the escape hatch: set it, before starting R or when
-running the container, to pin a dated snapshot for reproducible local
-testing. The shipped default never does this for you.
+Nothing here freezes a date, and the two architectures resolve R independently, so they may land on different versions of an unconstrained package. That is accepted rather than prevented: what each image actually got is recorded as a build artifact after the fact. Determinism where it matters comes from the refs themselves — every GitHub package is pinned to a commit SHA. `PPM` is the escape hatch: set it, before starting R or when running the container, to pin a dated snapshot for reproducible local testing. The shipped default never does this for you.
 
-**Testing gotcha.** pak resolves in a subprocess that re-reads
-`Rprofile.site` from disk, so `options(repos = ...)` typed at an R prompt
-never reaches it — a "fix" verified that way will appear to work while
-doing nothing. `getOption("repos")` is doubly misleading here: it shows
-neither the injected CRAN nor the Bioconductor repos. Ask pak
-(`pak::repo_get()`), or install something and inspect where it came from —
-`packageDescription("<pkg>")$Repository`, or the `RemoteRepos` field pak
-records — never by inspecting `getOption("repos")` in the calling session.
+**Testing gotcha.** pak resolves in a subprocess that re-reads `Rprofile.site` from disk, so `options(repos = ...)` typed at an R prompt never reaches it — a "fix" verified that way will appear to work while doing nothing. `getOption("repos")` is doubly misleading here: it shows neither the injected CRAN nor the Bioconductor repos. Ask pak (`pak::repo_get()`), or install something and inspect where it came from — `packageDescription("<pkg>")$Repository`, or the `RemoteRepos` field pak records — never by inspecting `getOption("repos")` in the calling session.
 
 ## Pull Request Guidelines
 
