@@ -1,0 +1,34 @@
+name: renovate
+
+# Thin caller of the org's reusable updater, hosted in ck-tf-modules so every repo runs an
+# identical one. Without this nothing invoked renovate.json at all, which is how the pixi pin
+# reached seven months stale.
+
+on:
+  schedule:
+    # Nightly, not weekly: minimumReleaseAge already holds every release for 7 days, so a weekly
+    # cron would add a second, arbitrary wait on top of the deliberate one.
+    - cron: "0 13 * * *" # daily 06:00 America/Los_Angeles
+  workflow_dispatch:
+    inputs:
+      log_level:
+        description: "Renovate LOG_LEVEL"
+        required: false
+        type: string
+        default: "info"
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  statuses: write
+
+concurrency:
+  group: renovate
+  cancel-in-progress: false
+
+jobs:
+  renovate:
+    uses: coursekata/ck-tf-modules/.github/workflows/tf-renovate.yml@9577705a9b752ed0eccc7a09ccf3f094f5d9ce28 # v0.9.0
+    with:
+      log_level: ${{ inputs.log_level || 'info' }}
