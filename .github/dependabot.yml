@@ -1,0 +1,15 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    # Don't adopt a release the week it ships; a compromised publish is usually
+    # caught in that window.
+    cooldown:
+      default-days: 7
+    groups:
+      # Minor and patch land as one PR; majors stay separate to be read on their own.
+      actions:
+        patterns: ["*"]
+        update-types: [minor, patch]

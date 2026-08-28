@@ -1,9 +1,8 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "Must run as the hosted GitHub App. A self-hosted instance on a PAT cannot produce signed commits, and required_signatures rejects unsigned ones outright.",
+  "description": "Actions are Dependabot's; this covers only what Dependabot cannot see. Must run as the hosted GitHub App: a self-hosted instance on a PAT cannot produce signed commits, and required_signatures rejects unsigned ones.",
   "enabledManagers": [
     "dockerfile",
-    "github-actions",
     "custom.regex"
   ],
   "pinDigests": true,
