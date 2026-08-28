@@ -69,9 +69,14 @@ jobs:
       # run-install: false because the gate only needs the pixi binary for `pixi
       # lock --check`, not an installed environment; and the runner's system
       # python3 (not an activated env's) is what should end up on PATH.
+      - name: Read the pixi version the image is built with
+        id: pixi-version
+        run: sed -n 's/^ARG PIXI_VERSION=/version=/p' Dockerfile >> "$GITHUB_OUTPUT"
+
       - name: Setup Pixi
         uses: prefix-dev/setup-pixi@28eb668aafebd9dede9d97c4ba1cd9989a4d0004 # v0.9.2
         with:
+          pixi-version: v${{ steps.pixi-version.outputs.version }}
           run-install: false
 
       # PyYAML is not guaranteed on the runner image, and this gate now blocks
@@ -95,9 +100,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
+      - name: Read the pixi version the image is built with
+        id: pixi-version
+        run: sed -n 's/^ARG PIXI_VERSION=/version=/p' Dockerfile >> "$GITHUB_OUTPUT"
+
       - name: Setup Pixi
         uses: prefix-dev/setup-pixi@28eb668aafebd9dede9d97c4ba1cd9989a4d0004 # v0.9.2
         with:
+          pixi-version: v${{ steps.pixi-version.outputs.version }}
           run-install: false
 
       - name: Update Conda packages
@@ -127,9 +137,14 @@ jobs:
           name: pixi-lock
           path: .
 
+      - name: Read the pixi version the image is built with
+        id: pixi-version
+        run: sed -n 's/^ARG PIXI_VERSION=/version=/p' Dockerfile >> "$GITHUB_OUTPUT"
+
       - name: Setup Pixi
         uses: prefix-dev/setup-pixi@28eb668aafebd9dede9d97c4ba1cd9989a4d0004 # v0.9.2
         with:
+          pixi-version: v${{ steps.pixi-version.outputs.version }}
           run-install: false
 
       - name: Derive image matrix

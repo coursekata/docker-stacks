@@ -131,10 +131,15 @@ jobs:
           name: ${{ inputs.lock-artifact }}
           path: .
 
+      - name: Read the pixi version the image is built with
+        id: pixi-version
+        run: sed -n 's/^ARG PIXI_VERSION=/version=/p' Dockerfile >> "$GITHUB_OUTPUT"
+
       - name: Setup Pixi
         if: inputs.target != 'base'
         uses: prefix-dev/setup-pixi@28eb668aafebd9dede9d97c4ba1cd9989a4d0004 # v0.9.2
         with:
+          pixi-version: v${{ steps.pixi-version.outputs.version }}
           run-install: false
 
       - name: Set up Docker Buildx

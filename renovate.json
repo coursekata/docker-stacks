@@ -1,18 +1,42 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "description": "Must run as the hosted GitHub App. A self-hosted instance on a PAT cannot produce signed commits, and required_signatures rejects unsigned ones outright.",
-  "enabledManagers": ["dockerfile", "github-actions"],
+  "enabledManagers": [
+    "dockerfile",
+    "github-actions",
+    "custom.regex"
+  ],
   "pinDigests": true,
-  "schedule": ["before 3am on monday"],
+  "schedule": [
+    "before 3am on monday"
+  ],
   "prConcurrentLimit": 2,
   "packageRules": [
     {
-      "matchUpdateTypes": ["digest", "pinDigest"],
+      "matchUpdateTypes": [
+        "digest",
+        "pinDigest"
+      ],
       "automerge": true,
       "automergeType": "pr",
       "platformAutomerge": true,
       "automergeStrategy": "squash",
       "rebaseWhen": "never"
+    }
+  ],
+  "customManagers": [
+    {
+      "description": "PIXI_VERSION is an ARG; the FROM tag interpolates two variables so the dockerfile manager cannot see it.",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/(^|/)Dockerfile$/"
+      ],
+      "matchStrings": [
+        "ARG PIXI_VERSION=(?<currentValue>\\S+)"
+      ],
+      "depNameTemplate": "prefix-dev/pixi",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^v(?<version>.*)$"
     }
   ]
 }

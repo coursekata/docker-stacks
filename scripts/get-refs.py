@@ -69,7 +69,9 @@ def resolve_platform(manifest, env, requested):
     """Inside the image the platform pixi reports is the one being built. On a
     macOS host it is not one the manifest targets: that has to be an error, not
     an empty list that makes every downstream assertion vacuously true."""
-    supported = environment(manifest, env)["platforms"]
+    # pixi >=0.77 reports platforms as objects, older as strings.
+    supported = [p["name"] if isinstance(p, dict) else p
+                 for p in environment(manifest, env)["platforms"]]
     platform = requested or info(manifest)["platform"]
     if platform not in supported:
         sys.exit(

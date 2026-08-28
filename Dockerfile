@@ -11,7 +11,7 @@ ARG PIXI_ENV=default
 # Python settings
 ARG PYTHON_MINOR=3.13
 
-ARG PIXI_VERSION=0.63.2
+ARG PIXI_VERSION=0.77.1
 ARG PIXI_DIR=/opt/pixi
 
 # -----------------------------------------------------------------------------
