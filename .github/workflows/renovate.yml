@@ -22,6 +22,7 @@ permissions:
   pull-requests: write
   issues: write
   statuses: write
+  security-events: read # a reusable workflow's permissions are capped by its caller's
 
 concurrency:
   group: renovate

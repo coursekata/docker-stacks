@@ -21,11 +21,21 @@
       "platformAutomerge": true,
       "automergeStrategy": "squash",
       "rebaseWhen": "never"
+    },
+    {
+      "description": "Two managers see the pixi image and would each propose the same bump. The dockerfile manager reads the tag as one value, 0.77.1-noble, because it is built from two interpolated args; writing that back into ARG PIXI_VERSION would produce pixi:0.78.0-noble-noble. The regex manager owns the arg and writes only the version, so it is the one kept.",
+      "matchManagers": [
+        "dockerfile"
+      ],
+      "matchPackageNames": [
+        "ghcr.io/prefix-dev/pixi"
+      ],
+      "enabled": false
     }
   ],
   "customManagers": [
     {
-      "description": "PIXI_VERSION is an ARG; the FROM tag interpolates two variables so the dockerfile manager cannot see it.",
+      "description": "PIXI_VERSION is an ARG. The dockerfile manager also sees the image, but reads the tag as a single combined value; this one writes the version alone, and the rule above disables the other.",
       "customType": "regex",
       "matchStrings": [
         "ARG PIXI_VERSION=(?<currentValue>\\S+)"
