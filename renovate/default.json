@@ -1,0 +1,25 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Shared Renovate settings for the repos that build software rather than infrastructure. The IaC fleet uses github>coursekata/ck-tf-modules//renovate/default.json instead: it runs Renovate as a workflow on GITHUB_TOKEN so bot pull requests do not auto-run a terraform plan holding cloud credentials. Nothing here plans against a cloud, so these repos run the hosted Renovate App, whose pull requests trigger CI normally — which is the whole point of proposing a dependency change.",
+  "extends": ["config:recommended"],
+  "timezone": "America/Los_Angeles",
+  "minimumReleaseAge": "7 days",
+  "major": {
+    "description": "Majors wait for a human on the dependency dashboard.",
+    "dependencyDashboardApproval": true
+  },
+  "packageRules": [
+    {
+      "description": "One pull request for the ordinary updates. These repos gate on a full build, and for an image that is tens of minutes of matrix; batching means one run covers the batch rather than one per dependency. Majors are excluded and stay individually reviewable.",
+      "matchUpdateTypes": ["minor", "patch", "digest", "pin"],
+      "groupName": "non-major dependencies"
+    },
+    {
+      "description": "Pre-1.0 minors can break and Renovate still classes them minor, so the major gate above misses them. Ungrouped deliberately: bundled into the batch, one 0.x dependency would hold the whole group behind an approval.",
+      "matchCurrentValue": "/^v?0\\./",
+      "matchUpdateTypes": ["minor", "major"],
+      "groupName": null,
+      "dependencyDashboardApproval": true
+    }
+  ]
+}
