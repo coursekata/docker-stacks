@@ -9,7 +9,7 @@
     "custom.regex"
   ],
   "pinDigests": true,
-  "platformCommit": true,
+  "platformCommit": "enabled",
   "packageRules": [
     {
       "matchUpdateTypes": [
@@ -43,8 +43,8 @@
       "depNameTemplate": "prefix-dev/pixi",
       "datasourceTemplate": "github-releases",
       "extractVersionTemplate": "^v(?<version>.*)$",
-      "fileMatch": [
-        "(^|/)Dockerfile$"
+      "managerFilePatterns": [
+        "/(^|/)Dockerfile$/"
       ]
     }
   ]
