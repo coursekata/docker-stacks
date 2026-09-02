@@ -17,8 +17,8 @@ ARG PIXI_DIR=/opt/pixi
 # -----------------------------------------------------------------------------
 # Other image-based dependencies
 # -----------------------------------------------------------------------------
-FROM quay.io/jupyter/base-notebook:python-3.13 AS jupyter--base-notebook
-FROM quay.io/jupyter/docker-stacks-foundation:python-3.13 AS jupyter--docker-stacks-foundation
+FROM quay.io/jupyter/base-notebook:python-3.13@sha256:292da16615e356b8b1258dab58f86386d9624e2a9532fc1d7ab1d6585dc7773a AS jupyter--base-notebook
+FROM quay.io/jupyter/docker-stacks-foundation:python-3.13@sha256:dfebdd15c9f742a246c0bab936abf8851f6b47efe9ea825928f7132e6077da03 AS jupyter--docker-stacks-foundation
 FROM ghcr.io/prefix-dev/pixi:${PIXI_VERSION}-${ROOT_CODENAME} AS pixi
 
 
