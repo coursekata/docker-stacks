@@ -3,9 +3,10 @@
   "extends": [
     "github>coursekata/docker-stacks//renovate/default.json"
   ],
-  "description": "Actions are Dependabot's; this covers what Dependabot cannot see. Runs as the hosted Renovate App: its pull requests trigger CI, which a workflow on GITHUB_TOKEN cannot, and it can read Dependabot alerts.",
+  "description": "Runs as the hosted Renovate App: its pull requests trigger CI, which a workflow on GITHUB_TOKEN cannot, and the App holds the Workflows scope that lets it update Actions. Security fixes stay with Dependabot.",
   "enabledManagers": [
     "dockerfile",
+    "github-actions",
     "custom.regex"
   ],
   "pinDigests": true,
