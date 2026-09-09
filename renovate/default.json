@@ -1,6 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "Shared Renovate settings for the repos that build software rather than infrastructure. The IaC fleet uses github>coursekata/ck-tf-modules//renovate/default.json instead: it runs Renovate as a workflow on GITHUB_TOKEN so bot pull requests do not auto-run a terraform plan holding cloud credentials. Nothing here plans against a cloud, so these repos run the hosted Renovate App, whose pull requests trigger CI normally \u2014 which is the whole point of proposing a dependency change.",
+  "description": "Shared Renovate settings for the repos that build software rather than infrastructure. The IaC fleet uses github>coursekata/ck-tf-modules//renovate/default.json instead: it runs Renovate as a workflow on GITHUB_TOKEN so bot pull requests do not auto-run a terraform plan holding cloud credentials. Nothing here plans against a cloud, so these repos run the hosted Renovate App, whose pull requests trigger CI normally — which is the whole point of proposing a dependency change.",
   "extends": [
     "config:recommended"
   ],
@@ -30,6 +30,13 @@
       ],
       "groupName": null,
       "dependencyDashboardApproval": true
+    },
+    {
+      "description": "A Docker digest cannot be yanked, so the seven-day soak protects nothing here — and the base images we pin are rebuilt every few days, so a digest is always superseded before it turns seven days old. Under the default strict filter that gate is unsatisfiable and the pin PR never merges. flexible keeps the soak wherever it can be met and falls back to the newest digest when nothing can.",
+      "matchDatasources": [
+        "docker"
+      ],
+      "internalChecksFilter": "flexible"
     }
   ],
   "vulnerabilityAlerts": {
