@@ -6,40 +6,13 @@ on:
   schedule:
     # Weekly, at 03:00 on Monday UTC time (see https://crontab.guru)
     - cron: "0 3 * * 1"
-  # Anything that changes what an image contains rebuilds it. Docs, licences
-  # and the READMEs deliberately do not: they cannot alter the artifact.
+  # No path filters here on purpose: a path-filtered workflow reports no checks at
+  # all on a docs-only pull request, which would leave a required `ci-passed`
+  # pending forever. The `changes` job below decides what actually needs building.
   push:
     branches: [main]
-    paths:
-      # ci/cd
-      - .github/workflows/publish.yml
-      - .github/workflows/build-test-push-multiarch.yml
-      - .github/workflows/build-test-push.yml
-      # build
-      - pixi.toml
-      - pixi.lock
-      - Dockerfile
-      - Rprofile.site
-      # the Dockerfile composes pak refs from these
-      - r/**
-      # get-refs.py and the test suite both ship into the build
-      - scripts/**
   pull_request:
     branches: [main]
-    paths:
-      # ci/cd
-      - .github/workflows/publish.yml
-      - .github/workflows/build-test-push-multiarch.yml
-      - .github/workflows/build-test-push.yml
-      # build
-      - pixi.toml
-      - pixi.lock
-      - Dockerfile
-      - Rprofile.site
-      # the Dockerfile composes pak refs from these
-      - r/**
-      # get-refs.py and the test suite both ship into the build
-      - scripts/**
 
 # https://docs.github.com/en/actions/using-jobs/using-concurrency
 concurrency:
@@ -51,7 +24,64 @@ permissions: {}
 
 jobs:
 
+  # Anything that changes what an image contains rebuilds it. Docs, licences and the
+  # READMEs deliberately do not: they cannot alter the artifact. This used to live in
+  # the `on:` triggers above; it moved here so the workflow always runs and therefore
+  # always reports `ci-passed`, while the expensive jobs still skip.
+  changes:
+    permissions:
+      contents: read
+    name: Detect Build Changes
+    runs-on: ubuntu-latest
+    outputs:
+      build: ${{ steps.filter.outputs.build }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Decide whether anything build-affecting changed
+        id: filter
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          set -uo pipefail
+          pattern='^(\.github/workflows/(publish|build-test-push|build-test-push-multiarch)\.yml|pixi\.(toml|lock)|Dockerfile|Rprofile\.site|r/.*|scripts/.*)$'
+
+          case "$EVENT_NAME" in
+            pull_request) base="$BASE_SHA" ;;
+            push) base="$BEFORE_SHA" ;;
+            # A schedule or a manual run has nothing to compare against, and both exist
+            # precisely to rebuild.
+            *) echo "build=true" >> "$GITHUB_OUTPUT"; exit 0 ;;
+          esac
+
+          # A new branch or a force-push leaves no usable base. Rebuild rather than guess.
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ] \
+             || ! git cat-file -e "${base}^{commit}" 2>/dev/null; then
+            echo "::notice::No usable base commit; building."
+            echo "build=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          changed=$(git diff --name-only "$base" HEAD)
+          echo "$changed"
+          if printf '%s\n' "$changed" | grep -Eq "$pattern"; then
+            echo "::notice::Build-affecting files changed."
+            echo "build=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Nothing that can alter an image changed."
+            echo "build=false" >> "$GITHUB_OUTPUT"
+          fi
+
+
   lint:
+    needs: [changes]
+    if: needs.changes.outputs.build == 'true'
     permissions:
       contents: read
       # zizmor uploads its findings to code scanning
@@ -71,6 +101,8 @@ jobs:
         uses: zizmorcore/zizmor-action@70fb788f84895a7701f5643d103d587e460b5c99 # v0.6.3
 
   update-lock:
+    needs: [changes]
+    if: needs.changes.outputs.build == 'true'
     permissions:
       contents: read
     name: Update Lock File
@@ -198,3 +230,29 @@ jobs:
       cache-from: ${{ needs.foundation.outputs.cache-from }}
       free-disk-space: ${{ matrix.image == 'datascience-notebook' || matrix.image == 'datascience-core' }}
       lock-artifact: pixi-lock
+
+  # The single stable status check a branch ruleset points at, matching the name
+  # ck-tf-modules already uses. The image jobs cannot be required directly: their
+  # matrix names embed each image's description, so editing a description would
+  # silently orphan the requirement. `skipped` counts as success here - it means the
+  # change could not affect an image.
+  ci-passed:
+    permissions: {}
+    if: always()
+    needs: [changes, lint, update-lock, setup, foundation, images]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Assert no required job failed
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          set -uo pipefail
+          echo "$RESULTS"
+          bad=$(printf '%s' "$RESULTS" | jq -r 'to_entries[]
+            | select(.value.result != "success" and .value.result != "skipped")
+            | "\(.key): \(.value.result)"')
+          if [ -n "$bad" ]; then
+            echo "::error::$bad"
+            exit 1
+          fi
+          echo "All required jobs succeeded or were skipped."
