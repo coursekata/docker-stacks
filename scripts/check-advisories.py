@@ -12,6 +12,13 @@ decides what ships, and it is text: no pull, no build. Conda packages that carry
 a PyPI distribution declare it in `purls`; their version lives in the artifact
 filename. Native conda libraries have no advisory feed in any tool and are
 deliberately out of scope -- `pixi update` on every build is the control there.
+
+DELETE THIS when a standard scanner can read pixi.lock. Nothing does today:
+osv-scanner reads Pipfile/poetry/pdm/pylock/uv locks but not pixi, and Trivy has
+no pixi analyzer. osv-scalibr, the engine behind osv-scanner, has open work for
+exactly this ("Extractor for python/pixilock"). When it lands, replace this file
+with that tool rather than maintaining a bespoke parser -- the only reason it
+exists is that the ecosystem has not caught up with pixi yet.
 """
 
 import argparse

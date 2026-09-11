@@ -198,6 +198,8 @@ Every build runs `pixi update`, so conda and PyPI resolve fresh and nothing here
 
 It reports rather than blocks. A finding is a prompt to look, not a reason to hold a build whose only alternative is shipping the previous image for longer.
 
+The script is a stopgap and should be deleted, not maintained. No standard scanner reads `pixi.lock` yet — osv-scanner handles Pipfile, poetry, pdm, pylock and uv locks but not pixi, and Trivy has no pixi analyzer — but osv-scalibr has open work for it. When that ships, swap this out for the real tool.
+
 Acting on one means adding a floor to `pixi.toml`, not bumping anything: the newest version is already installed, so a floor is a ratchet that stops the solver ever backtracking past the fix to satisfy some other constraint. The check prints the fixed-in versions for this reason. If the affected package is transitive and undeclared, declare it — that is what the `pillow >=12.3.0` entry is.
 
 Two things are deliberately out of scope. R packages: OSV's entire CRAN corpus is around a dozen advisories and GitHub's database has no CRAN ecosystem, so there is nothing to query. Native conda libraries — openssl, curl, krb5 and the rest — carry no advisory mapping in any scanner; `pixi update` on every build is the control there, and a clean advisory report should not be read as covering them.
