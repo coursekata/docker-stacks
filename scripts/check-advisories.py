@@ -60,9 +60,21 @@ def packages(lock_path):
     import yaml
 
     lock = yaml.safe_load(Path(lock_path).read_text())
+
+    # `packages:` is a shared pool that can outlive the environments referencing
+    # it, so an un-refreshed lock carries orphans. Reporting those is a false
+    # positive about something no image installs.
+    installed = set()
+    for environment in (lock.get("environments") or {}).values():
+        for entries in (environment.get("packages") or {}).values():
+            for entry in entries:
+                installed.update(entry.values())
+
     seen = {}
 
     for entry in lock.get("packages", []):
+        if installed and not ({entry.get("conda"), entry.get("pypi")} & installed):
+            continue
         if "pypi" in entry and entry.get("name") and entry.get("version"):
             seen[(entry["name"].lower(), entry["version"])] = "pypi"
             continue
