@@ -126,6 +126,24 @@ jobs:
       - name: Update Conda packages
         run: pixi update
 
+      # Every build resolves conda and PyPI fresh, so this is not about staleness.
+      # It answers what nothing else does: did the solver pick a version with a
+      # published advisory? That is the signal to add a floor to pixi.toml, which
+      # ratchets against the solver backtracking rather than bumping anything.
+      # Report-only: a finding is a prompt to look, not a reason to block a build
+      # whose alternative is shipping the previous image for longer.
+      - name: Check the resolved Python packages for advisories
+        run: |
+          python3 -m pip install --quiet --disable-pip-version-check pyyaml
+          python3 scripts/check-advisories.py pixi.lock | tee advisories.txt
+          {
+            echo "### Python advisories in the resolved lock"
+            echo
+            echo '```'
+            cat advisories.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Upload lock file
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
