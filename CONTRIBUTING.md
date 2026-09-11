@@ -192,6 +192,16 @@ ggpubr
 
 Nothing needs regenerating; pak reads these files directly.
 
+### Security advisories
+
+Every build runs `pixi update`, so conda and PyPI resolve fresh and nothing here can go stale on its own. What that does not tell you is whether the solver picked a version with a published advisory, and the `Update Lock File` job checks exactly that — `scripts/check-advisories.py` queries OSV for every Python distribution in the resolved lock and writes the result to the run summary. Run it yourself with `python3 scripts/check-advisories.py`.
+
+It reports rather than blocks. A finding is a prompt to look, not a reason to hold a build whose only alternative is shipping the previous image for longer.
+
+Acting on one means adding a floor to `pixi.toml`, not bumping anything: the newest version is already installed, so a floor is a ratchet that stops the solver ever backtracking past the fix to satisfy some other constraint. The check prints the fixed-in versions for this reason. If the affected package is transitive and undeclared, declare it — that is what the `pillow >=12.3.0` entry is.
+
+Two things are deliberately out of scope. R packages: OSV's entire CRAN corpus is around a dozen advisories and GitHub's database has no CRAN ecosystem, so there is nothing to query. Native conda libraries — openssl, curl, krb5 and the rest — carry no advisory mapping in any scanner; `pixi update` on every build is the control there, and a clean advisory report should not be read as covering them.
+
 ## The Six Images
 
 One `Dockerfile` builds all six images; a `PIXI_ENV` build arg selects which Pixi environment gets installed into it. The images are **not** `FROM`-chained — nothing is built on top of anything else here. "Downstream" describes cumulative *manifest features* (a package present in `r-notebook` and everything above it), not an inherited image layer. Containment therefore rests on the `features` lists being reviewed when they change, not on inheritance. `pixi.toml`'s `[environments.*]` `features` lists are the single definition of tier composition for both languages: the R side asks pixi (`scripts/get-refs.py`) and concatenates the matching `r/<feature>.txt` files, including the two instructor features, which carry no conda packages at all.
