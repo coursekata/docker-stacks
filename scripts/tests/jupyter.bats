@@ -87,9 +87,6 @@ run_kernel_probe() {
 # -----------------------------------------------------------------------------
 
 @test "ir kernel executes code" {
-  # jupyter run drops a connection file in JUPYTER_RUNTIME_DIR, which
-  # defaults under a root-owned ~/.local in a bare container.
-  export JUPYTER_RUNTIME_DIR="${BATS_TEST_TMPDIR}/runtime"
   local probe="${BATS_TEST_TMPDIR}/probe.R"
   # rlang is on every tier; loading it proves the kernel reaches the R library,
   # and the computed sentinel stops a kernel that only echoes input passing.
@@ -99,7 +96,6 @@ run_kernel_probe() {
 
 @test "python3 kernel executes code" {
   get_available_kernels | grep -qx "python3" || skip "python3 kernel not installed on this tier"
-  export JUPYTER_RUNTIME_DIR="${BATS_TEST_TMPDIR}/runtime"
   local probe="${BATS_TEST_TMPDIR}/probe.py"
   printf 'print(1 + 1, "python-executed")\n' >"$probe"
   run_kernel_probe python3 "$probe" "2 python-executed"
