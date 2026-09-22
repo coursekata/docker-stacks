@@ -121,8 +121,9 @@ jobs:
           images: |
             ghcr.io/${{ github.repository_owner }}/next/${{ inputs.image }}
           tags: |
-            type=raw,value=weekly
             type=raw,value={{date 'YYYY-MM-DD'}}
+            type=raw,value=weekly
+            type=raw,value=run-${{ github.run_id }}
           labels: |
             org.opencontainers.image.title=${{ inputs.title }}
             org.opencontainers.image.description=${{ inputs.description }}
@@ -138,14 +139,13 @@ jobs:
           AMD64_DIGEST: ${{ needs.build-amd64.outputs.digest }}
           ARM64_DIGEST: ${{ needs.build-arm64.outputs.digest }}
         run: |
-          # docker wants --annotation index:key="value", quotes around the value only
           ANNOTATION_FLAGS=()
           while IFS= read -r annotation; do
             if [[ -n "$annotation" ]]; then
               key="${annotation%%=*}"
               value="${annotation#*=}"
               ANNOTATION_FLAGS+=(--annotation)
-              ANNOTATION_FLAGS+=("${key}=\"${value}\"")
+              ANNOTATION_FLAGS+=("${key}=${value}")
             fi
           done <<< "$ANNOTATIONS"
 

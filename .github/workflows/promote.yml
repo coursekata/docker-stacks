@@ -1,0 +1,172 @@
+---
+name: Promote Tested Images
+
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_run_id:
+        description: Successful Build and Publish Images run on main
+        type: string
+        required: true
+      change_class:
+        description: Largest class of change in this environment release
+        type: choice
+        required: true
+        options:
+          - packages
+          - runtime
+          - os-only
+      mode:
+        description: Validate only, or promote after validation
+        type: choice
+        required: true
+        default: validate
+        options:
+          - validate
+          - promote
+
+concurrency:
+  group: stable-image-promotion
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  promote:
+    name: ${{ inputs.mode == 'promote' && 'Promote' || 'Validate' }} candidate ${{ inputs.candidate_run_id }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: write
+      packages: write
+    env:
+      # renovate: datasource=github-releases depName=google/go-containerregistry
+      CRANE_VERSION: 0.22.1
+      CRANE_SHA256: 0ab7a1d6932a213aed964ce97666c3077fe691c8606413674a8b3e0b9ec4cda0
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Require the main branch
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          if [[ "$REF_NAME" != "main" ]]; then
+            echo "::error::Promotion must run from main, not $REF_NAME."
+            exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install crane
+        env:
+          DOWNLOAD_DIR: ${{ runner.temp }}/crane-download
+          INSTALL_DIR: ${{ runner.temp }}/crane-bin
+        run: |
+          mkdir -p "$DOWNLOAD_DIR" "$INSTALL_DIR"
+          archive="go-containerregistry_Linux_x86_64.tar.gz"
+          curl --fail --silent --show-error --location \
+            --output "$DOWNLOAD_DIR/$archive" \
+            "https://github.com/google/go-containerregistry/releases/download/v${CRANE_VERSION}/$archive"
+          echo "$CRANE_SHA256  $DOWNLOAD_DIR/$archive" | sha256sum --check
+          tar -xzf "$DOWNLOAD_DIR/$archive" -C "$INSTALL_DIR" crane
+          echo "$INSTALL_DIR" >> "$GITHUB_PATH"
+
+      - name: Log in to the container registry
+        run: crane auth login ghcr.io --username "$GITHUB_ACTOR" --password-stdin <<< "$GH_TOKEN"
+
+      - name: Download candidate package records
+        env:
+          RUN_ID: ${{ inputs.candidate_run_id }}
+          DOWNLOAD_DIR: ${{ runner.temp }}/package-records
+        run: |
+          mkdir -p "$DOWNLOAD_DIR/raw" "$DOWNLOAD_DIR/release"
+          gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" \
+            --pattern 'r-packages-*' --dir "$DOWNLOAD_DIR/raw"
+          while IFS= read -r -d '' record; do
+            artifact=$(basename "$(dirname "$record")")
+            cp "$record" "$DOWNLOAD_DIR/release/r-${artifact#r-packages-}.txt"
+          done < <(find "$DOWNLOAD_DIR/raw" -mindepth 2 -type f -name 'r-*.txt' -print0)
+          count=$(find "$DOWNLOAD_DIR/release" -type f -name 'r-*.txt' | wc -l)
+          if [[ "$count" -ne 12 ]]; then
+            echo "::error::Expected 12 R package records; found $count."
+            exit 1
+          fi
+
+      - name: Validate candidate and promote when requested
+        env:
+          RUN_ID: ${{ inputs.candidate_run_id }}
+          CHANGE_CLASS: ${{ inputs.change_class }}
+          MODE: ${{ inputs.mode }}
+        run: |
+          python3 scripts/promote_images.py \
+            --run-id "$RUN_ID" \
+            --repository "$GITHUB_REPOSITORY" \
+            --owner "$GITHUB_REPOSITORY_OWNER" \
+            --change-class "$CHANGE_CLASS" \
+            --mode "$MODE" \
+            --manifest release-manifest.json
+          {
+            echo "### $(jq -r .status release-manifest.json): $(jq -r .release.tag release-manifest.json)"
+            echo
+            echo "Candidate run: [${RUN_ID}](https://github.com/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID})"
+            echo
+            # jq expands this expression.
+            # shellcheck disable=SC2016
+            jq -r '.images | to_entries[] | "- `\(.key)`: `\(.value.source.digest)`"' release-manifest.json
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publish release record
+        if: inputs.mode == 'promote'
+        env:
+          RUN_ID: ${{ inputs.candidate_run_id }}
+          RECORDS_DIR: ${{ runner.temp }}/package-records/release
+        run: |
+          tag=$(jq -r .release.tag release-manifest.json)
+          date=$(jq -r .release.date release-manifest.json)
+          head_sha=$(jq -r .candidate_run.head_sha release-manifest.json)
+          change_class=$(jq -r .change_class release-manifest.json)
+          run_url=$(jq -r .candidate_run.url release-manifest.json)
+          {
+            printf 'Promoted the six tested CourseKata images from [candidate run %s](%s).\n\n' \
+              "$RUN_ID" "$run_url"
+            # The backticks are Markdown.
+            # shellcheck disable=SC2016
+            printf 'Change class: `%s`\n\n' "$change_class"
+            # The backticks are Markdown.
+            # shellcheck disable=SC2016
+            printf '%s\n' '`release-manifest.json` records every source digest, platform digest, and replaced `latest` digest. The R package records came from the same candidate run.'
+          } > release-notes.md
+
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            tag_sha=$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${tag}" --jq .object.sha)
+            if [[ "$tag_sha" != "$head_sha" ]]; then
+              echo "::error::Release tag $tag points to $tag_sha, not $head_sha."
+              exit 1
+            fi
+
+            previous_dir="$RUNNER_TEMP/previous-release"
+            mkdir -p "$previous_dir"
+            if gh release download "$tag" --repo "$GITHUB_REPOSITORY" \
+              --pattern release-manifest.json --dir "$previous_dir"; then
+              jq --slurpfile previous "$previous_dir/release-manifest.json" '
+                if .candidate_run.head_sha == $previous[0].candidate_run.head_sha
+                then .
+                else error("existing release manifest belongs to another commit")
+                end
+                | reduce (.images | keys[]) as $image (.;
+                    .images[$image].stable.latest_digest_before =
+                      $previous[0].images[$image].stable.latest_digest_before)
+              ' release-manifest.json > release-manifest.merged.json
+              mv release-manifest.merged.json release-manifest.json
+            fi
+            gh release edit "$tag" --repo "$GITHUB_REPOSITORY" \
+              --title "Docker environment $date" --notes-file release-notes.md
+          else
+            gh release create "$tag" --repo "$GITHUB_REPOSITORY" --target "$head_sha" \
+              --title "Docker environment $date" --notes-file release-notes.md
+          fi
+          gh release upload "$tag" --repo "$GITHUB_REPOSITORY" --clobber \
+            release-manifest.json "$RECORDS_DIR"/*.txt

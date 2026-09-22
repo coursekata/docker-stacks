@@ -81,6 +81,11 @@ test-all arch=CURRENT_ARCH:
         just test "$env" "{{ arch }}"
     done
 
+# Test the release promotion safety checks
+[group('test')]
+test-promotion:
+    python3 -m unittest scripts/tests/test_promote_images.py
+
 # --- Run ---
 
 # Run container and open shell (builds first; arch: amd64, arm64; default: native)
@@ -121,5 +126,5 @@ img-clean: img-rm-dang img-rm
 [group('lint')]
 lint:
     shellcheck -S warning scripts/*.sh scripts/tests/*.sh scripts/tests/*.bats
+    python3 -m unittest scripts/tests/test_promote_images.py
     zizmor .
-
