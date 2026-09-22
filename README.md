@@ -2,15 +2,13 @@
 
 [base-r-notebook](https://ghcr.io/coursekata/base-r-notebook) [essentials-notebook](https://ghcr.io/coursekata/essentials-notebook) [r-notebook](https://ghcr.io/coursekata/r-notebook) [datascience-notebook](https://ghcr.io/coursekata/datascience-notebook) [datascience-core](https://ghcr.io/coursekata/datascience-core) [exercises-notebook](https://ghcr.io/coursekata/exercises-notebook)
 
-This is a collection of Docker images published for different purposes.. Read the [Contents](#contents) section for a description of what is in each image. Additionally, each of the images has a tag indicating something about how the image was built. Read the [Tagging](#tagging) section to get an idea of how the images are built and what the tags mean.
+This repository publishes six Docker images for CourseKata notebooks and related services. [Contents](#contents) describes what each image contains; [Tagging](#tagging) describes the stability guarantees attached to its tags.
 
-You will eventually need a link structured as [Contents](#contents):[Tag](#tagging).
-
-For example, in this link `coursekata/essentials-notebook:latest`, the `essentials-notebook` is an example of [Contents](#contents) and `latest` is an example of a [Tag](#tagging).
+Pull an image as `ghcr.io/coursekata/<image>:<tag>`. For example, `ghcr.io/coursekata/essentials-notebook:latest` selects the essentials image and its latest promoted release.
 
 ## Contents
 
-There are six images published from this repository. Four form a ladder — each contains everything in the one before it, package for package, though they are not literally built on top of one another (one `Dockerfile`, one build per image). Two more exist for specific consumers and sit outside the ladder. Both ARM64- and AMD64-compatible images are built for each of these. Both ARM64- and AMD64-compatible images are built for each of these.
+There are six images published from this repository. Four form a ladder: each contains everything in the one before it, package for package, though they are not literally built on top of one another (one `Dockerfile`, one build per image). Two more exist for specific consumers and sit outside the ladder. Every image supports AMD64 and ARM64.
 
 - [base-r-notebook](https://ghcr.io/coursekata/base-r-notebook): an image with Python and R installed, and that's it. R is configured to be the default notebook, but both R and Python notebooks are supported. This is a good image to use if you are building your own image from scratch.
 - [essentials-notebook](https://ghcr.io/coursekata/essentials-notebook): an image with all of the R packages used in CourseKata books and CourseKata's curated Jupyter Notebooks. If you are coming from the CourseKata book this is a great starting place: you will be able to do everything you did in the books and more!
@@ -36,29 +34,17 @@ python3 scripts/get-refs.py essentials-notebook > refs.txt
 Rscript -e 'pak::pkg_install(readLines("refs.txt"))'
 ```
 
-Each build also produces a version-pinned `r-<image>.txt` with the exact resolved versions, installable the same way; it will be attached to releases once the release contract mentioned below lands.
+Each stable environment release includes version-pinned R package records for both architectures. They are attached to the corresponding GitHub release.
 
 ## Tagging
 
-**This section is being replaced and does not describe the current build.** The weekly build now publishes only to the `next/*` namespace above — not to the six repositories this page covers — and none of the `sha-`, dated, or "most recent stable" behavior below is currently produced. A release contract describing what the six images above actually promise, and how they're tagged, is coming; until then, treat the rest of this section as historical.
+The six product repositories have two kinds of tags:
 
-These images are built based on a variety of triggers, and each trigger results in a different tag. You will notice that some issues have multiple tags, this is because the tags are there to either help you keep up-to-date, or pin your image to a specific revision or timepoint. This section is structured based on why you might choose one tag compared to another.
+- `latest` points to the most recently promoted environment release. It moves when a new release is promoted.
+- `YYYY-MM-DD` identifies one promoted environment release by the UTC completion date of its candidate build. The promotion workflow refuses to replace a dated tag with a different digest.
 
-### You want all the updates and changes
+Use a full `sha256:` digest when the deployment itself must be content-addressed. A dated tag is also stable, but a digest states the exact bytes without a registry lookup.
 
-If you want all the updates and changes to these images as we make them, you can use the `latest` tag. This will be the most recently built, stable version of each image. Note that while we try our best to maintain stability in terms of the packages that are installed on each image, by definition images tagged `latest` will be subject to changes as we improve our structure and delivery.
+The weekly build publishes candidates under `ghcr.io/coursekata/next/`. A candidate reaches the six product repositories only after all six images pass on AMD64 and ARM64 and the promotion workflow verifies that they came from the selected successful `main` run. Promotion copies the tested image indexes; it does not rebuild them. It writes and verifies every dated tag before changing any `latest` tag.
 
-### You mostly want stability
-
-Though we try to maintain stability in our installed packages and libraries, there is the chance that one may be removed. If you want to ensure that you continue to get the same packages, but that they are update weekly, you can select an image that is tagged with a specific repository revision, e.g `sha-bf50210`. Images with a specific revision tag will always have been built from the repository state at the time of that revision, so they will always have the same version of Python and R, and the package lists will always be the same.
-
-A downside of this approach is that when we update this repository, that particular revision will no longer be rebuilt. Before we make any commits to the repository, it will get weekly updates to packages, but after that it will be locked in place and not updated further.
-
-### You want to control your updates in full
-
-If you need your images to be highly reproducible, e.g. for use in systems where the image stability is critical, you will likely want to make sure that the image does not change at all when you pull. There are two ways to do this:
-
-1. Use the full SHA digest of the image
-2. Use a dated tag: all of these images are built weekly (Monday starting at 3:00 UTC), so you will see many tags like `2023-04-21` indicating when they were built
-
-Using one of these two methods will ensure that the image will be the same everytime you pull it.
+Each promotion creates a GitHub release named `environment-YYYY-MM-DD`. Its manifest records the source run, commit, image digests, platform digests, and previous `latest` digests. The release also contains the exact R package inventory for each image and architecture.

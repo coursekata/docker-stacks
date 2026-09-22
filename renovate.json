@@ -47,6 +47,17 @@
       "managerFilePatterns": [
         "/(^|/)Dockerfile$/"
       ]
+    },
+    {
+      "description": "Keep the pinned crane release current; its checksum is reviewed with each update.",
+      "customType": "regex",
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+CRANE_VERSION: (?<currentValue>\\S+)"
+      ],
+      "extractVersionTemplate": "^v(?<version>.*)$",
+      "managerFilePatterns": [
+        "/^\\.github/workflows/promote\\.yml$/"
+      ]
     }
   ]
 }

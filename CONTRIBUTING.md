@@ -125,10 +125,12 @@ bats itself is not in the published images. The Dockerfile's `test` stage instal
 
 ### GitHub Actions Workflow
 
-The CI/CD pipeline is defined in `.github/workflows/`:
+The build and release pipelines are defined in `.github/workflows/`:
 
-- **`build-test-push.yml`**: Main workflow that builds, tests, and pushes a single image
-- **`build-test-push-multiarch.yml`**: Orchestrates builds for both ARM64 and AMD64 architectures
+- **`publish.yml`**: Builds all candidates and supplies the required pull request check
+- **`build-test-push.yml`**: Builds and tests one image architecture
+- **`build-test-push-multiarch.yml`**: Combines the two tested architectures into one candidate image index
+- **`promote.yml`**: Validates or promotes all six candidates from one successful `main` run
 
 ### Workflow Steps
 
@@ -140,12 +142,33 @@ For each image and platform:
 4. **Push by digest**: Pushes image by digest to enable multi-arch manifests
 5. **Create manifest**: Combines AMD64 and ARM64 images into multi-arch manifest
 
+Candidate images are published to `ghcr.io/coursekata/next/`. They receive a dated tag, `weekly`, and `run-<GitHub run ID>`. Only `promote.yml` writes to the six stable image repositories.
+
+### Promoting a tested environment
+
+Find the successful `Build and Publish Images` run on `main`, then validate it:
+
+```bash
+gh workflow run promote.yml --ref main \
+  -f candidate_run_id=<run-id> \
+  -f change_class=packages \
+  -f mode=validate
+```
+
+Use `runtime` when the R, Python, Jupyter, or system runtime changed. Use `os-only` for an operating-system-only rebuild. If validation passes, run the same command with `-f mode=promote`.
+
+The workflow rejects failed, non-`main`, or unrelated runs. It also checks the candidate commit, creation time, AMD64 and ARM64 manifests, and every stable dated tag before writing anything. During promotion it copies and verifies all six dated tags before moving `latest`. It never rebuilds an image and never moves the separate `hub` tag.
+
+A successful promotion creates `environment-YYYY-MM-DD` as a GitHub release. The attached manifest and R package records are the permanent release record.
+
+The `docker-stacks` repository needs write access under **Manage Actions access** for every stable GHCR package. Connecting an existing package to the repository does not grant this access retroactively. Check this once when adding a package; the workflow's scoped `GITHUB_TOKEN` handles subsequent releases.
+
 ### Caching Strategy
 
 The build system uses Docker registry caching:
 
-- **Cache source**: `:latest` and `:cache-{amd64,arm64}` tags from registry
-- **Cache target**: Platform-specific cache tags (`:cache-amd64`, `:cache-arm64`)
+- **CI cache source**: Candidate `:weekly` and `:cache-{amd64,arm64}` tags
+- **CI cache target**: Candidate platform cache tags (`:cache-amd64`, `:cache-arm64`)
 - **Local builds**: Automatically pull cache from `ghcr.io/coursekata/*` if `DS_OWNER` is set
 
 This dramatically speeds up builds by reusing layers from previous builds.

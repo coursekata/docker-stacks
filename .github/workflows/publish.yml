@@ -97,6 +97,9 @@ jobs:
       - name: Shellcheck
         run: shellcheck -S warning scripts/*.sh scripts/tests/*.sh scripts/tests/*.bats
 
+      - name: Test promotion safety checks
+        run: python3 -m unittest scripts/tests/test_promote_images.py
+
       - name: Zizmor
         uses: zizmorcore/zizmor-action@70fb788f84895a7701f5643d103d587e460b5c99 # v0.6.3
 
