@@ -183,11 +183,11 @@ If tests fail in CI:
 
 A bare name means CRAN. An off-CRAN package needs a pak ref pinned to a full 40-hex commit SHA — `<package>=<owner>/<repo>@<sha>` — never a tag or branch, both of which can move out from under a resolved build. Append `?reinstall` to force a reinstall even when pak thinks the version is already satisfied.
 
-Example:
+For example, `coursekata` is on CRAN, while `fivethirtyeightdata` is pinned to GitHub:
 
 ```txt
-coursekata=coursekata/coursekata-r@5e68e7716b02065823d17491de4a18e57774185e?reinstall
-ggpubr
+coursekata
+fivethirtyeightdata=coursekata/fivethirtyeightdata@8de5de424ee5d5891fca08d4ef8734e28ff0618d
 ```
 
 Nothing needs regenerating; pak reads these files directly.
