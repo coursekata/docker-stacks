@@ -199,7 +199,8 @@ LABEL org.coursekata.image.ref.name="coursekata/${PIXI_ENV}"
 
 ARG PIXI_DIR PYTHON_MINOR
 ENV CONDA_DIR="${PIXI_DIR}/.pixi/envs/${PIXI_ENV}"
-ENV R_HOME="${CONDA_DIR}/lib/R" \
+ENV PATH="${CONDA_DIR}/bin:${PATH}" \
+    R_HOME="${CONDA_DIR}/lib/R" \
     R_LIBS_SITE="${CONDA_DIR}/lib/R/library" \
     CK_SITE_PACKAGES="${CONDA_DIR}/lib/python${PYTHON_MINOR}/site-packages" \
     TZ=Etc/UTC \
@@ -242,6 +243,9 @@ RUN --mount=type=bind,source="r",target=/tmp/r \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/refs.txt && \
     fix-permissions "${CONDA_DIR}" && \
     test -d "$R_LIBS_SITE" && test -d "$CK_SITE_PACKAGES" && test -d /opt/ck/env/lib/R
+
+# Root-level package setup creates Jupyter state under HOME.
+RUN fix-permissions "${HOME}"
 
 USER ${NB_UID}
 

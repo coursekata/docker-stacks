@@ -202,6 +202,30 @@ jobs:
           TEST_IMAGE: ${{ inputs.image }}:test
         run: docker run --rm --platform="$PLATFORM" "$TEST_IMAGE"
 
+      - name: Test Jupyter server health
+        if: inputs.skip-tests != true && inputs.target != 'base' && inputs.image != 'datascience-core'
+        shell: bash
+        env:
+          PLATFORM: ${{ inputs.platform }}
+          IMAGE: ghcr.io/${{ github.repository_owner }}/next/${{ inputs.image }}@${{ steps.build.outputs.digest }}
+        run: |
+          set -euo pipefail
+          container="jupyter-health-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          trap 'docker rm --force "$container" >/dev/null 2>&1 || true' EXIT
+
+          docker run --detach --platform="$PLATFORM" --name "$container" "$IMAGE"
+          for _ in {1..30}; do
+            status=$(docker inspect --format '{{.State.Health.Status}}' "$container")
+            case "$status" in
+              healthy) exit 0 ;;
+              unhealthy) break ;;
+            esac
+            sleep 1
+          done
+
+          docker logs "$container"
+          exit 1
+
       # A record, not a gate: the two architectures may legitimately differ.
       - name: Record installed R packages
         if: inputs.target != 'base'
