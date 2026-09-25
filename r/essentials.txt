@@ -7,3 +7,4 @@ lme4
 Lock5withR=coursekata/Lock5withR@f2773d9f828b72882ed1c4d6b3b2e539a3b3b24a
 plotly
 statmod
+testthat
