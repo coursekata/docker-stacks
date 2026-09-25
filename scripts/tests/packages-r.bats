@@ -46,3 +46,8 @@ else
     bats_test_function --description "library('$_pkg')" -- test_r_library "$_pkg"
   done
 fi
+
+@test "CourseKata tiers include the ckcode exercise-checking runtime" {
+  grep -qx "coursekata" "${R_PACKAGES_FILE}" || skip "coursekata is not installed on this tier"
+  Rscript -e 'stopifnot(requireNamespace("testthat", quietly = TRUE))'
+}
