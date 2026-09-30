@@ -2,8 +2,8 @@
 ARG DEFAULT_KERNEL=ir
 
 # Ubuntu 24.04 (noble)
-# https://gallery.ecr.aws/ubuntu/ubuntu
-ARG ROOT_IMAGE=public.ecr.aws/ubuntu/ubuntu:24.04@sha256:41938337738ac39ec015eecf7ac5ed9add869fffeb394f2b90819ba6793d889b
+# https://hub.docker.com/_/ubuntu
+ARG ROOT_IMAGE=ubuntu:24.04@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3
 ARG ROOT_CODENAME=noble
 
 # Pixi settings
