@@ -3,7 +3,7 @@ ARG DEFAULT_KERNEL=ir
 
 # Ubuntu 24.04 (noble)
 # https://hub.docker.com/_/ubuntu
-ARG ROOT_IMAGE=ubuntu:24.04@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3
+ARG ROOT_IMAGE=ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852
 ARG ROOT_CODENAME=noble
 
 # Pixi settings
@@ -17,8 +17,8 @@ ARG PIXI_DIR=/opt/pixi
 # -----------------------------------------------------------------------------
 # Other image-based dependencies
 # -----------------------------------------------------------------------------
-FROM quay.io/jupyter/base-notebook:python-3.13@sha256:eaa4faf647919e915f9cb90c19cade55b0518b0949cf543d59269dee471f4ecd AS jupyter--base-notebook
-FROM quay.io/jupyter/docker-stacks-foundation:python-3.13@sha256:4143929f2a7a9b131cdd121d11737f72b3f147bde5c8d76e86cd2d8627ef56da AS jupyter--docker-stacks-foundation
+FROM quay.io/jupyter/base-notebook:python-3.13@sha256:e7e1d8727cdca641ae97c4aa96afafc21b85eb8908da1a0dafa7ddb00c8e1554 AS jupyter--base-notebook
+FROM quay.io/jupyter/docker-stacks-foundation:python-3.13@sha256:0491293623a24de46b6983105f1c845f8e254adb0e61263579c2572e87f31d99 AS jupyter--docker-stacks-foundation
 FROM ghcr.io/prefix-dev/pixi:${PIXI_VERSION}-${ROOT_CODENAME} AS pixi
 
 
