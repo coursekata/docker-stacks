@@ -50,7 +50,7 @@ jobs:
           BEFORE_SHA: ${{ github.event.before }}
         run: |
           set -uo pipefail
-          pattern='^(\.github/workflows/(publish|build-test-push|build-test-push-multiarch)\.yml|pixi\.(toml|lock)|Dockerfile|Rprofile\.site|r/.*|scripts/.*)$'
+          pattern='^(\.github/workflows/(publish|build-test-push|build-test-push-multiarch)\.yml|pixi\.(toml|lock)|Dockerfile|\.dockerignore|Rprofile\.site|justfile|r/.*|scripts/.*)$'
 
           case "$EVENT_NAME" in
             pull_request) base="$BASE_SHA" ;;
@@ -129,18 +129,17 @@ jobs:
       - name: Update Conda packages
         run: pixi update
 
-      # Every build resolves conda and PyPI fresh, so this is not about staleness.
-      # It answers what nothing else does: did the solver pick a version with a
-      # published advisory? That is the signal to add a floor to pixi.toml, which
-      # ratchets against the solver backtracking rather than bumping anything.
-      # Report-only: a finding is a prompt to look, not a reason to block a build
-      # whose alternative is shipping the previous image for longer.
-      - name: Check the resolved Python packages for advisories
+      - name: Audit the resolved lockfile
+        env:
+          PIXI_AUDIT_TOKEN: ${{ secrets.BASILISK_API_TOKEN }}
         run: |
-          python3 -m pip install --quiet --disable-pip-version-check pyyaml
-          python3 scripts/check-advisories.py pixi.lock | tee advisories.txt
+          if [ -z "$PIXI_AUDIT_TOKEN" ]; then
+            echo "::warning::BASILISK_API_TOKEN unavailable; skipping lockfile audit."
+            exit 0
+          fi
+          pixi exec -- just audit | tee advisories.txt
           {
-            echo "### Python advisories in the resolved lock"
+            echo "### Advisories in the resolved lock"
             echo
             echo '```'
             cat advisories.txt
@@ -217,7 +216,7 @@ jobs:
       contents: read
       packages: write
     needs: [lint]
-    uses: ./.github/workflows/build-test-push-multiarch.yml
+    uses: $/.github/workflows/build-test-push-multiarch.yml
     with:
       image: foundation
       target: base
@@ -239,7 +238,7 @@ jobs:
       matrix:
         include: ${{ fromJson(needs.setup.outputs.images) }}
 
-    uses: ./.github/workflows/build-test-push-multiarch.yml
+    uses: $/.github/workflows/build-test-push-multiarch.yml
     with:
       image: ${{ matrix.image }}
       target: final

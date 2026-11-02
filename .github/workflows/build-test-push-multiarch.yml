@@ -59,7 +59,7 @@ jobs:
       contents: read
       packages: write
     name: Build (AMD64)
-    uses: ./.github/workflows/build-test-push.yml
+    uses: $/.github/workflows/build-test-push.yml
     with:
       image: ${{ inputs.image }}
       platform: linux/amd64
@@ -77,7 +77,7 @@ jobs:
       contents: read
       packages: write
     name: Build (ARM64)
-    uses: ./.github/workflows/build-test-push.yml
+    uses: $/.github/workflows/build-test-push.yml
     with:
       image: ${{ inputs.image }}
       platform: linux/arm64

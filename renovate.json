@@ -7,9 +7,13 @@
   "enabledManagers": [
     "dockerfile",
     "github-actions",
+    "pip-compile",
     "custom.regex"
   ],
   "pinDigests": true,
+  "pip-compile": {
+    "managerFilePatterns": ["/^scripts/security-requirements\\.txt$/"]
+  },
   "platformCommit": "enabled",
   "packageRules": [
     {

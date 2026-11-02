@@ -1,0 +1,19 @@
+# Send only image inputs, not Git history or local build/spike artifacts.
+*
+!Dockerfile
+!pixi.toml
+!pixi.lock
+!Rprofile.site
+!r/
+!r/*.txt
+!scripts/
+!scripts/**
+**/.git
+**/.git/**
+**/.scratch
+**/.scratch/**
+**/__pycache__
+**/__pycache__/**
+**/*.pyc
+**/*[Ss][Aa][Gg][Aa]*
+**/*[Ss][Aa][Gg][Aa]*/**
