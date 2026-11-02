@@ -193,7 +193,7 @@ USER ${NB_UID}
 # -----------------------------------------------------------------------------
 FROM base AS notebook
 
-ARG PIXI_ENV
+ARG PIXI_ENV TARGETARCH
 LABEL org.coursekata.image.authors="tech@coursekata.org"
 LABEL org.coursekata.image.ref.name="coursekata/${PIXI_ENV}"
 
@@ -225,29 +225,34 @@ RUN if command -v jupyter-lab >/dev/null 2>&1; then \
     fi && \
     fix-permissions "${HOME}"
 
-# install R packages and their system dependencies
+# Keep downloads in the build cache; shipping them bloats the runtime image.
 USER root
 # hadolint ignore=SC1008
-RUN --mount=type=bind,source="r",target=/tmp/r \
+RUN --mount=type=cache,id=pak-${TARGETARCH}-${PIXI_ENV},target=/tmp/pak-package-cache,sharing=locked \
+    --mount=type=bind,source="r",target=/tmp/r \
     --mount=type=bind,source="scripts/get-refs.py",target=/tmp/get-refs.py \
     --mount=type=bind,source="pixi.toml",target=/tmp/pixi.toml \
     --mount=type=bind,source="pixi.lock",target=/tmp/pixi.lock \
     --mount=type=bind,from=pixi,source=/usr/local/bin/pixi,target=/usr/local/bin/pixi \
     --mount=type=secret,id=github_token,uid=0 \
     GITHUB_PAT=$(cat /run/secrets/github_token) && \
-    export GITHUB_PAT && \
+    export GITHUB_PAT PKG_PACKAGE_CACHE_DIR=/tmp/pak-package-cache && \
     python3 /tmp/get-refs.py "${PIXI_ENV}" --manifest /tmp/pixi.toml --specs /tmp/r > /tmp/refs.txt && \
     apt-get update && \
     Rscript -e 'options(warn = 2); if (!requireNamespace("pak", quietly = TRUE)) install.packages("pak"); options(pkg.sysreqs = TRUE, pkg.sysreqs_platform = "ubuntu-24.04"); pak::pkg_install(readLines("/tmp/refs.txt"), upgrade = FALSE, ask = FALSE)' && \
     Rscript -e 'IRkernel::installspec(user = FALSE, prefix = Sys.getenv("CONDA_DIR"))' && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/refs.txt && \
     fix-permissions "${CONDA_DIR}" && \
+    fix-permissions "${HOME}" && \
     test -d "$R_LIBS_SITE" && test -d "$CK_SITE_PACKAGES" && test -d /opt/ck/env/lib/R
 
-# Root-level package setup creates Jupyter state under HOME.
-RUN fix-permissions "${HOME}"
-
 USER ${NB_UID}
+
+# Conda still selects vulnerable Tornado; remove this override once its solve reaches 6.6.
+# hadolint ignore=SC1008
+RUN --mount=type=bind,source=scripts/security-requirements.txt,target=/tmp/security-requirements.txt \
+    python -m pip install --no-cache-dir --only-binary=:all: --require-hashes -r /tmp/security-requirements.txt && \
+    fix-permissions "${CK_SITE_PACKAGES}/tornado" "${CK_SITE_PACKAGES}"/tornado-*.dist-info
 
 ARG DEFAULT_KERNEL
 ENV DEFAULT_KERNEL="${DEFAULT_KERNEL}"
@@ -266,25 +271,24 @@ RUN curl -fsSL "https://github.com/bats-core/bats-core/archive/refs/tags/v${BATS
     ln -s /opt/bats/bin/bats /usr/local/bin/bats && \
     rm /tmp/bats.tgz /tmp/bats.sha
 
-COPY scripts/tests /opt/tests
+COPY scripts /opt/scripts
 
 # pixi is bind-mounted, not installed: needed to resolve, not to run tests.
 RUN --mount=type=bind,source="pixi.toml",target=/tmp/pixi.toml \
     --mount=type=bind,source="pixi.lock",target=/tmp/pixi.lock \
     --mount=type=bind,source="r",target=/tmp/r \
-    --mount=type=bind,source="scripts",target=/tmp/scripts \
     --mount=type=bind,from=pixi,source=/usr/local/bin/pixi,target=/usr/local/bin/pixi \
-    python3 /tmp/scripts/get-refs.py "${PIXI_ENV}" --lang python \
-      --manifest /tmp/pixi.toml > /opt/tests/python-packages.txt && \
-    python3 /tmp/scripts/get-refs.py "${PIXI_ENV}" --lang r --names \
-      --manifest /tmp/pixi.toml --specs /tmp/r > /opt/tests/r-packages.txt
+    python3 /opt/scripts/get-refs.py "${PIXI_ENV}" --lang python \
+      --manifest /tmp/pixi.toml > /opt/scripts/tests/python-packages.txt && \
+    python3 /opt/scripts/get-refs.py "${PIXI_ENV}" --lang r --names \
+      --manifest /tmp/pixi.toml --specs /tmp/r > /opt/scripts/tests/r-packages.txt
 
 ENV ENV_NAME="${PIXI_ENV}" \
-    PYTHON_PACKAGES_FILE=/opt/tests/python-packages.txt \
-    R_PACKAGES_FILE=/opt/tests/r-packages.txt
+    PYTHON_PACKAGES_FILE=/opt/scripts/tests/python-packages.txt \
+    R_PACKAGES_FILE=/opt/scripts/tests/r-packages.txt
 
 USER ${NB_UID}
-CMD ["bash", "/opt/tests/run-tests.sh"]
+CMD ["bash", "/opt/scripts/tests/run-tests.sh"]
 
 
 # -----------------------------------------------------------------------------

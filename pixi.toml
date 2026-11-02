@@ -7,18 +7,25 @@ platforms = ["linux-aarch64", "linux-64"]
 requires-pixi = ">=0.63.2"
 
 [dependencies]
-python = ">=3.13.0,<3.14"
-# floor is the first release fixing the path-traversal and tar-extraction
-# advisories; the previous <25 ceiling held pip below every one of them
-pip = ">=25.3,<27"
+python = ">=3.13.18,<3.14"
+brotli-python = ">=1.2.1,<2"
+certifi = ">=2026.10.19"
+urllib3 = ">=2.8.0,<3"
 jupyter_core = ">=5.7.2,<6"
 ipykernel = ">=6.29.5,<8"
 
+[pypi-dependencies]
+pip = ">=26.3,<27"
+
 [feature.notebook.dependencies]
 jupyterhub-singleuser = ">=5.2.1,<6"
-jupyterlab = ">=4.5.10,<5"
-notebook = ">=7.3.1,<8"
+jupyterlab = ">=4.6.4,<5"
+notebook = ">=7.6.3,<8"
 nbclassic = ">=1.1.0,<2"
+nbconvert-core = ">=7.17.2,<8"
+mako = ">=1.4.2,<2"
+oauthlib = ">=4.0.0,<5"
+pyjwt = ">=2.15.1,<3"
 
 [feature.base-r.dependencies]
 r-base = ">=4.6,<5"
@@ -26,7 +33,6 @@ r-base = ">=4.6,<5"
 [feature.essentials.dependencies]
 
 [feature.exercises.dependencies]
-# for pythonwhat, not on conda
 asttokens = "<3"
 
 [feature.exercises.pypi-dependencies]
@@ -35,12 +41,13 @@ pythonwhat = ">=2.3.0,<3"
 [feature.r.dependencies]
 
 [feature.datascience.dependencies]
+brotli = ">=1.2.1,<2"
 gensim = ">=4.4.0,<5"
 ipywidgets = ">=8.1.5,<9"
 matplotlib-base = ">=3.9.4,<4"
-nltk = ">=3.9.4,<4"
+nltk = ">=3.10.4,<4"
 openpyxl = ">=3.1.5,<4"
-pillow = ">=12.3.0,<13"
+pillow = ">=13.0.0,<14"
 pandas = ">=2.2.3,<3"
 plotly = ">=5.24.1,<6"
 scikit-learn = ">=1.6.0,<2"

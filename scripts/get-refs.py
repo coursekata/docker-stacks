@@ -20,7 +20,12 @@ NOT_IMPORTABLE = {
 }
 
 # conda names that differ from the importable name.
-RENAMES = {"jupyterhub-singleuser": "jupyterhub", "matplotlib-base": "matplotlib"}
+RENAMES = {
+    "brotli-python": "brotli",
+    "jupyterhub-singleuser": "jupyterhub",
+    "matplotlib-base": "matplotlib",
+    "nbconvert-core": "nbconvert",
+}
 
 
 def pixi(manifest, *args):

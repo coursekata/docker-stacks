@@ -46,3 +46,12 @@ else
     bats_test_function --description "library('$_pkg')" -- test_r_library "$_pkg"
   done
 fi
+
+@test "build-time pak package archives are absent from the runtime image" {
+  Rscript -e 'stopifnot(pak::cache_summary()$files == 0)'
+  if [[ -e /tmp/pak-package-cache ]]; then
+    run find /tmp/pak-package-cache -type f -print -quit
+    [[ "$status" -eq 0 ]]
+    [[ -z "$output" ]]
+  fi
+}

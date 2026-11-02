@@ -18,6 +18,6 @@ posterior
 psych
 reticulate
 sjPlot
-Stat2Data
+Stat2Data=statmanrobin/Stat2Data@3fe987c7e1813fd9960a3ca9293873359c1e07e9
 tidymodels
 tidyverse

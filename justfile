@@ -122,9 +122,17 @@ img-clean: img-rm-dang img-rm
 
 # --- Lint ---
 
+# Report lockfile advisories; findings do not fail the command.
+[group('lint')]
+[positional-arguments]
+audit *args:
+    pixi exec --spec 'pixi-audit==0.2.1' \
+        --channel https://prefix.dev/prefix-dev/prefix-labs --channel conda-forge -- \
+        pixi-audit pixi.lock --warn-only-ecosystem conda-forge --warn-only-ecosystem pypi "$@"
+
 # Lint every shell script the same way CI does
 [group('lint')]
 lint:
     shellcheck -S warning scripts/*.sh scripts/tests/*.sh scripts/tests/*.bats
     python3 -m unittest scripts/tests/test_promote_images.py
-    zizmor .
+    shopt -s nullglob; zizmor .github/workflows/*.yml .github/workflows/*.yaml
