@@ -45,6 +45,19 @@ run_kernel_probe() {
   jupyter lab --version
 }
 
+@test "single-user server starts with a patched JupyterHub 5.x client" {
+  [[ "$ENV_NAME" != "datascience-core" ]] || skip "No notebook feature"
+  python - <<'PY'
+from importlib.metadata import version
+from pip._vendor.packaging.version import Version
+
+installed = Version(version("jupyterhub"))
+assert Version("5.5.5") <= installed < Version("6"), installed
+PY
+  python -m pip check
+  jupyterhub-singleuser --help
+}
+
 @test "Jupyter server config exists" {
   command -v jupyter-lab >/dev/null 2>&1 || skip "Jupyter front end not installed on this tier"
   [ -f "${HOME}/.jupyter/jupyter_server_config.py" ]
