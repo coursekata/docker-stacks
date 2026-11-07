@@ -134,5 +134,5 @@ audit *args:
 [group('lint')]
 lint:
     shellcheck -S warning scripts/*.sh scripts/tests/*.sh scripts/tests/*.bats
-    python3 -m unittest scripts/tests/test_promote_images.py
+    python3 -m unittest discover -s scripts/tests -p 'test_*.py'
     shopt -s nullglob; zizmor .github/workflows/*.yml .github/workflows/*.yaml
