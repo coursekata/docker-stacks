@@ -1,0 +1,6 @@
+# Notebook export tools; headless environments omit the notebook feature.
+inkscape
+pandoc
+texlive-xetex
+texlive-fonts-recommended
+texlive-plain-generic

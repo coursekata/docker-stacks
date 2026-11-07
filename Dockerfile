@@ -68,18 +68,10 @@ RUN apt-get update --yes && \
     netbase \
     # git-over-ssh
     openssh-client \
-    # - `pandoc` is used to convert notebooks to html files
-    #   it's not present in the aarch64 Ubuntu image, so we install it here
-    pandoc \
     # - `run-one` - a wrapper script that runs no more
     #   than one unique instance of some command with a unique set of arguments,
     #   we use `run-one-constantly` to support the `RESTARTABLE` option
     run-one \
-    # `nbconvert` dependencies
-    # https://nbconvert.readthedocs.io/en/latest/install.html#installing-tex
-    texlive-xetex \
-    texlive-fonts-recommended \
-    texlive-plain-generic \
     # - `tini` is installed as a helpful container entrypoint,
     #   that reaps zombie processes and such of the actual executable we want to start
     #   See https://github.com/krallin/tini#why-tini for details
@@ -229,6 +221,7 @@ RUN if command -v jupyter-lab >/dev/null 2>&1; then \
 USER root
 # hadolint ignore=SC1008
 RUN --mount=type=cache,id=pak-${TARGETARCH}-${PIXI_ENV},target=/tmp/pak-package-cache,sharing=locked \
+    --mount=type=bind,source="apt",target=/tmp/apt \
     --mount=type=bind,source="r",target=/tmp/r \
     --mount=type=bind,source="scripts/get-refs.py",target=/tmp/get-refs.py \
     --mount=type=bind,source="pixi.toml",target=/tmp/pixi.toml \
@@ -238,10 +231,12 @@ RUN --mount=type=cache,id=pak-${TARGETARCH}-${PIXI_ENV},target=/tmp/pak-package-
     GITHUB_PAT=$(cat /run/secrets/github_token) && \
     export GITHUB_PAT PKG_PACKAGE_CACHE_DIR=/tmp/pak-package-cache && \
     python3 /tmp/get-refs.py "${PIXI_ENV}" --manifest /tmp/pixi.toml --specs /tmp/r > /tmp/refs.txt && \
+    python3 /tmp/get-refs.py "${PIXI_ENV}" --manifest /tmp/pixi.toml --lang apt --specs /tmp/apt > /tmp/apt-packages.txt && \
     apt-get update && \
+    xargs -r apt-get install --yes --no-install-recommends < /tmp/apt-packages.txt && \
     Rscript -e 'options(warn = 2); if (!requireNamespace("pak", quietly = TRUE)) install.packages("pak"); options(pkg.sysreqs = TRUE, pkg.sysreqs_platform = "ubuntu-24.04"); pak::pkg_install(readLines("/tmp/refs.txt"), upgrade = FALSE, ask = FALSE)' && \
     Rscript -e 'IRkernel::installspec(user = FALSE, prefix = Sys.getenv("CONDA_DIR"))' && \
-    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/refs.txt && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/refs.txt /tmp/apt-packages.txt && \
     fix-permissions "${CONDA_DIR}" && \
     fix-permissions "${HOME}" && \
     test -d "$R_LIBS_SITE" && test -d "$CK_SITE_PACKAGES" && test -d /opt/ck/env/lib/R

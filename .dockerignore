@@ -4,6 +4,8 @@
 !pixi.toml
 !pixi.lock
 !Rprofile.site
+!apt/
+!apt/*.txt
 !r/
 !r/*.txt
 !scripts/

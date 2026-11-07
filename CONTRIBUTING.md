@@ -177,9 +177,10 @@ This dramatically speeds up builds by reusing layers from previous builds.
 
 #### `texlive` Installation Hangs
 
-The `base` stage installs `texlive`, which can hang on GitHub Actions `ubuntu-latest` runners.
+Notebook-feature images install `texlive`, which can hang on GitHub Actions `ubuntu-latest` runners.
 
-**Solution**: Run `just test base-r-notebook` locally to cache the base layer to the registry. This allows GitHub Actions to skip building the base stage and use the cached layer.
+Local tests can reuse Docker's build cache. CI imports its registry cache;
+`just test` does not publish cache layers or images.
 
 #### Test Failures
 
@@ -197,6 +198,19 @@ If tests fail in CI:
 1. Run `pixi add --feature <feature-name> <package-name>` to add the package and update the lock file
 - Note you can also scope it to a platform with `--platform linux-amd64` or `--platform linux-aarch64`
 2. Rebuild and test: `just build <image> && just test <image>`
+
+### Notebook export system packages
+
+`apt/<feature>.txt` declares Ubuntu packages for a Pixi feature, using the same
+feature lists as Python and R. The Dockerfile installs only the selected lists.
+`apt/notebook.txt` supplies Inkscape for SVG-to-PDF conversion, Pandoc, and TeX
+for notebook exports. The notebook feature's images receive these tools;
+`datascience-core` omits them. Consumers adding their own notebook server must
+also provide its export dependencies.
+
+The image suite exports synthetic text, PNG and SVG notebooks to PDF. Run
+`just test <image>` after changing these packages, and `just lint` to verify
+that package selection still covers every notebook tier and excludes core.
 
 ### R Packages
 
@@ -239,7 +253,7 @@ Four tiers form a ladder, each a superset of the one before:
 
 Two more images exist for specific consumers and sit outside the ladder:
 
-- **`datascience-core`** — everything in `datascience-notebook` except the Jupyter front end (`jupyterlab`, `notebook`, `nbclassic`, `jupyterhub-singleuser`). For a consumer that brings its own notebook server — CKHub, which is pinned to classic Notebook 6 and would otherwise inherit an unused JupyterLab install it has to overwrite. Nothing in this repository builds on it; it's a fifth environment in the same Pixi solve group as the ladder, so it stays version-identical with `datascience-notebook` on every package they share.
+- **`datascience-core`** — the data-science tier without the notebook feature's front end, single-user server or PDF export tools. For a consumer that brings its own notebook server — CKHub, which is pinned to classic Notebook 6 and would otherwise inherit an unused JupyterLab install it has to overwrite. That consumer must also supply its export dependencies. Nothing in this repository builds on it; it's a fifth environment in the same Pixi solve group as the ladder, so it stays version-identical with `datascience-notebook` on every package they share.
 - **`exercises-notebook`** — `essentials-notebook` + the exercise-checking machinery (`pythonwhat`, `testwhat`) that grades the book's inline exercises. A **leaf**: nothing is built on top of it. It lives in its **own Pixi solve group**, separate from the ladder, because `pythonwhat` declares a hard `asttokens<3` ceiling that only it needs — inside a shared solve group that ceiling would reach every tier, including `base-r-notebook`, which contains no Python teaching stack at all.
 
 **Important**: a change to a feature multiple environments share — anything in `pixi.toml`'s `[dependencies]` or `[feature.notebook]`, or a shared `r/<feature>.txt` spec file — affects every tier that includes it. Rebuild and test every affected tier, not just the one you were editing.

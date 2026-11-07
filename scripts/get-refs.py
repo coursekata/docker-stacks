@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""List the packages a pixi environment declares, for one language.
+"""List the Python, R or apt packages a pixi environment declares.
 
 Asks pixi rather than parsing pixi.toml, so per-target tables resolve correctly:
 a package declared for one architecture is not reported for the other.
@@ -74,8 +74,8 @@ def resolve_platform(manifest, env, requested):
     return platform
 
 
-def r_refs(manifest, env, specs_dir):
-    """pak refs, in feature order, from r/<feature>.txt."""
+def feature_refs(manifest, env, specs_dir):
+    """Package refs, in feature order, from <specs_dir>/<feature>.txt."""
     refs = []
     for feature in features_for(manifest, env):
         spec_file = specs_dir / f"{feature}.txt"
@@ -114,11 +114,11 @@ def ref_name(ref):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("env", nargs="?", help="pixi environment name")
-    parser.add_argument("--lang", choices=("r", "python"), default="r", help="which language's packages to list")
+    parser.add_argument("--lang", choices=("r", "python", "apt"), default="r", help="which package source to list")
     parser.add_argument("--names", action="store_true", help="print package names only, without ref syntax")
     parser.add_argument("--list", action="store_true", help="list known environment names")
     parser.add_argument("--manifest", default="pixi.toml", help="path to pixi.toml")
-    parser.add_argument("--specs", default="r", help="path to the r/ spec directory")
+    parser.add_argument("--specs", help="path to the feature spec directory (default: r/ or apt/)")
     parser.add_argument("--platform", help="pixi platform to resolve for (default: the platform pixi reports)")
     args = parser.parse_args()
 
@@ -135,9 +135,9 @@ def main():
     if args.lang == "python":
         refs = python_refs(manifest, args.env, resolve_platform(manifest, args.env, args.platform))
     else:
-        refs = r_refs(manifest, args.env, Path(args.specs))
+        refs = feature_refs(manifest, args.env, Path(args.specs or args.lang))
 
-    if not refs:
+    if not refs and args.lang != "apt":
         parser.error(f"no {args.lang} packages declared for environment '{args.env}'")
 
     for ref in refs:
