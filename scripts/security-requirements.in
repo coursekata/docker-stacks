@@ -1,2 +1,2 @@
 # Temporary override until conda-forge supplies Tornado 6.6.
-tornado>=6.6,<7
+tornado>=6.6.1,<7
